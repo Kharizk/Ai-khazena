@@ -4,6 +4,9 @@ import { auth, db } from './firebase';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
+import { motion, AnimatePresence } from 'motion/react';
 
 type FundHistoryEntry = {
   id: string;
@@ -133,8 +136,8 @@ type DailySnapshot = {
 
 const formatNum = (num: number) => num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const DailyPrintView = ({ state, summary, formatNum }: any) => (
-  <div className="hidden print:block rtl p-8 w-full print:bg-white text-black font-sans">
+const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id }: any) => (
+  <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white text-black font-sans"}>
     <div className="text-center mb-6 pb-4 border-b-2 border-gray-300">
       <h1 className="text-3xl font-bold mb-2">الخزينة الذكية - تقرير التقفيل اليومي</h1>
       <p className="text-lg">تاريخ: <span dir="ltr" className="font-bold">{state.date}</span></p>
@@ -212,12 +215,12 @@ const DailyPrintView = ({ state, summary, formatNum }: any) => (
   </div>
 );
 
-const PendingPrintView = ({ pendingOwedToUs, pendingOwedByUs, formatNum }: any) => {
+const PendingPrintView = ({ pendingOwedToUs, pendingOwedByUs, formatNum, isPdfMode = false, id }: any) => {
   const sumOwedToUs = pendingOwedToUs.reduce((a: number, b: any) => a + b.amount, 0);
   const sumOwedByUs = pendingOwedByUs.reduce((a: number, b: any) => a + b.amount, 0);
 
   return (
-    <div className="hidden print:block rtl p-8 w-full print:bg-white text-black font-sans">
+    <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white text-black font-sans"}>
       <div className="text-center mb-8 pb-4 border-b-2 border-gray-300">
         <h1 className="text-3xl font-bold mb-2">تقرير الأموال المعلقة</h1>
         <p className="text-gray-700 text-lg">تاريخ الطباعة: <span dir="ltr" className="font-bold font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
@@ -310,8 +313,164 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
 
   const monthlyList = Object.values(monthlyAgg).sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime());
 
+  const [reportType, setReportType] = useState<'daily'|'monthly'|'yearly'>('daily');
+  const [reportDateInput, setReportDateInput] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const generateReportText = () => {
+    // Parse the input date YYYY-MM-DD to DD/MM/YYYY
+    const inputDateObj = new Date(reportDateInput);
+    if (isNaN(inputDateObj.getTime())) return 'يرجى اختيار تاريخ صحيح.';
+    
+    const day = String(inputDateObj.getDate()).padStart(2, '0');
+    const month = String(inputDateObj.getMonth() + 1).padStart(2, '0');
+    const year = inputDateObj.getFullYear();
+    const targetDateStr = `${day}/${month}/${year}`;
+    const targetMonthYear = `${month}/${year}`;
+    const targetYear = `${year}`;
+    
+    const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    if (reportType === 'daily') {
+      const dayData = dailyMetrics.find((d: any) => d.dateStr === targetDateStr);
+      const dailySales = dayData ? dayData.sales : 0;
+      
+      const monthData = dailyMetrics.filter((d: any) => d.monthYear === targetMonthYear && d.dateObj.getTime() <= inputDateObj.getTime());
+      const monthTotalSales = monthData.reduce((sum: number, d: any) => sum + d.sales, 0);
+      const daysCountInMonth = monthData.length;
+      const avgMonthly = daysCountInMonth > 0 ? monthTotalSales / daysCountInMonth : 0;
+
+      return `═══════════════════════════════════════
+           📊 تقرير مبيعات اليوم
+═══════════════════════════════════════
+
+📅 التاريخ: ${targetDateStr}
+
+💰 إجمالي مبيعات اليوم
+   ${formatNum(dailySales)} ريال
+
+📈 المتوسط اليومي (لهذا الشهر حتى اليوم)
+   ${formatNum(avgMonthly)} ريال
+
+📊 إجمالي مبيعات الشهر (تراكمي)
+   ${formatNum(monthTotalSales)} ريال
+
+═══════════════════════════════════════
+   تم إنشاء التقرير في: ${timeStr}`;
+    } 
+    else if (reportType === 'monthly') {
+      const monthData = dailyMetrics.filter((d: any) => d.monthYear === targetMonthYear);
+      const monthTotalSales = monthData.reduce((sum: number, d: any) => sum + d.sales, 0);
+      const daysCountInMonth = monthData.length;
+      const avgDaily = daysCountInMonth > 0 ? monthTotalSales / daysCountInMonth : 0;
+      
+      const yearData = dailyMetrics.filter((d: any) => d.dateObj.getFullYear().toString() === targetYear && d.dateObj.getTime() <= inputDateObj.getTime());
+      const yearTotalSales = yearData.reduce((sum: number, d: any) => sum + d.sales, 0);
+
+      return `═══════════════════════════════════════
+           📊 تقرير مبيعات الشهر
+═══════════════════════════════════════
+
+📅 الشهر: ${targetMonthYear}
+
+💰 إجمالي مبيعات الشهر
+   ${formatNum(monthTotalSales)} ريال
+
+📈 المتوسط اليومي
+   ${formatNum(avgDaily)} ريال
+
+📊 إجمالي مبيعات السنة (تراكمي)
+   ${formatNum(yearTotalSales)} ريال
+
+═══════════════════════════════════════
+   تم إنشاء التقرير في: ${timeStr}`;
+    }
+    else {
+      // Yearly
+      const yearData = dailyMetrics.filter((d: any) => d.dateObj.getFullYear().toString() === targetYear);
+      const yearTotalSales = yearData.reduce((sum: number, d: any) => sum + d.sales, 0);
+      
+      const uniqueMonths = new Set(yearData.map((d:any) => d.monthYear)).size;
+      const avgMonthly = uniqueMonths > 0 ? yearTotalSales / uniqueMonths : 0;
+
+      return `═══════════════════════════════════════
+           📊 تقرير مبيعات السنة
+═══════════════════════════════════════
+
+📅 السنة: ${targetYear}
+
+💰 إجمالي مبيعات السنة
+   ${formatNum(yearTotalSales)} ريال
+
+📈 المتوسط الشهري
+   ${formatNum(avgMonthly)} ريال
+
+═══════════════════════════════════════
+   تم إنشاء التقرير في: ${timeStr}`;
+    }
+  };
+
+  const reportText = generateReportText();
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(reportText).then(() => {
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    });
+  };
+
   return (
     <div className="print:block print:w-full space-y-6">
+      {/* Add Reports Generator Section */}
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 print:hidden">
+        <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-slate-800">
+          <FileText className="text-purple-600" size={28} /> تقارير نصية (قابلة للنسخ)
+        </h2>
+        
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:w-1/3 flex flex-col gap-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">نوع التقرير</label>
+              <div className="flex bg-slate-100 p-1 rounded-xl">
+                {[{id: 'daily', label: 'يومي'}, {id: 'monthly', label: 'شهري'}, {id: 'yearly', label: 'سنوي'}].map(rt => (
+                  <button 
+                    key={rt.id}
+                    onClick={() => setReportType(rt.id as any)}
+                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${reportType === rt.id ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'}`}
+                  >
+                    {rt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">
+                {reportType === 'daily' ? 'اختر اليوم' : reportType === 'monthly' ? 'اختر أي يوم في الشهر' : 'اختر أي يوم في السنة'}
+              </label>
+              <input 
+                type="date" 
+                value={reportDateInput}
+                onChange={(e) => setReportDateInput(e.target.value)}
+                className="w-full bg-slate-50 hover:bg-white border text-slate-700 border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-[3px] focus:ring-purple-500/20 focus:border-purple-500 focus:bg-white transition-all text-sm"
+              />
+            </div>
+            
+            <button 
+              onClick={handleCopy}
+              className={`mt-auto flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${copySuccess ? 'bg-emerald-100 text-emerald-700 pointer-events-none' : 'bg-purple-600 text-white hover:bg-purple-700 active:scale-95 shadow-sm hover:shadow-md'}`}
+            >
+              {copySuccess ? <Check size={20} /> : <Copy size={20} />}
+              {copySuccess ? 'تم النسخ بنجاح!' : 'نسخ التقرير (WhatsApp)'}
+            </button>
+          </div>
+          
+          <div className="w-full lg:w-2/3 bg-slate-800 text-slate-300 rounded-2xl p-4 md:p-6 relative overflow-hidden font-mono text-sm leading-relaxed whitespace-pre-wrap flex items-center justify-center min-h-[250px]" dir="rtl">
+             <div className="relative z-10 w-full text-right">{reportText}</div>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
         <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-slate-800">
           <BarChart3 className="text-blue-600" size={28} /> ملخص المبيعات الشهري
@@ -529,7 +688,7 @@ const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "
     placeholder={placeholder}
     dir={dir}
     list={list}
-    className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 focus:bg-white inset-shadow-sm transition-all text-sm placeholder-slate-400 ${className}`}
+    className={`w-full bg-slate-50/80 hover:bg-white border text-slate-700 border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-sm placeholder-slate-400 shadow-sm ${className}`}
   />
 );
 
@@ -605,8 +764,16 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
       )}
 
       <div className="p-5 pt-2">
+        <AnimatePresence initial={false}>
         {filteredData.map((item: any, index: number) => (
-          <div key={item.id} className="flex gap-2.5 mb-2.5 items-center group/row">
+          <motion.div 
+            initial={{ opacity: 0, y: -10, height: 0, overflow: 'hidden' }}
+            animate={{ opacity: 1, y: 0, height: 'auto', overflow: 'visible' }}
+            exit={{ opacity: 0, scale: 0.95, height: 0, overflow: 'hidden' }}
+            transition={{ duration: 0.2 }}
+            key={item.id} 
+            className="flex gap-2.5 mb-2.5 items-center group/row"
+          >
             <span className="text-slate-300 text-xs w-4 font-bold select-none">{data.findIndex((d: any) => d.id === item.id) + 1}</span>
             <div className="flex-1">
               <Input 
@@ -652,17 +819,30 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
             <button onClick={() => onRemove(item.id)} title={onArchive ? "حذف بالخطأ (بدون أرشفة)" : "حذف البند"} className="p-2.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all hover:scale-105 active:scale-95 opacity-50 group-hover/row:opacity-100">
               <Trash2 size={20} />
             </button>
-          </div>
+          </motion.div>
         ))}
+        </AnimatePresence>
         {data.length === 0 && (
-          <div className="text-center py-8 text-slate-400 flex flex-col items-center gap-2">
-            <span className="bg-slate-50 text-slate-300 p-4 rounded-full"><Plus size={32} /></span>
-            <span className="font-medium text-slate-500">اضغط على إضافة للبدء...</span>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-10 px-4 flex flex-col items-center gap-3 bg-slate-50/50 rounded-2xl mx-5 mb-5 border border-dashed border-slate-200">
+            <div className="bg-white p-4 rounded-full shadow-sm border border-slate-100 text-slate-300">
+              <Icon size={32} strokeWidth={1.5} />
+            </div>
+            <div className="space-y-1">
+              <p className="font-bold text-slate-600">لا يوجد بيانات حالياً</p>
+              <p className="text-sm text-slate-400">لم تقم بإضافة أي بنود في هذا القسم بعد.</p>
+            </div>
+            <button onClick={onAdd} className="mt-2 text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-2">
+              <Plus size={16} /> أضف أول بند
+            </button>
+          </motion.div>
+        )}
+        {data.length > 0 && (
+          <div className="px-5 pb-5">
+            <button onClick={onAdd} className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-800 text-sm font-bold px-4 py-3 rounded-xl border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all active:scale-95 group/btn">
+              <Plus size={18} className="group-hover/btn:rotate-90 transition-transform" /> إضافة بند جديد
+            </button>
           </div>
         )}
-        <button onClick={onAdd} className="mt-4 flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-800 text-sm font-bold px-4 py-3 rounded-xl border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all active:scale-95">
-          <Plus size={18} /> إضافة بند جديد
-        </button>
       </div>
     </div>
   );
@@ -818,8 +998,8 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
   };
 
   return (
-    <div className="fixed inset-0 z-[150] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <h3 className="font-bold text-slate-800 flex items-center gap-2">
             <Calculator size={20} className="text-blue-600" /> 
@@ -1021,8 +1201,8 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
@@ -1066,12 +1246,31 @@ export default function App() {
   const [viewSnapshot, setViewSnapshot] = useState<DailySnapshot | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
+    // Fallback timer: force exit loading state if Firebase hangs
+    const safetyTimer = setTimeout(() => {
+      if (isMounted) {
+        setLoading(false);
+        // If it hangs, we can try to fall back to local data gracefully
+        const saved = localStorage.getItem('treasury_app_data');
+        if (saved && isMounted) {
+            try { setState(JSON.parse(saved)); } catch(e) {}
+        }
+      }
+    }, 7000);
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
         try {
+          const withTimeout = (promise: Promise<any>, ms: number) => 
+            Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
+
           const docRef = doc(db, `users/${currentUser.uid}/treasury/state`);
-          const docSnap = await getDoc(docRef);
+          // Use timeout so it doesn't hang indefinitely on bad networks
+          const docSnap = await withTimeout(getDoc(docRef), 5000);
+          
           if (docSnap.exists()) {
             const data = docSnap.data() as AppState;
             if (data.posData) {
@@ -1080,23 +1279,36 @@ export default function App() {
                 networks: Array.isArray(p.networks) ? p.networks : [(p as any).network || 0]
               }));
             }
-            setState(data);
+            if (isMounted) setState(data);
           }
           
           // Load history
           const historyRef = collection(db, `users/${currentUser.uid}/treasury_history`);
           const q = query(historyRef, orderBy('timestamp', 'desc'));
-          const historySnap = await getDocs(q);
-          const historyData = historySnap.docs.map(d => ({ id: d.id, ...d.data() } as DailySnapshot));
-          setHistory(historyData);
+          const historySnap = await withTimeout(getDocs(q), 5000);
+          
+          const historyData = historySnap.docs.map((d: any) => ({ id: d.id, ...d.data() } as DailySnapshot));
+          if (isMounted) setHistory(historyData);
           
         } catch (error) {
           console.error("Error loading data from Firebase:", error);
+          if (error instanceof Error && error.message === 'timeout') {
+            showToast("تأخر الاتصال بالسحابة، قد تكون غير متصل بالإنترنت", "error");
+          }
+          // Fallback to local on error
+          const saved = localStorage.getItem('treasury_app_data');
+          if (saved && isMounted) {
+            try { setState(JSON.parse(saved)); } catch(e) {}
+          }
+          const savedHistory = localStorage.getItem('treasury_history');
+          if (savedHistory && isMounted) {
+            try { setHistory(JSON.parse(savedHistory)); } catch(e) {}
+          }
         }
       } else {
         // Fallback to local storage if not logged in
         const saved = localStorage.getItem('treasury_app_data');
-        if (saved) {
+        if (saved && isMounted) {
           try {
             const parsed = JSON.parse(saved);
             if (parsed.posData) {
@@ -1111,7 +1323,7 @@ export default function App() {
           }
         }
         const savedHistory = localStorage.getItem('treasury_history');
-        if (savedHistory) {
+        if (savedHistory && isMounted) {
           try {
             setHistory(JSON.parse(savedHistory));
           } catch (e) {
@@ -1119,9 +1331,17 @@ export default function App() {
           }
         }
       }
-      setLoading(false);
+      if (isMounted) {
+        clearTimeout(safetyTimer);
+        setLoading(false);
+      }
     });
-    return () => unsubscribe();
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(safetyTimer);
+      unsubscribe();
+    };
   }, []);
 
   const handleLogin = async () => {
@@ -1158,27 +1378,91 @@ export default function App() {
   }, []);
 
   const handleExport = () => {
-    if (exportMode === 'summary') {
-      setPrintView('daily');
-    } else {
-      // For detailed mode, we use the app's native print styles (all tabs become visible)
-      setPrintView('none'); 
-    }
     setIsExporting(true);
     setShowExportModal(false);
     
-    setTimeout(() => {
-      window.print();
-      // For detailed mode, we reset isExporting immediately after print dialog
-      if (exportMode === 'detailed') {
+    if (exportMode === 'summary') {
+      setPrintView('daily');
+      
+      setTimeout(async () => {
+        const element = document.getElementById('daily-print-container');
+        if (!element) {
+          setPrintView('none');
+          setIsExporting(false);
+          return;
+        }
+        try {
+          const dataUrl = await toPng(element, { 
+            quality: 1, 
+            pixelRatio: 2,
+            backgroundColor: '#ffffff'
+          });
+          
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+          
+          const minHeight = pdf.internal.pageSize.getHeight();
+          const customPdf = new jsPDF('p', 'mm', [pdfWidth, Math.max(pdfHeight, minHeight)]);
+          customPdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          customPdf.save(`اليومية-${state.date.replace(/\//g, '-')}.pdf`);
+          
+          showToast('تم تصدير PDF بنجاح', 'success');
+        } catch (err) {
+          console.error('PDF export failed:', err);
+          showToast('حدث خطأ أثناء التصدير', 'error');
+        } finally {
+          setPrintView('none');
+          setIsExporting(false);
+        }
+      }, 500);
+    } else {
+      // For detailed mode, we use native print styles to allow for easy pagination of long tables
+      setPrintView('none'); 
+      setTimeout(() => {
+        window.print();
         setTimeout(() => setIsExporting(false), 500);
-      }
-    }, 300);
+      }, 300);
+    }
   };
 
   const handlePrintPending = () => {
     setPrintView('pending');
-    setTimeout(() => window.print(), 300);
+    setIsExporting(true); // Re-use isExporting overlay for UI blocking
+    
+    setTimeout(async () => {
+      const element = document.getElementById('pending-print-container');
+      if (!element) {
+        setPrintView('none');
+        setIsExporting(false);
+        return;
+      }
+      try {
+        const dataUrl = await toPng(element, { 
+          quality: 1, 
+          pixelRatio: 2,
+          backgroundColor: '#ffffff'
+        });
+        
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+        
+        // Single continuous page PDF if it's longer than A4
+        const minHeight = pdf.internal.pageSize.getHeight();
+        const customPdf = new jsPDF('p', 'mm', [pdfWidth, Math.max(pdfHeight, minHeight)]);
+        customPdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        customPdf.save(`الاموال-المعلقة-${state.date.replace(/\//g, '-')}.pdf`);
+        
+        showToast('تم تصدير PDF بنجاح', 'success');
+      } catch (err) {
+        console.error('PDF export failed:', err);
+        showToast('حدث خطأ أثناء التصدير', 'error');
+      } finally {
+        setPrintView('none');
+        setIsExporting(false);
+      }
+    }, 500);
   };
 
   const saveStateToFirebase = async (newState: AppState, isAutoSave = false) => {
@@ -1579,7 +1863,18 @@ export default function App() {
   );
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200"></div>
+            <div className="absolute top-0 left-0 animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent"></div>
+            <Calculator size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-600" />
+          </div>
+          <p className="font-bold text-slate-500 animate-pulse">جاري تحميل البيانات...</p>
+        </motion.div>
+      </div>
+    );
   }
 
   const activePos = state.posData.find(p => p.id === activeNetworkPosId);
@@ -1666,11 +1961,21 @@ export default function App() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold transition-all whitespace-nowrap transform hover:scale-[1.02] active:scale-95 ${
-                        activeTab === tab.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200 hover:border-slate-300'
+                      className={`relative flex items-center gap-2 px-5 py-3 rounded-2xl font-bold transition-all whitespace-nowrap transform hover:scale-[1.02] active:scale-95 ${
+                        activeTab === tab.id ? 'text-white shadow-lg shadow-blue-500/30' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200 hover:border-slate-300'
                       }`}
                     >
-                      <tab.icon size={18} className={activeTab === tab.id ? 'animate-pulse' : ''} /> {tab.label}
+                      {activeTab === tab.id && (
+                        <motion.div
+                          layoutId="activeTabIndicator"
+                          className="absolute inset-0 bg-blue-600 rounded-2xl"
+                          style={{ zIndex: 0 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-10 flex items-center gap-2">
+                        <tab.icon size={18} className={activeTab === tab.id ? 'animate-pulse' : ''} /> {tab.label}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -1774,7 +2079,7 @@ export default function App() {
                       </p>
                     </div>
                     <button onClick={handlePrintPending} className="flex h-fit items-center gap-2 bg-amber-600 text-white px-5 py-3 rounded-xl hover:bg-amber-700 transition-colors font-bold shadow-sm whitespace-nowrap">
-                      <Printer size={20} /> طباعة الأموال المعلقة
+                      <Download size={20} /> تصدير السجل كـ PDF
                     </button>
                   </div>
                 )}
@@ -2021,8 +2326,16 @@ export default function App() {
                               </tr>
                             </thead>
                             <tbody>
-                              {filteredLedger.map(entry => (
-                                <tr key={entry.id} className="border-b border-slate-100 hover:bg-slate-50">
+                              <AnimatePresence>
+                              {filteredLedger.map((entry: any) => (
+                                <motion.tr 
+                                  initial={{ opacity: 0, x: -10 }} 
+                                  animate={{ opacity: 1, x: 0 }} 
+                                  exit={{ opacity: 0, scale: 0.95 }}
+                                  transition={{ duration: 0.15 }}
+                                  key={entry.id} 
+                                  className="border-b border-slate-100 hover:bg-slate-50"
+                                >
                                   <td className="py-3 font-bold">{entry.date}</td>
                                   <td className="py-3">{entry.description}</td>
                                   <td className="py-3 text-slate-500">{entry.category}</td>
@@ -2032,10 +2345,18 @@ export default function App() {
                                     <span className="text-amber-600 bg-amber-50 px-2 py-1 rounded-md text-xs font-bold">معلق</span>}
                                   </td>
                                   <td className="py-3 font-bold" dir="ltr">{formatNum(entry.amount)}</td>
-                                </tr>
+                                </motion.tr>
                               ))}
+                              </AnimatePresence>
                               {filteredLedger.length === 0 && (
-                                <tr><td colSpan={5} className="text-center py-8 text-slate-400">لا توجد حركات مسجلة تطابق البحث</td></tr>
+                                <tr>
+                                  <td colSpan={5}>
+                                    <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                                      <BookOpen size={48} className="opacity-20 mb-3" />
+                                      <p className="font-medium text-lg">لا توجد حركات مسجلة تطابق البحث</p>
+                                    </div>
+                                  </td>
+                                </tr>
                               )}
                             </tbody>
                           </table>
@@ -2153,9 +2474,10 @@ export default function App() {
       </div>
 
       {/* Export Modal */}
+      <AnimatePresence>
       {showExportModal && (
-        <div className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <Download size={20} className="text-blue-600" /> 
@@ -2194,23 +2516,25 @@ export default function App() {
                 className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isExporting ? (
-                  <>جاري تجهيز الطباعة...</>
+                  <>جاري تجهيز الملف...</>
                 ) : (
                   <>
-                    <Printer size={20} />
-                    طباعة التقرير / تحميل كـ PDF
+                    {exportMode === 'summary' ? <Download size={20} /> : <Printer size={20} />}
+                    {exportMode === 'summary' ? 'تصدير الملخص كـ PDF' : 'طباعة التقرير المفصل'}
                   </>
                 )}
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* View Snapshot Modal */}
+      <AnimatePresence>
       {viewSnapshot && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <CalendarDays size={20} className="text-blue-600" /> 
@@ -2223,11 +2547,13 @@ export default function App() {
             <div className="p-4 overflow-y-auto bg-slate-100">
               <SummaryDashboard state={viewSnapshot.state} summary={viewSnapshot.summary} />
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Fund Manager Modal */}
+      <AnimatePresence>
       {managingFund && state[managingFund.field].find(f => f.id === managingFund.item.id) && (
         <FundManagerModal 
           fund={state[managingFund.field].find(f => f.id === managingFund.item.id)}
@@ -2243,19 +2569,23 @@ export default function App() {
           showToast={showToast}
         />
       )}
+      </AnimatePresence>
 
       {/* Toast Notification */}
+      <AnimatePresence>
       {toast && (
-        <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-full shadow-lg font-bold text-white flex items-center gap-2 animate-fade-in-up ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
+        <motion.div initial={{ opacity: 0, y: 50, x: '-50%' }} animate={{ opacity: 1, y: 0, x: '-50%' }} exit={{ opacity: 0, y: 20, x: '-50%' }} className={`fixed bottom-4 left-1/2 z-[200] px-6 py-3 rounded-full shadow-lg font-bold text-white flex items-center gap-2 ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
           {toast.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
           {toast.message}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Confirm Dialog */}
+      <AnimatePresence>
       {confirmDialog && (
-        <div className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
             <div className="p-6 text-center">
               <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
               <p className="text-lg font-bold text-slate-800 mb-2">تأكيد الإجراء</p>
@@ -2265,14 +2595,16 @@ export default function App() {
                 <button onClick={() => setConfirmDialog(null)} className="flex-1 bg-slate-100 text-slate-700 py-2 rounded-xl font-bold hover:bg-slate-200 transition-colors">إلغاء</button>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Networks Modal */}
+      <AnimatePresence>
       {activeNetworkPosId && activePos && (
-        <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <CreditCard size={20} className="text-amber-600" /> 
@@ -2335,13 +2667,20 @@ export default function App() {
                 موافق
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
       </div>
 
       {printView === 'daily' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} />}
       {printView === 'pending' && <PendingPrintView pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />}
+      
+      {/* Hidden containers for PDF export calculation */}
+      <div className="absolute top-0 left-0 -z-50 opacity-0 pointer-events-none">
+        <DailyPrintView id="daily-print-container" isPdfMode={true} state={state} summary={currentSummary} formatNum={formatNum} />
+        <PendingPrintView id="pending-print-container" isPdfMode={true} pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />
+      </div>
     </div>
   );
 }
