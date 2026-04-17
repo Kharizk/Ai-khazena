@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users/{userId}/treasury/state
+    // Document ID: state
+    // Fields:
+    //   - date: string
+    //   - previousBalance: number
+    //   - posData: list of objects
+    //   - expenseRefunds: list of objects
+    //   - companyPayments: list of objects
+    //   - expenses: list of objects
+    //   - customerTransfers: list of objects
+    //   - pendingFundsOwedToUs: list of objects
+    //   - pendingFundsOwedByUs: list of objects
+    //   - archivedPendingFunds: list of objects
+    //   - cashDeposits: list of objects
+    //   - cashDenominations: map
+    //   - customCashAmounts: list of objects
+    //   - savedNames: map
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /users/{userId}/treasury/state {
+      // Allow read and write only if the user is the owner of the document.
+      // Since the state object is complex and can grow dynamically, we rely on 
+      // the client to maintain the schema, but enforce strict ownership.
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/treasury_history/{snapshotId} {
+      allow read, write: if isOwner(userId);
+    }
+  }
+}

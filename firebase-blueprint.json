@@ -1,0 +1,90 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A single transaction entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "amount": { "type": "number" },
+        "isPinned": { "type": "boolean" },
+        "showInSummary": { "type": "boolean" }
+      },
+      "required": ["id", "name", "amount"]
+    },
+    "ArchivedFund": {
+      "title": "ArchivedFund",
+      "description": "A settled pending fund",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["toUs", "byUs"] },
+        "dateSettled": { "type": "string" }
+      },
+      "required": ["id", "name", "amount", "type", "dateSettled"]
+    },
+    "POSData": {
+      "title": "POSData",
+      "description": "Point of sale data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "sales": { "type": "number" },
+        "returns": { "type": "number" },
+        "networks": {
+          "type": "array",
+          "items": { "type": "number" }
+        }
+      },
+      "required": ["id", "name", "sales", "returns", "networks"]
+    },
+    "TreasuryState": {
+      "title": "TreasuryState",
+      "description": "The complete state of the treasury app for a user",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "previousBalance": { "type": "number" },
+        "posData": { "type": "array", "items": { "$ref": "#/entities/POSData" } },
+        "expenseRefunds": { "type": "array", "items": { "$ref": "#/entities/Transaction" } },
+        "companyPayments": { "type": "array", "items": { "$ref": "#/entities/Transaction" } },
+        "expenses": { "type": "array", "items": { "$ref": "#/entities/Transaction" } },
+        "customerTransfers": { "type": "array", "items": { "$ref": "#/entities/Transaction" } },
+        "pendingFundsOwedToUs": { "type": "array", "items": { "$ref": "#/entities/Transaction" } },
+        "pendingFundsOwedByUs": { "type": "array", "items": { "$ref": "#/entities/Transaction" } },
+        "archivedPendingFunds": { "type": "array", "items": { "$ref": "#/entities/ArchivedFund" } },
+        "cashDeposits": { "type": "array", "items": { "$ref": "#/entities/Transaction" } },
+        "cashDenominations": { "type": "object" },
+        "customCashAmounts": { "type": "array", "items": { "$ref": "#/entities/Transaction" } },
+        "savedNames": { "type": "object" }
+      },
+      "required": ["date", "previousBalance"]
+    },
+    "DailySnapshot": {
+      "title": "DailySnapshot",
+      "description": "A snapshot of the treasury state for a specific day",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "state": { "$ref": "#/entities/TreasuryState" },
+        "summary": { "type": "object" }
+      },
+      "required": ["timestamp", "state", "summary"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/treasury/state": {
+      "schema": { "$ref": "#/entities/TreasuryState" },
+      "description": "User's treasury state"
+    },
+    "/users/{userId}/treasury_history/{snapshotId}": {
+      "schema": { "$ref": "#/entities/DailySnapshot" },
+      "description": "Historical snapshots of daily treasury states"
+    }
+  }
+}
