@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp } from 'lucide-react';
 import { auth, db } from './firebase';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { toPng } from 'html-to-image';
@@ -1208,6 +1208,11 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
 
 export default function App() {
   const [state, setState] = useState<AppState>(getInitialState());
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [authError, setAuthError] = useState('');
   const [history, setHistory] = useState<DailySnapshot[]>([]);
   const [activeTab, setActiveTab] = useState<'sales' | 'payments' | 'pending' | 'cash' | 'archive' | 'history' | 'ledger' | 'settings'>('sales');
   const [user, setUser] = useState<User | null>(null);
@@ -1344,13 +1349,30 @@ export default function App() {
     };
   }, []);
 
-  const handleLogin = async () => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Login failed", error);
-      showToast("فشل تسجيل الدخول", "error");
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, authEmail, authPassword);
+        showToast("تم إنشاء الحساب بنجاح", "success");
+      } else {
+        await signInWithEmailAndPassword(auth, authEmail, authPassword);
+        showToast("تم تسجيل الدخول بنجاح", "success");
+      }
+      setShowAuthModal(false);
+      setAuthPassword('');
+    } catch (error: any) {
+      console.error("Auth error", error);
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        setAuthError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+      } else if (error.code === 'auth/email-already-in-use') {
+        setAuthError('البريد الإلكتروني مستخدم مسبقاً');
+      } else if (error.code === 'auth/weak-password') {
+        setAuthError('كلمة المرور ضعيفة جداً (يجب أن تكون 6 أحرف على الأقل)');
+      } else {
+        setAuthError(error.message);
+      }
     }
   };
 
@@ -1891,7 +1913,7 @@ export default function App() {
             </div>
             <div className="flex items-center gap-3">
               {!user ? (
-                <button onClick={handleLogin} className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors font-medium shadow-sm">
+                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors font-medium shadow-sm">
                   <LogIn size={18} /> <span className="hidden sm:inline">تسجيل الدخول للحفظ السحابي</span>
                 </button>
               ) : (
@@ -2666,6 +2688,42 @@ export default function App() {
               <button onClick={() => setActiveNetworkPosId(null)} className="w-full bg-blue-600 text-white py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors">
                 موافق
               </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+      {showAuthModal && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden" dir="rtl">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                <LogIn className="text-blue-600" size={20} />
+                {isSignUp ? 'حساب جديد' : 'تسجيل الدخول'}
+              </h3>
+              <button onClick={() => setShowAuthModal(false)} className="text-slate-400 hover:text-slate-600 hover:bg-slate-200 p-1.5 rounded-lg transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              {authError && <div className="p-3 mb-4 text-sm font-bold bg-rose-50 border border-rose-200 text-rose-700 rounded-lg">{authError}</div>}
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">البريد الإلكتروني</label>
+                  <input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} required className="w-full border border-slate-200 hover:border-slate-300 focus:border-blue-500 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-100 transition-all text-left" dir="ltr" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">كلمة المرور</label>
+                  <input type="password" value={authPassword} onChange={e => setAuthPassword(e.target.value)} required className="w-full border border-slate-200 hover:border-slate-300 focus:border-blue-500 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-100 transition-all text-left" dir="ltr" />
+                </div>
+                <button type="submit" className="w-full py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm">
+                  {isSignUp ? 'إنشاء حساب' : 'دخول'}
+                </button>
+              </form>
+              <div className="mt-4 text-center border-t border-slate-100 pt-4">
+                <button type="button" onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} className="text-sm text-blue-600 font-semibold hover:underline">
+                  {isSignUp ? 'لديك حساب بالفعل؟ تسجيل الدخول' : 'ليس لديك حساب؟ إنشاء حساب جديد'}
+                </button>
+              </div>
             </div>
           </motion.div>
         </motion.div>
