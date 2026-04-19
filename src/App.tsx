@@ -352,6 +352,13 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
   
   const dailyMetrics = allData.map(state => {
     const netSales = state.posData ? state.posData.reduce((acc: number, pos: any) => acc + (pos.sales - pos.returns), 0) : 0;
+    const refunds = state.expenseRefunds ? state.expenseRefunds.reduce((a:number, c:any)=>a+c.amount, 0) : 0;
+    const totalIn = netSales + refunds;
+
+    const exp1 = state.expenses ? state.expenses.reduce((a:number,c:any)=>a+c.amount,0) : 0;
+    const exp2 = state.companyPayments ? state.companyPayments.reduce((a:number,c:any)=>a+c.amount,0) : 0;
+    const exp3 = state.customerTransfers ? state.customerTransfers.reduce((a:number,c:any)=>a+c.amount,0) : 0;
+    const totalOut = exp1 + exp2 + exp3;
     
     const parts = state.date.split('/');
     let month = '', day = '', year = '';
@@ -366,15 +373,19 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
       dateStr: state.date,
       dateObj: dObj,
       monthYear: parts.length === 3 ? `${month}/${year}` : 'غير محدد',
-      sales: netSales,
+      sales: totalIn,
+      expenses: totalOut,
+      net: totalIn - totalOut,
       isCurrent: state.isCurrent,
       dateName: parts.length === 3 ? `${day}/${month}` : state.date
     };
   }).sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
 
   const monthlyAgg = dailyMetrics.reduce((acc: any, curr: any) => {
-    if (!acc[curr.monthYear]) acc[curr.monthYear] = { monthYear: curr.monthYear, dateObj: curr.dateObj, totalSales: 0, daysCount: 0 };
+    if (!acc[curr.monthYear]) acc[curr.monthYear] = { monthYear: curr.monthYear, dateObj: curr.dateObj, totalSales: 0, totalExpenses: 0, totalNet: 0, daysCount: 0 };
     acc[curr.monthYear].totalSales += curr.sales;
+    acc[curr.monthYear].totalExpenses += curr.expenses;
+    acc[curr.monthYear].totalNet += curr.net;
     acc[curr.monthYear].daysCount += 1;
     return acc;
   }, {});
@@ -541,15 +552,31 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
 
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
         <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-slate-800">
-          <BarChart3 className="text-blue-600" size={28} /> ملخص المبيعات الشهري
+          <BarChart3 className="text-blue-600" size={28} /> ملخص الأداء الشهري
         </h2>
         {monthlyList.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {monthlyList.map((m: any) => (
-              <div key={m.monthYear} className="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col items-center justify-center text-center hover:bg-white hover:shadow-md transition-all">
-                <span className="text-slate-500 font-bold mb-3 text-lg">شهر {m.monthYear}</span>
-                <span className="text-3xl font-black text-blue-700 block mb-3 font-mono" dir="ltr">{formatNum(m.totalSales)}</span>
-                <span className="text-sm text-slate-500 bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-300">أيام العمل المسجلة: {m.daysCount}</span>
+              <div key={m.monthYear} className="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col hover:bg-white hover:shadow-md transition-all relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-slate-700 font-bold text-xl">شهر {m.monthYear}</span>
+                  <span className="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-md">{m.daysCount} أيام مسجلة</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <span className="text-xs text-emerald-600 font-bold block mb-1">المقبوضات (الوارد)</span>
+                    <span className="text-lg font-black text-emerald-700 font-mono" dir="ltr">{formatNum(m.totalSales)}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-rose-600 font-bold block mb-1">المدفوعات (المنصرف)</span>
+                    <span className="text-lg font-black text-rose-700 font-mono" dir="ltr">{formatNum(m.totalExpenses)}</span>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-slate-200">
+                    <span className="text-sm text-slate-600 font-bold block mb-1">صافي الحركة (الرصيد)</span>
+                    <span className={`text-2xl font-black font-mono ${m.totalNet >= 0 ? 'text-blue-700' : 'text-rose-600'}`} dir="ltr">{formatNum(m.totalNet)}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -560,7 +587,7 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
 
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 print:break-inside-avoid">
         <h2 className="text-2xl font-bold flex items-center gap-3 mb-8 text-slate-800">
-          <TrendingUp className="text-emerald-600" size={28} /> حركة صافي المبيعات اليومية
+          <TrendingUp className="text-emerald-600" size={28} /> حركة الماليّات اليومية
         </h2>
         
         {dailyMetrics.length >= 2 ? (
@@ -571,12 +598,14 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
                 <XAxis dataKey="dateName" tick={{ fill: '#64748b', fontSize: 13, fontFamily: 'monospace' }} tickMargin={10} />
                 <YAxis tick={{ fill: '#64748b', fontSize: 13, fontFamily: 'monospace' }} tickFormatter={(val) => Math.floor(val).toLocaleString()} width={80} />
                 <RechartsTooltip 
-                  formatter={(value: number) => [formatNum(value), 'صافي المبيعات']}
+                  formatter={(value: number, name: string) => [formatNum(value), name === 'sales' ? 'المقبوضات' : name === 'expenses' ? 'المدفوعات' : 'الصافي']}
                   labelFormatter={(label) => `التاريخ: ${label}`}
                   contentStyle={{ borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', fontFamily: 'Cairo', textAlign: 'right', padding: '12px 16px' }}
                 />
-                <Legend wrapperStyle={{ fontFamily: 'Cairo', paddingTop: '20px' }} />
-                <Line type="monotone" dataKey="sales" name="صافي المبيعات" stroke="#2563eb" strokeWidth={4} dot={{ r: 5, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8, strokeWidth: 0, fill: '#1d4ed8' }} />
+                <Legend wrapperStyle={{ fontFamily: 'Cairo', paddingTop: '20px' }} formatter={(value) => value === 'sales' ? 'المقبوضات' : value === 'expenses' ? 'المدفوعات' : 'الصافي'} />
+                <Line type="monotone" dataKey="sales" name="sales" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 7, strokeWidth: 0 }} />
+                <Line type="monotone" dataKey="expenses" name="expenses" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, fill: '#f43f5e', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 7, strokeWidth: 0 }} />
+                <Line type="monotone" dataKey="net" name="net" stroke="#3b82f6" strokeWidth={4} dot={{ r: 5, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8, strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -588,18 +617,22 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
           <table className="w-full text-right text-base border-collapse">
             <thead>
               <tr className="bg-slate-100 border-b-2 border-slate-200 text-slate-700">
-                <th className="py-4 px-6 font-bold rounded-tr-2xl w-1/3">التاريخ</th>
-                <th className="py-4 px-6 font-bold rounded-tl-2xl text-left">صافي المبيعات اليومي</th>
+                <th className="py-4 px-6 font-bold w-1/4">التاريخ</th>
+                <th className="py-4 px-6 font-bold text-center text-emerald-700">المقبوضات</th>
+                <th className="py-4 px-6 font-bold text-center text-rose-700">المدفوعات</th>
+                <th className="py-4 px-6 font-bold text-left text-blue-700">صافي الحركة</th>
               </tr>
             </thead>
             <tbody>
               {dailyMetrics.map((day: any) => (
                 <tr key={day.dateStr} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${day.isCurrent ? 'bg-blue-50/40 hover:bg-blue-50/60' : ''}`}>
-                  <td className="py-4 px-6 font-bold text-slate-700 flex items-center gap-3">
+                  <td className="py-4 px-6 font-bold text-slate-700 flex items-center gap-3 border-l border-slate-100">
                     <span className="font-mono text-sm">{day.dateStr}</span>
                     {day.isCurrent && <span className="bg-blue-600 text-white px-2 py-0.5 rounded-md text-xs">اليوم (جاري)</span>}
                   </td>
-                  <td className="py-4 px-6 font-black text-left text-slate-900 font-mono text-lg" dir="ltr">{formatNum(day.sales)}</td>
+                  <td className="py-4 px-6 font-bold text-center text-emerald-700 font-mono border-l border-slate-100 bg-emerald-50/20" dir="ltr">{formatNum(day.sales)}</td>
+                  <td className="py-4 px-6 font-bold text-center text-rose-700 font-mono border-l border-slate-100 bg-rose-50/20" dir="ltr">{formatNum(day.expenses)}</td>
+                  <td className="py-4 px-6 font-black text-left text-blue-800 font-mono text-lg bg-blue-50/20" dir="ltr">{formatNum(day.net)}</td>
                 </tr>
               ))}
             </tbody>
@@ -745,20 +778,41 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
   );
 };
 
-const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "rtl", placeholder = "", list }: any) => (
-  <input
-    type={type}
-    value={value === 0 && type === 'number' ? '' : value}
-    onChange={onChange}
-    onBlur={onBlur}
-    onFocus={e => e.target.select()}
-    onWheel={e => (e.target as HTMLElement).blur()}
-    placeholder={placeholder}
-    dir={dir}
-    list={list}
-    className={`w-full bg-slate-50/80 hover:bg-white border text-slate-700 border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-sm placeholder-slate-400 shadow-sm ${className}`}
-  />
-);
+const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "rtl", placeholder = "", list, ...props }: any) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      const elements = Array.from(document.querySelectorAll(focusableElements)) as HTMLElement[];
+      const index = elements.indexOf(e.currentTarget);
+      if (index > -1 && index < elements.length - 1) {
+        elements[index + 1].focus();
+      }
+    }
+    if (props.onKeyDown) props.onKeyDown(e);
+  };
+
+  return (
+    <input
+      type={type}
+      value={value === 0 && type === 'number' ? '' : value}
+      onChange={onChange}
+      onBlur={onBlur}
+      onFocus={e => e.target.select()}
+      onWheel={e => {
+        if (type === 'number') {
+           e.currentTarget.blur();
+        }
+      }}
+      onKeyDown={handleKeyDown}
+      placeholder={placeholder}
+      dir={dir}
+      list={list}
+      className={`w-full bg-slate-50/80 hover:bg-white border text-slate-700 border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-sm placeholder-slate-400 shadow-sm ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
+      {...props}
+    />
+  );
+};
 
 const AddNameInput = ({ onAdd }: { onAdd: (name: string) => void }) => {
   const [val, setVal] = useState('');
@@ -1278,6 +1332,7 @@ export default function App() {
   const [state, setState] = useState<AppState>(getInitialState());
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showAddBranchModal, setShowAddBranchModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [newBranchName, setNewBranchName] = useState('');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -1383,44 +1438,32 @@ export default function App() {
     }
   };
 
-  const handleMigrateOldData = () => {
-    if (!currentBranchId) {
-      showToast("الرجاء اختيار فرع من القائمة العلوية أولاً لنقل البيانات إليه", "error");
-      return;
+  const handleUpdateBranch = async (branchId: string, newName: string) => {
+    if (!newName.trim() || !user || userProfile?.role !== 'admin') return;
+    try {
+      await updateDoc(doc(db, 'branches', branchId), { name: newName.trim() });
+      setBranches(prev => prev.map(b => b.id === branchId ? { ...b, name: newName.trim() } : b));
+      showToast("تم تحديث اسم الفرع بنجاح", "success");
+    } catch (e) {
+      showToast("خطأ في تحديث الفرع", "error");
     }
-    const branchName = branches.find(b => b.id === currentBranchId)?.name;
-    setConfirmDialog({
-      message: `هل أنت متأكد من رغبتك في نسخ بياناتك القديمة (قبل نظام الفروع) إلى هذا الفرع المختار: "${branchName}"؟ سيؤدي هذا إلى استبدال أية بيانات حالية داخل هذا الفرع وإعادة تحميل الصفحة.`,
-      onConfirm: async () => {
-        try {
-          if (!user) return;
-          setLoading(true);
-          // 1. Copy State
-          const oldStateRef = doc(db, `users/${user.uid}/treasury/state`);
-          const oldStateSnap = await getDoc(oldStateRef);
-          if (oldStateSnap.exists()) {
-            await setDoc(doc(db, `branches/${currentBranchId}/treasury/state`), oldStateSnap.data());
-          }
-          
-          // 2. Copy History
-          const oldHistoryRef = collection(db, `users/${user.uid}/treasury_history`);
-          const historySnap = await getDocs(oldHistoryRef);
-          for (const docSnapshot of historySnap.docs) {
-            await setDoc(doc(db, `branches/${currentBranchId}/treasury_history/${docSnapshot.id}`), docSnapshot.data());
-          }
+  };
 
-          showToast("تم نقل وتحديث بياناتك القديمة بنجاح إلى الفرع", "success");
-          
-          // Refresh current branch
-          await loadBranchData(currentBranchId);
-          setLoading(false);
-        } catch (error) {
-          console.error("Migration error", error);
-          setLoading(false);
-          showToast("حدث خطأ أثناء نقل البيانات", "error");
-        }
+  const handleDeleteBranch = async (branchId: string) => {
+    if (!user || userProfile?.role !== 'admin') return;
+    if (!window.confirm('هل أنت متأكد من حذف هذا الفرع نهائياً؟')) return;
+    try {
+      await updateDoc(doc(db, 'branches', branchId), { deleted: true }); // Soft delete
+      setBranches(prev => prev.filter(b => b.id !== branchId));
+      if (currentBranchId === branchId) {
+        setCurrentBranchId(null);
+        setState(getInitialState());
+        setHistory([]);
       }
-    });
+      showToast("تم إخفاء/حذف الفرع بنجاح", "success");
+    } catch (e) {
+      showToast("خطأ في حذف الفرع", "error");
+    }
   };
 
   useEffect(() => {
@@ -1661,6 +1704,36 @@ export default function App() {
 
     return () => clearTimeout(timer);
   }, [state, loading]);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Ctrl + S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveStateToFirebase(state);
+        showToast('تم الحفظ يدوياً بنجاح', 'success');
+      }
+      // Ctrl + P: Print / Export
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        setShowExportModal(true);
+      }
+      // Esc to close modals
+      if (e.key === 'Escape') {
+        if (confirmDialog) setConfirmDialog(null);
+        else if (managingFund) setManagingFund(null);
+        else if (viewSnapshot) setViewSnapshot(null);
+        else {
+          setShowAuthModal(false);
+          setShowAddBranchModal(false);
+          setShowExportModal(false);
+          setShowSettingsModal(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [state]);
 
   const handleSave = () => {
     saveStateToFirebase(state);
@@ -2057,17 +2130,17 @@ export default function App() {
   return (
     <div className={`min-h-screen bg-slate-50 text-slate-800 font-sans ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl">
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
-        <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm print:hidden">
+        <div className="sticky top-0 z-50 bg-slate-900 border-b border-slate-800 shadow-lg print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-600 text-white p-2 rounded-xl"><Calculator size={24} /></div>
-              <h1 className="font-bold text-xl text-slate-900">الخزينة الذكية</h1>
+              <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-2 rounded-xl shadow-inner"><Calculator size={24} /></div>
+              <h1 className="font-bold text-xl text-white tracking-tight">الخزينة الذكية</h1>
             </div>
             <div className="flex items-center gap-3">
               {!user ? (
-                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors font-medium shadow-sm">
-                  <LogIn size={18} /> <span className="hidden sm:inline">تسجيل الدخول للحفظ السحابي</span>
+                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors font-bold shadow-sm">
+                  <LogIn size={18} /> <span className="hidden sm:inline">تسجيل الدخول</span>
                 </button>
               ) : (
                 <>
@@ -2084,7 +2157,7 @@ export default function App() {
                             setHistory([]);
                           }
                         }}
-                        className="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
+                        className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 outline-none font-medium hover:bg-slate-700 transition-colors"
                       >
                         <option value="">-- اختر الفرع --</option>
                         {branches.map(b => (
@@ -2093,24 +2166,28 @@ export default function App() {
                       </select>
                     </div>
                   )}
-                  <div className="hidden md:flex items-center gap-2 text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    {user.email}
+                  <div className="hidden md:flex items-center gap-2 text-sm text-slate-300 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                    <span className="font-mono">{user.email?.split('@')[0]}</span>
                   </div>
-                  <button onClick={handleLogout} className="flex items-center gap-2 text-slate-500 hover:text-rose-600 px-2 py-2 rounded-lg hover:bg-rose-50 transition-colors" title="تسجيل الخروج">
-                    <LogOut size={18} />
+                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center gap-2 text-slate-400 hover:text-white px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors" title="إعدادات">
+                    <Settings size={20} />
                   </button>
-                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold shadow-sm disabled:opacity-50 hover:shadow-md active:scale-95 ${saving ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'}`}>
+                  <button onClick={handleLogout} className="flex items-center gap-2 text-slate-400 hover:text-rose-400 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors" title="تسجيل الخروج">
+                    <LogOut size={20} />
+                  </button>
+                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold shadow-sm disabled:opacity-50 hover:shadow-md active:scale-95 ${saving ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30'}`}>
                     {saving ? <Save size={20} className="animate-pulse" /> : <CheckCircle2 size={20} />}
-                    <span className="hidden sm:inline">{saving ? 'جاري الحفظ...' : 'تم الحفظ تلقائياً'}</span>
+                    <span className="hidden sm:inline">{saving ? 'جاري الحفظ...' : 'حفظ'}</span>
                   </button>
                 </>
               )}
-              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-50 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
-                <Download size={20} /> <span className="hidden sm:inline">تصدير</span>
+              <div className="w-px h-8 bg-slate-700 mx-1 hidden sm:block"></div>
+              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-slate-800 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl hover:bg-slate-700 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
+                <Download size={18} /> <span className="hidden sm:inline">تصدير</span>
               </button>
-              <button onClick={handleNewDay} className="flex items-center gap-2 bg-rose-50 text-rose-700 border border-rose-200 px-4 py-2 rounded-xl hover:bg-rose-100/80 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
-                <FilePlus size={20} /> <span className="hidden sm:inline">تقفيل ويوم جديد</span>
+              <button onClick={handleNewDay} className="flex items-center gap-2 bg-rose-600 text-white border border-rose-500 px-4 py-2 rounded-xl hover:bg-rose-500 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
+                <FilePlus size={18} /> <span className="hidden sm:inline">يوم جديد</span>
               </button>
             </div>
           </div>
@@ -2152,9 +2229,7 @@ export default function App() {
                     { id: 'history', label: 'سجل الأيام السابقة', icon: CalendarDays },
                     { id: 'ledger', label: 'دفتر الأستاذ (التقارير)', icon: BookOpen },
                     { id: 'archive', label: 'أرشيف المعلقات', icon: History },
-                    { id: 'settings', label: 'إعدادات القوائم', icon: Settings },
-                    { id: 'analytics', label: 'تحليلات المبيعات', icon: BarChart3 },
-                    ...(userProfile?.role === 'admin' ? [{ id: 'admin', label: 'لوحة الإدارة', icon: Pin }] : [])
+                    { id: 'analytics', label: 'تحليلات المبيعات', icon: BarChart3 }
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -2356,9 +2431,14 @@ export default function App() {
                               </span>
                             </td>
                             <td className="py-3">
-                              <button onClick={() => setViewSnapshot(snap)} className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold flex items-center gap-1">
-                                <Eye size={14} /> عرض التفاصيل
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => setViewSnapshot(snap)} className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold flex items-center gap-1">
+                                  <Eye size={14} /> التفاصيل
+                                </button>
+                                <button onClick={() => handlePrintHistorySnapshot(snap)} className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold flex items-center gap-1">
+                                  <Printer size={14} /> طباعة
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -2416,7 +2496,15 @@ export default function App() {
                     return new Date(Number(year), Number(month) - 1, Number(day));
                   };
 
-                  const filteredLedger = allEntries.filter(entry => {
+                  const sortedEntries = allEntries.sort((a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime());
+                  let runningBalance = 0;
+                  const balanceEntries = sortedEntries.map(e => {
+                    if (e.type === 'in') runningBalance += e.amount;
+                    if (e.type === 'out') runningBalance -= e.amount;
+                    return { ...e, balance: runningBalance };
+                  });
+
+                  const filteredLedger = balanceEntries.filter(entry => {
                     const entryDate = parseDate(entry.date);
                     const start = ledgerFilter.startDate ? new Date(ledgerFilter.startDate) : null;
                     const end = ledgerFilter.endDate ? new Date(ledgerFilter.endDate) : null;
@@ -2471,8 +2559,9 @@ export default function App() {
                                   <th>التاريخ</th>
                                   <th>البيان</th>
                                   <th>التصنيف</th>
-                                  <th>النوع</th>
-                                  <th>المبلغ</th>
+                                  <th>مدين (وارد)</th>
+                                  <th>دائن (منصرف)</th>
+                                  <th>الرصيد</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -2481,11 +2570,12 @@ export default function App() {
                                     <td>${e.date}</td>
                                     <td>${e.description}</td>
                                     <td>${e.category}</td>
-                                    <td>${e.type === 'in' ? 'وارد' : e.type === 'out' ? 'منصرف' : 'معلق'}</td>
-                                    <td dir="ltr" class="text-left">${formatNum(e.amount)}</td>
+                                    <td class="text-left" dir="ltr">${e.type === 'in' ? formatNum(e.amount) : '-'}</td>
+                                    <td class="text-left" dir="ltr">${e.type === 'out' ? formatNum(e.amount) : '-'}</td>
+                                    <td class="text-left font-bold" dir="ltr">${formatNum(e.balance)}</td>
                                   </tr>
                                 `).join('')}
-                                ${filteredLedger.length === 0 ? '<tr><td colspan="5" style="text-align:center;">لا توجد بيانات مطابقة</td></tr>' : ''}
+                                ${filteredLedger.length === 0 ? '<tr><td colspan="6" style="text-align:center;">لا توجد بيانات مطابقة</td></tr>' : ''}
                               </tbody>
                             </table>
                             <script>window.print();</script>
@@ -2498,76 +2588,88 @@ export default function App() {
 
                   return (
                     <>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-center justify-between">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-emerald-600 text-sm font-bold mb-1">إجمالي الوارد (المفلتر)</p>
-                            <p className="text-2xl font-black text-emerald-800" dir="ltr">{formatNum(filteredIn)}</p>
+                            <p className="text-emerald-600 text-sm font-bold mb-1">إجمالي الوارد (مدين)</p>
+                            <p className="text-xl font-black text-emerald-800" dir="ltr">{formatNum(filteredIn)}</p>
                           </div>
                         </div>
-                        <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 flex items-center justify-between">
+                        <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-rose-600 text-sm font-bold mb-1">إجمالي المنصرف (المفلتر)</p>
-                            <p className="text-2xl font-black text-rose-800" dir="ltr">{formatNum(filteredOut)}</p>
+                            <p className="text-rose-600 text-sm font-bold mb-1">إجمالي المنصرف (دائن)</p>
+                            <p className="text-xl font-black text-rose-800" dir="ltr">{formatNum(filteredOut)}</p>
                           </div>
                         </div>
-                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-center justify-between">
+                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-amber-600 text-sm font-bold mb-1">إجمالي المعلق (المفلتر)</p>
-                            <p className="text-2xl font-black text-amber-800" dir="ltr">{formatNum(filteredNeutral)}</p>
+                            <p className="text-amber-600 text-sm font-bold mb-1">إجمالي المعلق</p>
+                            <p className="text-xl font-black text-amber-800" dir="ltr">{formatNum(filteredNeutral)}</p>
+                          </div>
+                        </div>
+                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                          <div>
+                            <p className="text-blue-600 text-sm font-bold mb-1">صافي الرصيد</p>
+                            <p className="text-xl font-black text-blue-800" dir="ltr">{formatNum(filteredIn - filteredOut)}</p>
                           </div>
                         </div>
                       </div>
 
                       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-                        <div className="bg-purple-50 text-purple-800 p-4 flex justify-between items-center border-b border-purple-100">
+                        <div className="bg-slate-800 text-white p-4 flex justify-between items-center border-b border-slate-700">
                           <div className="flex items-center gap-2 font-bold">
-                            <BookOpen size={20} /> دفتر الأستاذ (النتائج: {filteredLedger.length})
+                            <BookOpen size={20} className="text-slate-300" /> كشف حساب (النتائج: {filteredLedger.length})
                           </div>
-                          <button onClick={handlePrintFilteredLedger} className="flex items-center gap-2 bg-white text-purple-700 px-3 py-1.5 rounded-lg text-sm font-bold border border-purple-200 hover:bg-purple-100 transition-colors">
+                          <button onClick={handlePrintFilteredLedger} className="flex items-center gap-2 bg-slate-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold border border-slate-600 hover:bg-slate-600 transition-colors">
                             <Printer size={16} /> طباعة التقرير
                           </button>
                         </div>
-                        <div className="p-4 overflow-x-auto">
-                          <table className="w-full text-sm text-right">
+                        <div className="p-0 overflow-x-auto">
+                          <table className="w-full text-sm text-right border-collapse">
                             <thead>
-                              <tr className="text-slate-500 border-b border-slate-200">
-                                <th className="pb-3 font-medium">التاريخ</th>
-                                <th className="pb-3 font-medium">البيان</th>
-                                <th className="pb-3 font-medium">التصنيف</th>
-                                <th className="pb-3 font-medium">النوع</th>
-                                <th className="pb-3 font-medium">المبلغ</th>
+                              <tr className="bg-slate-100 text-slate-600 border-b border-slate-200">
+                                <th className="p-3 font-bold border-l border-slate-200">التاريخ</th>
+                                <th className="p-3 font-bold border-l border-slate-200 w-1/3">البيان</th>
+                                <th className="p-3 font-bold border-l border-slate-200">التصنيف</th>
+                                <th className="p-3 font-bold border-l border-slate-200 text-emerald-700">مدين (وارد)</th>
+                                <th className="p-3 font-bold border-l border-slate-200 text-rose-700">دائن (منصرف)</th>
+                                <th className="p-3 font-bold text-blue-700">الرصيد</th>
                               </tr>
                             </thead>
                             <tbody>
                               <AnimatePresence>
-                              {filteredLedger.map((entry: any) => (
+                              {filteredLedger.map((entry: any, index: number) => (
                                 <motion.tr 
                                   initial={{ opacity: 0, x: -10 }} 
                                   animate={{ opacity: 1, x: 0 }} 
                                   exit={{ opacity: 0, scale: 0.95 }}
                                   transition={{ duration: 0.15 }}
-                                  key={entry.id} 
-                                  className="border-b border-slate-100 hover:bg-slate-50"
+                                  key={entry.id + index} 
+                                  className="border-b border-slate-200 hover:bg-amber-50/50 transition-colors"
                                 >
-                                  <td className="py-3 font-bold">{entry.date}</td>
-                                  <td className="py-3">{entry.description}</td>
-                                  <td className="py-3 text-slate-500">{entry.category}</td>
-                                  <td className="py-3">
-                                    {entry.type === 'in' ? <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md text-xs font-bold">وارد</span> : 
-                                    entry.type === 'out' ? <span className="text-rose-600 bg-rose-50 px-2 py-1 rounded-md text-xs font-bold">منصرف</span> :
-                                    <span className="text-amber-600 bg-amber-50 px-2 py-1 rounded-md text-xs font-bold">معلق</span>}
+                                  <td className="p-3 font-medium text-slate-700 border-l border-slate-200">{entry.date}</td>
+                                  <td className="p-3 font-bold text-slate-800 border-l border-slate-200">{entry.description}</td>
+                                  <td className="p-3 text-slate-500 text-xs border-l border-slate-200">
+                                    <span className="bg-slate-100 px-2 py-1 rounded border border-slate-200">{entry.category}</span>
                                   </td>
-                                  <td className="py-3 font-bold" dir="ltr">{formatNum(entry.amount)}</td>
+                                  <td className="p-3 border-l border-slate-200 font-mono text-emerald-700 font-bold bg-emerald-50/30" dir="ltr">
+                                    {entry.type === 'in' ? formatNum(entry.amount) : '-'}
+                                  </td>
+                                  <td className="p-3 border-l border-slate-200 font-mono text-rose-700 font-bold bg-rose-50/30" dir="ltr">
+                                    {entry.type === 'out' ? formatNum(entry.amount) : '-'}
+                                  </td>
+                                  <td className="p-3 font-mono text-blue-700 font-black bg-blue-50/30" dir="ltr">
+                                    {formatNum(entry.balance)}
+                                  </td>
                                 </motion.tr>
                               ))}
                               </AnimatePresence>
                               {filteredLedger.length === 0 && (
                                 <tr>
-                                  <td colSpan={5}>
-                                    <div className="flex flex-col items-center justify-center py-10 text-slate-400">
+                                  <td colSpan={6}>
+                                    <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50">
                                       <BookOpen size={48} className="opacity-20 mb-3" />
-                                      <p className="font-medium text-lg">لا توجد حركات مسجلة تطابق البحث</p>
+                                      <p className="font-bold text-lg text-slate-500">لا توجد حركات مسجلة تطابق البحث</p>
                                     </div>
                                   </td>
                                 </tr>
@@ -2632,128 +2734,12 @@ export default function App() {
                   </div>
                 </div>
               </div>
-
-              {/* Settings Tab */}
-              <div className={`${activeTab === 'settings' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-                  <div className="bg-slate-50 text-slate-800 p-4 border-b border-slate-100 flex items-center gap-2 font-bold">
-                    <Settings size={20} /> إدارة القوائم المنسدلة (الأسماء المحفوظة)
-                  </div>
-                  <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {Object.entries({
-                        expenseRefunds: 'مردود المصروفات',
-                        expenses: 'المصروفات المتنوعة',
-                        companyPayments: 'سداد الشركات والموردين',
-                        customerTransfers: 'تحويلات العملاء',
-                        pendingFundsOwedToUs: 'أموال معلقة لنا (سلف/عهد)',
-                        pendingFundsOwedByUs: 'أموال معلقة علينا (لعملاء)',
-                        cashDeposits: 'الإيداعات البنكية',
-                        customCashAmounts: 'المبالغ النقدية المجمعة'
-                      }).map(([fieldKey, label]) => (
-                        <div key={fieldKey} className="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
-                          <h3 className="font-bold text-slate-700 mb-3">{label}</h3>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {(state.savedNames[fieldKey as keyof typeof state.savedNames] || []).map(name => (
-                              <span key={name} className="bg-white text-slate-700 px-3 py-1 rounded-lg text-sm flex items-center gap-2 border border-slate-200 shadow-sm">
-                                {name}
-                                <button onClick={() => removeSavedName(fieldKey as any, name)} className="text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
-                              </span>
-                            ))}
-                          </div>
-                          <AddNameInput onAdd={(name) => addSavedName(fieldKey as any, name)} />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
               
               {/* Analytics Tab */}
               <div className={`${activeTab === 'analytics' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
                 <AnalyticsView history={history} currentState={state} formatNum={formatNum} />
               </div>
-
-              {/* Admin Tab */}
-              <div className={`${activeTab === 'admin' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
-                  <div className="bg-indigo-50 text-indigo-800 p-4 border-b border-indigo-100 flex items-center justify-between font-bold">
-                    <div className="flex items-center gap-2"><Pin size={20} /> إدارة الفروع والموظفين</div>
-                    <button onClick={() => setShowAddBranchModal(true)} className="bg-indigo-600 text-white text-sm px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-indigo-700">
-                      <Plus size={16} /> إضافة فرع
-                    </button>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="font-bold text-slate-700 mb-4 text-lg">المستخدمون</h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm text-right bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-                        <thead className="bg-slate-100 text-slate-600">
-                          <tr>
-                            <th className="p-3">الإيميل</th>
-                            <th className="p-3">الدور</th>
-                            <th className="p-3">الفرع</th>
-                            <th className="p-3">الحالة</th>
-                            <th className="p-3">تاريخ التسجيل</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {adminUsers.map(u => (
-                            <tr key={u.uid} className="border-b border-slate-200 last:border-0 hover:bg-white transition-colors">
-                              <td className="p-3 font-medium text-slate-800">{u.email}</td>
-                              <td className="p-3">
-                                <select value={u.role} onChange={(e) => handleUpdateUser(u.uid, { role: e.target.value as UserRole })} className="border border-slate-200 rounded-lg px-2 py-1 bg-white outline-none">
-                                  <option value="cashier">كاشير</option>
-                                  <option value="manager">مدير</option>
-                                  <option value="admin">أدمن</option>
-                                </select>
-                              </td>
-                              <td className="p-3">
-                                <select value={u.branchId || ''} onChange={(e) => handleUpdateUser(u.uid, { branchId: e.target.value || null })} className="border border-slate-200 rounded-lg px-2 py-1 bg-white outline-none">
-                                  <option value="">-- بدون فرع --</option>
-                                  {branches.map(b => (
-                                    <option key={b.id} value={b.id}>{b.name}</option>
-                                  ))}
-                                </select>
-                              </td>
-                              <td className="p-3">
-                                <select value={u.status} onChange={(e) => handleUpdateUser(u.uid, { status: e.target.value as UserStatus })} className={`border rounded-lg px-2 py-1 outline-none font-bold ${u.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : u.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                                  <option value="pending">قيد الانتظار</option>
-                                  <option value="active">نشط</option>
-                                  <option value="suspended">موقوف</option>
-                                </select>
-                              </td>
-                              <td className="p-3 text-slate-500" dir="ltr">{new Date(u.createdAt).toLocaleDateString()}</td>
-                            </tr>
-                          ))}
-                          {adminUsers.length === 0 && <tr><td colSpan={5} className="text-center p-6 text-slate-500">لا يوجد مستخدمين</td></tr>}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="mt-8 border-t border-slate-200 pt-6">
-                      <h3 className="font-bold text-slate-700 mb-4 text-lg flex items-center gap-2">
-                        <Settings size={20} className="text-blue-600" />
-                        أدوات وإعدادات متقدمة
-                      </h3>
-                      <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div>
-                          <p className="font-bold text-orange-800 text-sm mb-1">استيراد بيانات حسابي القديمة</p>
-                          <p className="text-orange-700 text-xs">أداة لنقل بياناتك المحفوظة قديماً قبل تحديث الفروع ونسخها بالكامل إلى <span className="font-black bg-orange-100 px-1 rounded">{branches.find(b => b.id === currentBranchId)?.name || 'الفرع المختار حالياً'}</span>.</p>
-                        </div>
-                        <button 
-                          onClick={handleMigrateOldData}
-                          disabled={!currentBranchId || loading}
-                          className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors disabled:opacity-50 min-w-max flex items-center gap-2"
-                        >
-                          <Download size={16} /> نقل بياناتي للفرع
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              </div>
+            </div>
             </div>
           )}
 
@@ -2866,6 +2852,158 @@ export default function App() {
           formatNum={formatNum}
           showToast={showToast}
         />
+      )}
+      </AnimatePresence>
+
+      {/* Settings Modal */}
+      <AnimatePresence>
+      {showSettingsModal && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto print:hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="bg-slate-50 rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white sticky top-0 z-10 shrink-0 shadow-sm">
+              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                <Settings size={22} className="text-blue-600" /> لوحة الإدارة والإعدادات
+              </h3>
+              <button onClick={() => setShowSettingsModal(false)} className="text-slate-400 hover:text-slate-600 p-1 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-8">
+              
+              {/* Lists Management */}
+              <section>
+                <div className="flex items-center gap-2 font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">
+                  <BookOpen size={20} className="text-indigo-600" /> إدارة القوائم المنسدلة (الأسماء المحفوظة)
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries({
+                    expenseRefunds: 'مردود المصروفات',
+                    expenses: 'المصروفات المتنوعة',
+                    companyPayments: 'سداد الشركات والموردين',
+                    customerTransfers: 'تحويلات العملاء',
+                    pendingFundsOwedToUs: 'أموال معلقة لنا (سلف/عهد)',
+                    pendingFundsOwedByUs: 'أموال معلقة علينا (لعملاء)',
+                    cashDeposits: 'الإيداعات البنكية',
+                    customCashAmounts: 'المبالغ النقدية المجمعة'
+                  }).map(([fieldKey, label]) => (
+                    <div key={fieldKey} className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
+                      <h3 className="font-bold text-slate-700 mb-3 text-sm">{label}</h3>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {(state.savedNames[fieldKey as keyof typeof state.savedNames] || []).map(name => (
+                          <span key={name} className="bg-slate-50 text-slate-700 px-2 py-1 rounded-md text-xs flex items-center gap-2 border border-slate-200">
+                            {name}
+                            <button onClick={() => removeSavedName(fieldKey as any, name)} className="text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={12} /></button>
+                          </span>
+                        ))}
+                      </div>
+                      <AddNameInput onAdd={(name) => addSavedName(fieldKey as any, name)} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Admin Panel */}
+              {userProfile?.role === 'admin' && (
+                <section>
+                  <div className="flex items-center gap-2 font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2 mt-4">
+                    <Pin size={20} className="text-amber-600" /> إدارة الفروع والموظفين
+                  </div>
+
+                  {/* Branches Settings */}
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+                    <h4 className="font-bold text-slate-700 mb-4 flex items-center justify-between">
+                      الفروع
+                      <button onClick={() => { setShowSettingsModal(false); setShowAddBranchModal(true); }} className="bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1">
+                        <Plus size={16} /> إضافة فرع
+                      </button>
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-right bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+                        <thead className="bg-slate-100 text-slate-600">
+                          <tr>
+                            <th className="p-3">اسم الفرع</th>
+                            <th className="p-3 w-40 text-center">إجراء</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {branches.map(b => (
+                            <tr key={b.id} className="border-b border-slate-200 last:border-0 hover:bg-white transition-colors">
+                              <td className="p-3">
+                                <Input value={b.name} onChange={(e: any) => {
+                                  const newBranches = [...branches];
+                                  const idx = newBranches.findIndex(x => x.id === b.id);
+                                  if (idx > -1) { newBranches[idx].name = e.target.value; setBranches(newBranches); }
+                                }} onBlur={(e: any) => handleUpdateBranch(b.id, e.target.value)} className="w-full max-w-sm" />
+                              </td>
+                              <td className="p-3 text-center">
+                                <button onClick={() => handleDeleteBranch(b.id)} className="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors" title="حذف الفرع">
+                                  <Trash2 size={16} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                          {branches.length === 0 && <tr><td colSpan={2} className="text-center p-6 text-slate-500">لا يوجد فروع</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Users Settings */}
+                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                    <h4 className="font-bold text-slate-700 mb-4">المستخدمون</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-right bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
+                        <thead className="bg-slate-100 text-slate-600">
+                          <tr>
+                            <th className="p-3">الإيميل</th>
+                            <th className="p-3">الدور</th>
+                            <th className="p-3">الفرع</th>
+                            <th className="p-3">الحالة</th>
+                            <th className="p-3">تاريخ التسجيل</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {adminUsers.map(u => (
+                            <tr key={u.uid} className="border-b border-slate-200 last:border-0 hover:bg-white transition-colors">
+                              <td className="p-3 font-medium text-slate-800">{u.email}</td>
+                              <td className="p-3">
+                                <select value={u.role} onChange={(e) => handleUpdateUser(u.uid, { role: e.target.value as UserRole })} className="border border-slate-200 rounded-lg px-2 py-1 bg-white outline-none">
+                                  <option value="cashier">كاشير</option>
+                                  <option value="manager">مدير</option>
+                                  <option value="admin">أدمن</option>
+                                </select>
+                              </td>
+                              <td className="p-3">
+                                <select value={u.branchId || ''} onChange={(e) => handleUpdateUser(u.uid, { branchId: e.target.value || null })} className="border border-slate-200 rounded-lg px-2 py-1 bg-white outline-none">
+                                  <option value="">-- بدون فرع --</option>
+                                  {branches.map(b => (
+                                    <option key={b.id} value={b.id}>{b.name}</option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td className="p-3">
+                                <select value={u.status} onChange={(e) => handleUpdateUser(u.uid, { status: e.target.value as UserStatus })} className={`border rounded-lg px-2 py-1 outline-none font-bold ${u.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : u.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                                  <option value="pending">قيد الانتظار</option>
+                                  <option value="active">نشط</option>
+                                  <option value="suspended">موقوف</option>
+                                </select>
+                              </td>
+                              <td className="p-3 text-slate-500" dir="ltr">{new Date(u.createdAt).toLocaleDateString()}</td>
+                            </tr>
+                          ))}
+                          {adminUsers.length === 0 && <tr><td colSpan={5} className="text-center p-6 text-slate-500">لا يوجد مستخدمين</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </section>
+              )}
+
+            </div>
+          </motion.div>
+        </motion.div>
       )}
       </AnimatePresence>
 
