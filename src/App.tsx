@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp } from 'lucide-react';
 import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, updateDoc, where } from 'firebase/firestore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
@@ -18,7 +18,25 @@ type FundHistoryEntry = {
 
 type Transaction = { id: string; name: string; amount: number; isPinned?: boolean; showInSummary?: boolean; history?: FundHistoryEntry[] };
 type ArchivedFund = Transaction & { type: 'toUs' | 'byUs'; dateSettled: string };
-type POSData = { id: string; name: string; sales: number; returns: number; networks: number[] };
+type POSData = { id: string; name: string; sales: number; returns: number; networks: number[]; physicalCash?: number };
+
+type UserRole = 'admin' | 'manager' | 'cashier';
+type UserStatus = 'pending' | 'active' | 'suspended';
+
+export type UserProfile = {
+  uid: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  branchId: string | null;
+  createdAt: number;
+};
+
+export type Branch = {
+  id: string;
+  name: string;
+  createdAt: number;
+};
 
 type AppState = {
   date: string;
@@ -214,6 +232,56 @@ const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id }: an
     </div>
   </div>
 );
+
+const PosPrintView = ({ pos, summary, formatNum }: any) => {
+  const net = pos.sales - pos.returns;
+  const networksTotal = pos.networks.reduce((a: number, b: any) => a + (typeof b === 'number' ? b : b.amount || 0), 0);
+  const diff = (pos.physicalCash !== undefined ? pos.physicalCash : 0) - (net - networksTotal);
+  
+  return (
+    <div className="hidden print:block rtl p-8 w-full print:bg-white text-black font-sans">
+      <div className="text-center mb-6 pb-4 border-b-2 border-gray-300">
+        <h1 className="text-3xl font-bold mb-2">تسوية نقطة بيع: {pos.name || 'بدون اسم'}</h1>
+        <p className="text-lg">تاريخ: <span dir="ltr" className="font-bold">{summary.date}</span></p>
+      </div>
+      <table className="w-full text-right border-collapse text-lg border border-gray-300 mb-6">
+        <tbody>
+          <tr className="border-b border-gray-300">
+            <td className="py-3 px-4 font-bold bg-gray-50/50 w-2/3">إجمالي المبيعات</td>
+            <td className="py-3 px-4 font-bold" dir="ltr">{formatNum(pos.sales)}</td>
+          </tr>
+          <tr className="border-b border-gray-300">
+            <td className="py-3 px-4 font-bold text-rose-700 bg-rose-50 w-2/3">المرتجعات</td>
+            <td className="py-3 px-4 font-bold text-rose-700" dir="ltr">{formatNum(pos.returns)}</td>
+          </tr>
+          <tr className="border-b border-gray-300">
+            <td className="py-3 px-4 font-bold bg-gray-50/50 w-2/3">صافي المبيعات</td>
+            <td className="py-3 px-4 font-bold" dir="ltr">{formatNum(net)}</td>
+          </tr>
+          <tr className="border-b border-gray-300">
+            <td className="py-3 px-4 font-bold text-blue-700 bg-blue-50 w-2/3">الشبكات (تخصم)</td>
+            <td className="py-3 px-4 font-bold text-blue-700" dir="ltr">{formatNum(networksTotal)}</td>
+          </tr>
+          <tr className="border-b-2 border-gray-800 bg-gray-100">
+            <td className="py-4 px-4 font-black w-2/3">المطلوب كاش</td>
+            <td className="py-4 px-4 font-black font-mono text-indigo-700" dir="ltr">{formatNum(net - networksTotal)}</td>
+          </tr>
+          {pos.physicalCash !== undefined && (
+            <tr className="border-b border-gray-300">
+              <td className="py-3 px-4 font-bold text-emerald-800 bg-emerald-50 w-2/3">الكاش الفعلي بالدرج</td>
+              <td className="py-3 px-4 font-bold text-emerald-800" dir="ltr">{formatNum(pos.physicalCash)}</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      {pos.physicalCash !== undefined && (
+        <div className={`p-6 mt-8 rounded-xl border-4 text-center font-black text-2xl ${diff === 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : diff > 0 ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+          {diff === 0 ? 'الدرج مطابق تماماً' : diff > 0 ? `يوجد زيادة: ${formatNum(Math.abs(diff))}` : `يوجد عجز: ${formatNum(Math.abs(diff))}`}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const PendingPrintView = ({ pendingOwedToUs, pendingOwedByUs, formatNum, isPdfMode = false, id }: any) => {
   const sumOwedToUs = pendingOwedToUs.reduce((a: number, b: any) => a + b.amount, 0);
@@ -1209,12 +1277,19 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
 export default function App() {
   const [state, setState] = useState<AppState>(getInitialState());
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAddBranchModal, setShowAddBranchModal] = useState(false);
+  const [newBranchName, setNewBranchName] = useState('');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [currentBranchId, setCurrentBranchId] = useState<string | null>(null);
+  const [adminUsers, setAdminUsers] = useState<UserProfile[]>([]);
+  
   const [history, setHistory] = useState<DailySnapshot[]>([]);
-  const [activeTab, setActiveTab] = useState<'sales' | 'payments' | 'pending' | 'cash' | 'archive' | 'history' | 'ledger' | 'settings'>('sales');
+  const [activeTab, setActiveTab] = useState<'sales' | 'payments' | 'pending' | 'cash' | 'archive' | 'history' | 'ledger' | 'settings' | 'admin'>('sales');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1250,6 +1325,104 @@ export default function App() {
   };
   const [viewSnapshot, setViewSnapshot] = useState<DailySnapshot | null>(null);
 
+  const loadBranchData = async (branchId: string) => {
+    try {
+      const docRef = doc(db, `branches/${branchId}/treasury/state`);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data() as AppState;
+        if (data.posData) {
+          data.posData = data.posData.map(p => ({
+            ...p,
+            networks: Array.isArray(p.networks) ? p.networks : [(p as any).network || 0]
+          }));
+        }
+        setState(data);
+      } else {
+        setState(getInitialState());
+      }
+      
+      const historyRef = collection(db, `branches/${branchId}/treasury_history`);
+      const q = query(historyRef, orderBy('timestamp', 'desc'));
+      const historySnap = await getDocs(q);
+      
+      const historyData = historySnap.docs.map((d: any) => ({ id: d.id, ...d.data() } as DailySnapshot));
+      setHistory(historyData);
+    } catch (e) {
+      console.error(e);
+      showToast("خطأ في تحميل بيانات الفرع", "error");
+    }
+  };
+
+  const handleAddBranchSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBranchName.trim()) return;
+    try {
+      const newBranch = {
+        name: newBranchName.trim(),
+        createdAt: Date.now()
+      };
+      const docRef = await addDoc(collection(db, 'branches'), newBranch);
+      setBranches(prev => [...prev, { id: docRef.id, ...newBranch }]);
+      showToast("تمت إضافة الفرع بنجاح", "success");
+      setShowAddBranchModal(false);
+      setNewBranchName('');
+    } catch (e) {
+      showToast("خطأ في إضافة الفرع", "error");
+    }
+  };
+
+  const handleUpdateUser = async (userId: string, updates: Partial<UserProfile>) => {
+    try {
+      await updateDoc(doc(db, `users/${userId}`), updates);
+      setAdminUsers(prev => prev.map(u => u.uid === userId ? { ...u, ...updates } as UserProfile : u));
+      showToast("تم تحديث بيانات المستخدم", "success");
+    } catch (e) {
+      showToast("خطأ في تحديث البيانات", "error");
+    }
+  };
+
+  const handleMigrateOldData = () => {
+    if (!currentBranchId) {
+      showToast("الرجاء اختيار فرع من القائمة العلوية أولاً لنقل البيانات إليه", "error");
+      return;
+    }
+    const branchName = branches.find(b => b.id === currentBranchId)?.name;
+    setConfirmDialog({
+      message: `هل أنت متأكد من رغبتك في نسخ بياناتك القديمة (قبل نظام الفروع) إلى هذا الفرع المختار: "${branchName}"؟ سيؤدي هذا إلى استبدال أية بيانات حالية داخل هذا الفرع وإعادة تحميل الصفحة.`,
+      onConfirm: async () => {
+        try {
+          if (!user) return;
+          setLoading(true);
+          // 1. Copy State
+          const oldStateRef = doc(db, `users/${user.uid}/treasury/state`);
+          const oldStateSnap = await getDoc(oldStateRef);
+          if (oldStateSnap.exists()) {
+            await setDoc(doc(db, `branches/${currentBranchId}/treasury/state`), oldStateSnap.data());
+          }
+          
+          // 2. Copy History
+          const oldHistoryRef = collection(db, `users/${user.uid}/treasury_history`);
+          const historySnap = await getDocs(oldHistoryRef);
+          for (const docSnapshot of historySnap.docs) {
+            await setDoc(doc(db, `branches/${currentBranchId}/treasury_history/${docSnapshot.id}`), docSnapshot.data());
+          }
+
+          showToast("تم نقل وتحديث بياناتك القديمة بنجاح إلى الفرع", "success");
+          
+          // Refresh current branch
+          await loadBranchData(currentBranchId);
+          setLoading(false);
+        } catch (error) {
+          console.error("Migration error", error);
+          setLoading(false);
+          showToast("حدث خطأ أثناء نقل البيانات", "error");
+        }
+      }
+    });
+  };
+
   useEffect(() => {
     let isMounted = true;
     
@@ -1272,68 +1445,61 @@ export default function App() {
           const withTimeout = (promise: Promise<any>, ms: number) => 
             Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
 
-          const docRef = doc(db, `users/${currentUser.uid}/treasury/state`);
-          // Use timeout so it doesn't hang indefinitely on bad networks
-          const docSnap = await withTimeout(getDoc(docRef), 5000);
-          
-          if (docSnap.exists()) {
-            const data = docSnap.data() as AppState;
-            if (data.posData) {
-              data.posData = data.posData.map(p => ({
-                ...p,
-                networks: Array.isArray(p.networks) ? p.networks : [(p as any).network || 0]
-              }));
-            }
-            if (isMounted) setState(data);
+          // Fetch user profile
+          const profileRef = doc(db, `users/${currentUser.uid}`);
+          const profileSnap = await withTimeout(getDoc(profileRef), 5000);
+          let currentProfile: UserProfile;
+
+          if (!profileSnap.exists()) {
+            const isAdmin = currentUser.email === 'kk.rizk@gmail.com';
+            currentProfile = {
+              uid: currentUser.uid,
+              email: currentUser.email || '',
+              role: isAdmin ? 'admin' : 'cashier',
+              status: isAdmin ? 'active' : 'pending',
+              branchId: null,
+              createdAt: Date.now()
+            };
+            await setDoc(profileRef, currentProfile);
+          } else {
+            currentProfile = profileSnap.data() as UserProfile;
           }
-          
-          // Load history
-          const historyRef = collection(db, `users/${currentUser.uid}/treasury_history`);
-          const q = query(historyRef, orderBy('timestamp', 'desc'));
-          const historySnap = await withTimeout(getDocs(q), 5000);
-          
-          const historyData = historySnap.docs.map((d: any) => ({ id: d.id, ...d.data() } as DailySnapshot));
-          if (isMounted) setHistory(historyData);
-          
+          if (isMounted) setUserProfile(currentProfile);
+
+          if (currentProfile.status === 'active') {
+            if (currentProfile.role === 'admin') {
+              // Load all branches and users for admin
+              const branchesRef = collection(db, 'branches');
+              const branchesSnap = await withTimeout(getDocs(branchesRef), 5000);
+              const loadedBranches = branchesSnap.docs.map(d => ({id: d.id, ...d.data()} as Branch));
+              if (isMounted) setBranches(loadedBranches);
+
+              const usersRef = collection(db, 'users');
+              const usersSnap = await withTimeout(getDocs(usersRef), 5000);
+              const loadedUsers = usersSnap.docs.map(d => d.data() as UserProfile);
+              if (isMounted) setAdminUsers(loadedUsers);
+
+              // If admin has a branch selected, fetch its data, else fetch their own isolated or just leave empty
+              if (currentBranchId) {
+                 await loadBranchData(currentBranchId);
+              }
+            } else if (currentProfile.branchId) {
+              // Cashier or Manager: loads their assigned branch
+              if (isMounted) setCurrentBranchId(currentProfile.branchId);
+              await loadBranchData(currentProfile.branchId);
+            }
+          }
         } catch (error) {
           console.error("Error loading data from Firebase:", error);
           if (error instanceof Error && error.message === 'timeout') {
             showToast("تأخر الاتصال بالسحابة، قد تكون غير متصل بالإنترنت", "error");
           }
-          // Fallback to local on error
-          const saved = localStorage.getItem('treasury_app_data');
-          if (saved && isMounted) {
-            try { setState(JSON.parse(saved)); } catch(e) {}
-          }
-          const savedHistory = localStorage.getItem('treasury_history');
-          if (savedHistory && isMounted) {
-            try { setHistory(JSON.parse(savedHistory)); } catch(e) {}
-          }
         }
       } else {
-        // Fallback to local storage if not logged in
-        const saved = localStorage.getItem('treasury_app_data');
-        if (saved && isMounted) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (parsed.posData) {
-              parsed.posData = parsed.posData.map((p: any) => ({
-                ...p,
-                networks: Array.isArray(p.networks) ? p.networks : [p.network || 0]
-              }));
-            }
-            setState(parsed);
-          } catch (e) {
-            console.error("Failed to load local data", e);
-          }
-        }
-        const savedHistory = localStorage.getItem('treasury_history');
-        if (savedHistory && isMounted) {
-          try {
-            setHistory(JSON.parse(savedHistory));
-          } catch (e) {
-            console.error("Failed to load local history", e);
-          }
+        if (isMounted) {
+            setUserProfile(null);
+            setCurrentBranchId(null);
+            setBranches([]);
         }
       }
       if (isMounted) {
@@ -1401,7 +1567,9 @@ export default function App() {
     }
   };
 
-  const [printView, setPrintView] = useState<'none' | 'daily' | 'pending'>('none');
+  const [printView, setPrintView] = useState<'none' | 'daily' | 'pending' | 'pos' | 'history'>('none');
+  const [activePrintPosId, setActivePrintPosId] = useState<string | null>(null);
+  const [printSnapshot, setPrintSnapshot] = useState<{state: AppState, summary: ReturnType<typeof getSummary>} | null>(null);
 
   useEffect(() => {
     const handleAfterPrint = () => {
@@ -1418,99 +1586,56 @@ export default function App() {
     
     if (exportMode === 'summary') {
       setPrintView('daily');
-      
-      setTimeout(async () => {
-        const element = document.getElementById('daily-print-container');
-        if (!element) {
-          setPrintView('none');
-          setIsExporting(false);
-          return;
-        }
-        try {
-          const dataUrl = await toPng(element, { 
-            quality: 1, 
-            pixelRatio: 2,
-            backgroundColor: '#ffffff'
-          });
-          
-          const pdf = new jsPDF('p', 'mm', 'a4');
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-          
-          const minHeight = pdf.internal.pageSize.getHeight();
-          const customPdf = new jsPDF('p', 'mm', [pdfWidth, Math.max(pdfHeight, minHeight)]);
-          customPdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-          customPdf.save(`اليومية-${state.date.replace(/\//g, '-')}.pdf`);
-          
-          showToast('تم تصدير PDF بنجاح', 'success');
-        } catch (err) {
-          console.error('PDF export failed:', err);
-          showToast('حدث خطأ أثناء التصدير', 'error');
-        } finally {
-          setPrintView('none');
-          setIsExporting(false);
-        }
-      }, 500);
     } else {
-      // For detailed mode, we use native print styles to allow for easy pagination of long tables
-      setPrintView('none'); 
-      setTimeout(() => {
-        window.print();
-        setTimeout(() => setIsExporting(false), 500);
-      }, 300);
+      setPrintView('none');
     }
+    
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
+  const handlePrintPos = (posId: string) => {
+    setActivePrintPosId(posId);
+    setPrintView('pos');
+    setIsExporting(true);
+    setTimeout(() => {
+      window.print();
+    }, 500);
   };
 
   const handlePrintPending = () => {
     setPrintView('pending');
     setIsExporting(true); // Re-use isExporting overlay for UI blocking
     
-    setTimeout(async () => {
-      const element = document.getElementById('pending-print-container');
-      if (!element) {
-        setPrintView('none');
-        setIsExporting(false);
-        return;
-      }
-      try {
-        const dataUrl = await toPng(element, { 
-          quality: 1, 
-          pixelRatio: 2,
-          backgroundColor: '#ffffff'
-        });
-        
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-        
-        // Single continuous page PDF if it's longer than A4
-        const minHeight = pdf.internal.pageSize.getHeight();
-        const customPdf = new jsPDF('p', 'mm', [pdfWidth, Math.max(pdfHeight, minHeight)]);
-        customPdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        customPdf.save(`الاموال-المعلقة-${state.date.replace(/\//g, '-')}.pdf`);
-        
-        showToast('تم تصدير PDF بنجاح', 'success');
-      } catch (err) {
-        console.error('PDF export failed:', err);
-        showToast('حدث خطأ أثناء التصدير', 'error');
-      } finally {
-        setPrintView('none');
-        setIsExporting(false);
-      }
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
+  const handlePrintHistory = (snap: DailySnapshot) => {
+    setPrintSnapshot({ state: snap.state, summary: snap.summary });
+    setPrintView('history');
+    setIsExporting(true);
+    setTimeout(() => {
+      window.print();
     }, 500);
   };
 
   const saveStateToFirebase = async (newState: AppState, isAutoSave = false) => {
-    if (!user) {
+    if (!user || userProfile?.status !== 'active' || !currentBranchId) {
       localStorage.setItem('treasury_app_data', JSON.stringify(newState));
-      if (!isAutoSave) showToast('تم الحفظ محلياً (يرجى تسجيل الدخول للحفظ السحابي)', 'success');
+      if (!isAutoSave) {
+         if (!user) showToast('تم الحفظ محلياً (يرجى تسجيل الدخول للحفظ السحابي)', 'success');
+         else showToast('تم الحفظ محلياً (ليس لديك فرع محدد أو الصلاحيات لم تكتمل)', 'success');
+      }
       return;
     }
     setSaving(true);
     try {
       const sanitizedState = JSON.parse(JSON.stringify(newState));
-      await setDoc(doc(db, `users/${user.uid}/treasury/state`), sanitizedState);
-      if (!isAutoSave) showToast('تم حفظ البيانات بنجاح في السحابة!', 'success');
+      await setDoc(doc(db, `branches/${currentBranchId}/treasury/state`), sanitizedState);
+      if (!isAutoSave) showToast('تم حفظ البيانات بنجاح في السحابة للفرع!', 'success');
     } catch (error) {
       console.error("Error saving to Firebase:", error);
       if (!isAutoSave) showToast('حدث خطأ أثناء الحفظ', 'error');
@@ -1582,14 +1707,14 @@ export default function App() {
         
         setState(nextState);
         
-        if (user) {
+        if (user && userProfile?.status === 'active' && currentBranchId) {
           try {
             const sanitizedSnapshot = JSON.parse(JSON.stringify(snapshot));
-            const docRef = await addDoc(collection(db, `users/${user.uid}/treasury_history`), sanitizedSnapshot);
+            const docRef = await addDoc(collection(db, `branches/${currentBranchId}/treasury_history`), sanitizedSnapshot);
             setHistory(prev => [{ id: docRef.id, ...snapshot }, ...prev]);
             
             const sanitizedNextState = JSON.parse(JSON.stringify(nextState));
-            await setDoc(doc(db, `users/${user.uid}/treasury/state`), sanitizedNextState);
+            await setDoc(doc(db, `branches/${currentBranchId}/treasury/state`), sanitizedNextState);
             showToast('تم التقفيل بنجاح وبدء يوم جديد!', 'success');
           } catch (e) {
             console.error("Error saving history to Firebase", e);
@@ -1912,6 +2037,21 @@ export default function App() {
     );
   }
 
+  if (user && userProfile && userProfile.status === 'pending') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50" dir="rtl">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle size={32} />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">حسابك قيد المراجعة</h2>
+          <p className="text-slate-600 mb-6 font-medium">يرجى الانتظار حتى تقوم الإدارة بمراجعة حسابك وتفعيله للتمكن من الدخول للخزينة الفعالة.</p>
+          <button onClick={handleLogout} className="text-slate-500 hover:text-slate-700 underline font-bold mt-2">تسجيل الخروج</button>
+        </div>
+      </div>
+    );
+  }
+
   const activePos = state.posData.find(p => p.id === activeNetworkPosId);
 
   return (
@@ -1931,6 +2071,28 @@ export default function App() {
                 </button>
               ) : (
                 <>
+                  {userProfile?.role === 'admin' && (
+                    <div className="hidden md:flex items-center gap-2">
+                      <select 
+                        value={currentBranchId || ''} 
+                        onChange={(e) => {
+                          setCurrentBranchId(e.target.value || null);
+                          if (e.target.value) {
+                            loadBranchData(e.target.value);
+                          } else {
+                            setState(getInitialState());
+                            setHistory([]);
+                          }
+                        }}
+                        className="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
+                      >
+                        <option value="">-- اختر الفرع --</option>
+                        {branches.map(b => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className="hidden md:flex items-center gap-2 text-sm text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     {user.email}
@@ -1992,6 +2154,7 @@ export default function App() {
                     { id: 'archive', label: 'أرشيف المعلقات', icon: History },
                     { id: 'settings', label: 'إعدادات القوائم', icon: Settings },
                     { id: 'analytics', label: 'تحليلات المبيعات', icon: BarChart3 },
+                    ...(userProfile?.role === 'admin' ? [{ id: 'admin', label: 'لوحة الإدارة', icon: Pin }] : [])
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -2028,10 +2191,12 @@ export default function App() {
                       <thead>
                         <tr className="text-slate-500 border-b border-slate-200">
                           <th className="pb-3 font-medium">نقطة البيع</th>
-                          <th className="pb-3 font-medium w-1/5">إجمالي المبيعات</th>
-                          <th className="pb-3 font-medium w-1/5">المرتجعات</th>
-                          <th className="pb-3 font-medium w-1/5">صافي المبيعات</th>
-                          <th className="pb-3 font-medium w-1/5">الشبكات (تخصم)</th>
+                          <th className="pb-3 font-medium w-[15%]">إجمالي المبيعات</th>
+                          <th className="pb-3 font-medium w-[15%]">المرتجعات</th>
+                          <th className="pb-3 font-medium w-[15%]">صافي المبيعات</th>
+                          <th className="pb-3 font-medium w-[15%]">الشبكات (تخصم)</th>
+                          <th className="pb-3 font-medium w-[15%]">الكاش الفعلي</th>
+                          <th className="pb-3 font-medium w-[8%] print:hidden text-center">طباعة</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2039,7 +2204,7 @@ export default function App() {
                           const net = pos.sales - pos.returns;
                           const posNetworksTotal = sumNetworks(pos.networks);
                           return (
-                            <tr key={pos.id} className="border-b border-slate-100 last:border-0">
+                            <tr key={pos.id} className="border-b border-slate-100 last:border-0 relative group">
                               <td className="py-2 pr-2">
                                 <Input value={pos.name} onChange={(e: any) => {
                                   const newData = [...state.posData];
@@ -2070,6 +2235,18 @@ export default function App() {
                                   </span>
                                 </button>
                               </td>
+                              <td className="py-2 px-1">
+                                <Input type="number" value={pos.physicalCash !== undefined ? pos.physicalCash : ''} placeholder="" onChange={(e: any) => {
+                                  const newData = [...state.posData];
+                                  newData[index].physicalCash = e.target.value === '' ? undefined : Number(e.target.value);
+                                  updateField('posData', newData);
+                                }} dir="ltr" className="text-left font-bold text-blue-700 pointer-events-auto" />
+                              </td>
+                              <td className="py-2 pl-2 text-center print:hidden">
+                                <button onClick={() => handlePrintPos(pos.id)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors" title="طباعة تسوية النقطة">
+                                  <Printer size={18} />
+                                </button>
+                              </td>
                             </tr>
                           );
                         })}
@@ -2081,6 +2258,8 @@ export default function App() {
                           <td className="py-3 px-2 text-left text-rose-600" dir="ltr">{formatNum(currentSummary.totalReturns)}</td>
                           <td className="py-3 px-2 text-left text-emerald-600" dir="ltr">{formatNum(currentSummary.netSales)}</td>
                           <td className="py-3 px-2 text-left text-amber-600" dir="ltr">{formatNum(currentSummary.totalNetworks)}</td>
+                          <td className="py-3 px-2 text-left text-blue-600" dir="ltr">{formatNum(state.posData.reduce((acc, p) => acc + (p.physicalCash || 0), 0))}</td>
+                          <td className="print:hidden"></td>
                         </tr>
                       </tfoot>
                     </table>
@@ -2494,7 +2673,86 @@ export default function App() {
               <div className={`${activeTab === 'analytics' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
                 <AnalyticsView history={history} currentState={state} formatNum={formatNum} />
               </div>
-              
+
+              {/* Admin Tab */}
+              <div className={`${activeTab === 'admin' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                  <div className="bg-indigo-50 text-indigo-800 p-4 border-b border-indigo-100 flex items-center justify-between font-bold">
+                    <div className="flex items-center gap-2"><Pin size={20} /> إدارة الفروع والموظفين</div>
+                    <button onClick={() => setShowAddBranchModal(true)} className="bg-indigo-600 text-white text-sm px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-indigo-700">
+                      <Plus size={16} /> إضافة فرع
+                    </button>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-bold text-slate-700 mb-4 text-lg">المستخدمون</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-right bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
+                        <thead className="bg-slate-100 text-slate-600">
+                          <tr>
+                            <th className="p-3">الإيميل</th>
+                            <th className="p-3">الدور</th>
+                            <th className="p-3">الفرع</th>
+                            <th className="p-3">الحالة</th>
+                            <th className="p-3">تاريخ التسجيل</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {adminUsers.map(u => (
+                            <tr key={u.uid} className="border-b border-slate-200 last:border-0 hover:bg-white transition-colors">
+                              <td className="p-3 font-medium text-slate-800">{u.email}</td>
+                              <td className="p-3">
+                                <select value={u.role} onChange={(e) => handleUpdateUser(u.uid, { role: e.target.value as UserRole })} className="border border-slate-200 rounded-lg px-2 py-1 bg-white outline-none">
+                                  <option value="cashier">كاشير</option>
+                                  <option value="manager">مدير</option>
+                                  <option value="admin">أدمن</option>
+                                </select>
+                              </td>
+                              <td className="p-3">
+                                <select value={u.branchId || ''} onChange={(e) => handleUpdateUser(u.uid, { branchId: e.target.value || null })} className="border border-slate-200 rounded-lg px-2 py-1 bg-white outline-none">
+                                  <option value="">-- بدون فرع --</option>
+                                  {branches.map(b => (
+                                    <option key={b.id} value={b.id}>{b.name}</option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td className="p-3">
+                                <select value={u.status} onChange={(e) => handleUpdateUser(u.uid, { status: e.target.value as UserStatus })} className={`border rounded-lg px-2 py-1 outline-none font-bold ${u.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : u.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                                  <option value="pending">قيد الانتظار</option>
+                                  <option value="active">نشط</option>
+                                  <option value="suspended">موقوف</option>
+                                </select>
+                              </td>
+                              <td className="p-3 text-slate-500" dir="ltr">{new Date(u.createdAt).toLocaleDateString()}</td>
+                            </tr>
+                          ))}
+                          {adminUsers.length === 0 && <tr><td colSpan={5} className="text-center p-6 text-slate-500">لا يوجد مستخدمين</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="mt-8 border-t border-slate-200 pt-6">
+                      <h3 className="font-bold text-slate-700 mb-4 text-lg flex items-center gap-2">
+                        <Settings size={20} className="text-blue-600" />
+                        أدوات وإعدادات متقدمة
+                      </h3>
+                      <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div>
+                          <p className="font-bold text-orange-800 text-sm mb-1">استيراد بيانات حسابي القديمة</p>
+                          <p className="text-orange-700 text-xs">أداة لنقل بياناتك المحفوظة قديماً قبل تحديث الفروع ونسخها بالكامل إلى <span className="font-black bg-orange-100 px-1 rounded">{branches.find(b => b.id === currentBranchId)?.name || 'الفرع المختار حالياً'}</span>.</p>
+                        </div>
+                        <button 
+                          onClick={handleMigrateOldData}
+                          disabled={!currentBranchId || loading}
+                          className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors disabled:opacity-50 min-w-max flex items-center gap-2"
+                        >
+                          <Download size={16} /> نقل بياناتي للفرع
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               </div>
             </div>
           )}
@@ -2575,9 +2833,14 @@ export default function App() {
                 <CalendarDays size={20} className="text-blue-600" /> 
                 تفاصيل يوم: {viewSnapshot.state.date}
               </h3>
-              <button onClick={() => setViewSnapshot(null)} className="text-slate-400 hover:text-slate-600 p-1">
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot); }} className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-sm font-bold flex items-center gap-2">
+                  <Printer size={16} /> طباعة
+                </button>
+                <button onClick={() => setViewSnapshot(null)} className="text-slate-400 hover:text-slate-600 p-1">
+                  <X size={20} />
+                </button>
+              </div>
             </div>
             <div className="p-4 overflow-y-auto bg-slate-100">
               <SummaryDashboard state={viewSnapshot.state} summary={viewSnapshot.summary} />
@@ -2705,58 +2968,43 @@ export default function App() {
           </motion.div>
         </motion.div>
       )}
-      {showAuthModal && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden" dir="rtl">
+      </AnimatePresence>
+
+      {/* Add Branch Modal */}
+      <AnimatePresence>
+      {showAddBranchModal && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                <LogIn className="text-blue-600" size={20} />
-                {isSignUp ? 'حساب جديد' : 'تسجيل الدخول'}
+                <Plus className="text-blue-600" size={20} />
+                إضافة فرع جديد
               </h3>
-              <button onClick={() => setShowAuthModal(false)} className="text-slate-400 hover:text-slate-600 hover:bg-slate-200 p-1.5 rounded-lg transition-colors">
+              <button disabled={loading} onClick={() => setShowAddBranchModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-colors">
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6">
-              {authError && <div className="p-3 mb-4 text-sm font-bold bg-rose-50 border border-rose-200 text-rose-700 rounded-lg">{authError}</div>}
-              <form onSubmit={handleLoginSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">البريد الإلكتروني</label>
-                  <input type="email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} required className="w-full border border-slate-200 hover:border-slate-300 focus:border-blue-500 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-100 transition-all text-left" dir="ltr" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">كلمة المرور</label>
-                  <input type="password" value={authPassword} onChange={e => setAuthPassword(e.target.value)} required className="w-full border border-slate-200 hover:border-slate-300 focus:border-blue-500 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-blue-100 transition-all text-left" dir="ltr" />
-                </div>
-                <button type="submit" className="w-full py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm">
-                  {isSignUp ? 'إنشاء حساب' : 'دخول بالبريد الإلكتروني'}
-                </button>
-
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-slate-500">أو</span>
-                  </div>
-                </div>
-
-                <button type="button" onClick={handleGoogleLogin} className="w-full py-2.5 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition-colors shadow-sm flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
-                  <span>تسجيل الدخول باستخدام جوجل</span>
-                </button>
-              </form>
-              <div className="mt-4 text-center border-t border-slate-100 pt-4">
-                <button type="button" onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} className="text-sm text-blue-600 font-semibold hover:underline">
-                  {isSignUp ? 'لديك حساب بالفعل؟ تسجيل الدخول' : 'ليس لديك حساب؟ إنشاء حساب جديد'}
-                </button>
+            <form onSubmit={handleAddBranchSubmit} className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-slate-700 mb-2">اسم الفرع</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="مثال: فرع المدينة"
+                  value={newBranchName}
+                  onChange={(e) => setNewBranchName(e.target.value)}
+                  className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
               </div>
-            </div>
+              <button
+                type="submit"
+                disabled={loading || !newBranchName.trim()}
+                className="w-full bg-blue-600 outline-none text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle2 size={20} />}
+                إضافة
+              </button>
+            </form>
           </motion.div>
         </motion.div>
       )}
@@ -2764,7 +3012,11 @@ export default function App() {
       </div>
 
       {printView === 'daily' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} />}
+      {printView === 'history' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} />}
       {printView === 'pending' && <PendingPrintView pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />}
+      {printView === 'pos' && activePrintPosId && state.posData.find(p => p.id === activePrintPosId) && (
+        <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} />
+      )}
       
       {/* Hidden containers for PDF export calculation */}
       <div className="absolute top-0 left-0 -z-50 opacity-0 pointer-events-none">

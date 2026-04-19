@@ -71,7 +71,7 @@
   }
 
   /* Add subtle hover to table rows that aren't headers/totals */
-  tbody tr:not(.font-bold):not(.bg-[#f8fafc]):not(.bg-[#f1f5f9]) {
+  tbody tr:not(.font-bold):not(.bg-slate-50):not(.bg-slate-100) {
     @apply hover:bg-slate-50/80 transition-colors duration-150;
   }
 }

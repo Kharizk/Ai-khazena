@@ -2,46 +2,55 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    // Collection: users/{userId}/treasury/state
-    // Document ID: state
-    // Fields:
-    //   - date: string
-    //   - previousBalance: number
-    //   - posData: list of objects
-    //   - expenseRefunds: list of objects
-    //   - companyPayments: list of objects
-    //   - expenses: list of objects
-    //   - customerTransfers: list of objects
-    //   - pendingFundsOwedToUs: list of objects
-    //   - pendingFundsOwedByUs: list of objects
-    //   - archivedPendingFunds: list of objects
-    //   - cashDeposits: list of objects
-    //   - cashDenominations: map
-    //   - customCashAmounts: list of objects
-    //   - savedNames: map
-    // ===============================================================
-
-    // Helper Functions
-    function isAuthenticated() {
-      return request.auth != null;
+    // Global functions
+    function isSignedIn() { return request.auth != null; }
+    
+    // Role check
+    // We use a helper function to get the current user's profile
+    function getUserProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
-
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+    
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserProfile().role == 'admin' && getUserProfile().status == 'active';
     }
-
+    
+    function isBranchUser(branchId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserProfile().branchId == branchId && getUserProfile().status == 'active';
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // User can read their own profile, or admin can read all
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      // User can create their own profile initially. Admin can update any.
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isAdmin();
+    }
+    
+    // Branches collection
+    match /branches/{branchId} {
+      // Allow read if user is active
+      allow read: if isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserProfile().status == 'active';
+      allow write: if isAdmin();
+      
+      // Branch data
+      match /treasury/state {
+        allow read, write: if isAdmin() || isBranchUser(branchId);
+      }
+      
+      match /treasury_history/{docId} {
+        allow read, write: if isAdmin() || isBranchUser(branchId);
+      }
+    }
+    
+    // Fallback for old data to prevent complete breakage during migration
     match /users/{userId}/treasury/state {
-      // Allow read and write only if the user is the owner of the document.
-      // Since the state object is complex and can grow dynamically, we rely on 
-      // the client to maintain the schema, but enforce strict ownership.
-      allow read, write: if isOwner(userId);
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
-
-    match /users/{userId}/treasury_history/{snapshotId} {
-      allow read, write: if isOwner(userId);
+    
+    match /users/{userId}/treasury_history/{docId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
   }
 }
