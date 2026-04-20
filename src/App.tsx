@@ -18,7 +18,7 @@ type FundHistoryEntry = {
 
 type Transaction = { id: string; name: string; amount: number; isPinned?: boolean; showInSummary?: boolean; history?: FundHistoryEntry[] };
 type ArchivedFund = Transaction & { type: 'toUs' | 'byUs'; dateSettled: string };
-type POSData = { id: string; name: string; sales: number; returns: number; networks: number[]; physicalCash?: number };
+type POSData = { id: string; name: string; sales: number; returns: number; networks: number[]; physicalCash?: number; isPinned?: boolean };
 
 type UserRole = 'admin' | 'manager' | 'cashier';
 type UserStatus = 'pending' | 'active' | 'suspended';
@@ -233,50 +233,75 @@ const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id }: an
   </div>
 );
 
-const PosPrintView = ({ pos, summary, formatNum }: any) => {
+const PosPrintView = ({ pos, summary, formatNum, date }: any) => {
   const net = pos.sales - pos.returns;
   const networksTotal = pos.networks.reduce((a: number, b: any) => a + (typeof b === 'number' ? b : b.amount || 0), 0);
   const diff = (pos.physicalCash !== undefined ? pos.physicalCash : 0) - (net - networksTotal);
   
   return (
-    <div className="hidden print:block rtl p-8 w-full print:bg-white text-black font-sans">
-      <div className="text-center mb-6 pb-4 border-b-2 border-gray-300">
-        <h1 className="text-3xl font-bold mb-2">تسوية نقطة بيع: {pos.name || 'بدون اسم'}</h1>
-        <p className="text-lg">تاريخ: <span dir="ltr" className="font-bold">{summary.date}</span></p>
+    <div className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white text-black font-sans mx-auto">
+      <div className="text-center mb-8 pb-6 border-b-2 border-gray-400">
+        <h1 className="text-4xl font-black mb-3 text-gray-900 border-2 border-gray-900 inline-block px-8 py-3 rounded-2xl shadow-[4px_4px_0_0_rgba(17,24,39,1)]">
+          تسوية نقطة بيع: {pos.name || 'بدون اسم'}
+        </h1>
+        <div className="flex justify-center gap-6 mt-6">
+          <p className="text-lg font-bold bg-gray-100 px-4 py-2 rounded-lg border border-gray-300">
+            تاريخ الإعداد: <span dir="ltr" className="font-mono text-blue-700">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span>
+          </p>
+          <p className="text-lg font-bold bg-gray-100 px-4 py-2 rounded-lg border border-gray-300">
+            تاريخ الطباعة: <span dir="ltr" className="font-mono text-gray-700">{new Date().toLocaleDateString('en-GB')}</span>
+          </p>
+        </div>
       </div>
-      <table className="w-full text-right border-collapse text-lg border border-gray-300 mb-6">
+      
+      <table className="w-full text-right border-collapse text-xl border-2 border-gray-400 mb-8 rounded-lg overflow-hidden shadow-sm">
         <tbody>
-          <tr className="border-b border-gray-300">
-            <td className="py-3 px-4 font-bold bg-gray-50/50 w-2/3">إجمالي المبيعات</td>
-            <td className="py-3 px-4 font-bold" dir="ltr">{formatNum(pos.sales)}</td>
+          <tr className="border-b-2 border-gray-300">
+            <td className="py-4 px-6 font-bold bg-gray-50 align-middle w-2/3">إجمالي المبيعات</td>
+            <td className="py-4 px-6 font-black font-mono text-2xl border-r-2 border-gray-300 bg-white" dir="ltr">{formatNum(pos.sales)}</td>
           </tr>
-          <tr className="border-b border-gray-300">
-            <td className="py-3 px-4 font-bold text-rose-700 bg-rose-50 w-2/3">المرتجعات</td>
-            <td className="py-3 px-4 font-bold text-rose-700" dir="ltr">{formatNum(pos.returns)}</td>
+          <tr className="border-b-2 border-gray-300">
+            <td className="py-4 px-6 font-bold text-rose-800 bg-rose-50 align-middle w-2/3">المرتجعات (تخصم)</td>
+            <td className="py-4 px-6 font-black font-mono text-2xl text-rose-700 border-r-2 border-gray-300 bg-white" dir="ltr">{formatNum(pos.returns)}</td>
           </tr>
-          <tr className="border-b border-gray-300">
-            <td className="py-3 px-4 font-bold bg-gray-50/50 w-2/3">صافي المبيعات</td>
-            <td className="py-3 px-4 font-bold" dir="ltr">{formatNum(net)}</td>
+          <tr className="border-b-2 border-gray-400">
+            <td className="py-4 px-6 font-black bg-slate-100 text-slate-800 align-middle w-2/3">صافي المبيعات</td>
+            <td className="py-4 px-6 font-black font-mono text-2xl border-r-2 border-gray-400 bg-white text-slate-800" dir="ltr">{formatNum(net)}</td>
           </tr>
-          <tr className="border-b border-gray-300">
-            <td className="py-3 px-4 font-bold text-blue-700 bg-blue-50 w-2/3">الشبكات (تخصم)</td>
-            <td className="py-3 px-4 font-bold text-blue-700" dir="ltr">{formatNum(networksTotal)}</td>
+          <tr className="border-b-2 border-gray-300">
+            <td className="py-4 px-6 font-bold text-blue-800 bg-blue-50 align-middle w-2/3 break-words relative">
+              <span className="block mb-1">إجمالي الشبكات (تخصم)</span>
+              {pos.networks?.length > 0 && (
+                <span className="text-sm font-normal text-blue-600 block bg-blue-100/50 px-2 py-1 rounded inline-block mt-1">
+                  ( {pos.networks.map((n: number) => formatNum(n)).join(' + ')} )
+                </span>
+              )}
+            </td>
+            <td className="py-4 px-6 font-black font-mono text-2xl text-blue-700 border-r-2 border-gray-300 bg-white align-middle" dir="ltr">{formatNum(networksTotal)}</td>
           </tr>
-          <tr className="border-b-2 border-gray-800 bg-gray-100">
-            <td className="py-4 px-4 font-black w-2/3">المطلوب كاش</td>
-            <td className="py-4 px-4 font-black font-mono text-indigo-700" dir="ltr">{formatNum(net - networksTotal)}</td>
+          <tr className="border-b-[3px] border-gray-900 bg-amber-50">
+            <td className="py-5 px-6 font-black text-amber-900 align-middle w-2/3 text-2xl">المطلوب كاش في الدرج</td>
+            <td className="py-5 px-6 font-black font-mono text-3xl text-indigo-800 border-r-2 border-gray-900 bg-amber-50/50" dir="ltr">{formatNum(net - networksTotal)}</td>
           </tr>
           {pos.physicalCash !== undefined && (
-            <tr className="border-b border-gray-300">
-              <td className="py-3 px-4 font-bold text-emerald-800 bg-emerald-50 w-2/3">الكاش الفعلي بالدرج</td>
-              <td className="py-3 px-4 font-bold text-emerald-800" dir="ltr">{formatNum(pos.physicalCash)}</td>
+            <tr className="border-b-0 border-gray-300">
+              <td className="py-4 px-6 font-bold text-emerald-900 bg-emerald-100 align-middle w-2/3 text-xl">الكاش الفعلي الموجود بالدرج</td>
+              <td className="py-4 px-6 font-black font-mono text-2xl text-emerald-800 border-r-2 border-gray-300 bg-emerald-50/30" dir="ltr">{formatNum(pos.physicalCash)}</td>
             </tr>
           )}
         </tbody>
       </table>
       {pos.physicalCash !== undefined && (
-        <div className={`p-6 mt-8 rounded-xl border-4 text-center font-black text-2xl ${diff === 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : diff > 0 ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
-          {diff === 0 ? 'الدرج مطابق تماماً' : diff > 0 ? `يوجد زيادة: ${formatNum(Math.abs(diff))}` : `يوجد عجز: ${formatNum(Math.abs(diff))}`}
+        <div className={`p-8 mt-8 rounded-2xl border-4 text-center ${diff === 0 ? 'bg-emerald-50 border-emerald-400' : diff > 0 ? 'bg-blue-50 border-blue-400' : 'bg-rose-50 border-rose-400'}`}>
+          <p className="text-xl font-bold mb-2 text-gray-600">نتيجة جرد الدرج الفعلي</p>
+          <div className={`font-black text-4xl tracking-tight ${diff === 0 ? 'text-emerald-800' : diff > 0 ? 'text-blue-800' : 'text-rose-800'}`}>
+            {diff === 0 ? 'الدرج مطابق تماماً (لا عجز ولا زيادة)' : diff > 0 ? `يوجد زيادة: ${formatNum(Math.abs(diff))}` : `يوجد عجز: ${formatNum(Math.abs(diff))}`}
+          </div>
+          {diff !== 0 && (
+             <p className={`mt-3 font-bold ${diff > 0 ? 'text-blue-600' : 'text-rose-600'}`}>
+               يرجى المراجعة والتسوية مع القسم المختص.
+             </p>
+          )}
         </div>
       )}
     </div>
@@ -294,54 +319,56 @@ const PendingPrintView = ({ pendingOwedToUs, pendingOwedByUs, formatNum, isPdfMo
         <p className="text-gray-700 text-lg">تاريخ الطباعة: <span dir="ltr" className="font-bold font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
       </div>
 
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold p-3 mb-4 bg-amber-50 text-amber-900 border border-amber-200 flex justify-between rounded-lg">
-          <span>أموال معلقة لنا (سلف/عهد)</span>
-          <span dir="ltr" className="font-mono">{formatNum(sumOwedToUs)}</span>
-        </h2>
-        <table className="w-full text-right border-collapse text-lg border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="py-2 px-4 border border-gray-300 w-16 text-center">م</th>
-              <th className="py-2 px-4 border border-gray-300">البيان / الاسم</th>
-              <th className="py-2 px-4 border border-gray-300 w-48 text-left">المبلغ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pendingOwedToUs.length > 0 ? pendingOwedToUs.map((item: any, idx: number) => (
-              <tr key={item.id} className="border-b border-gray-200">
-                <td className="py-2 px-4 border border-gray-300 text-center">{idx + 1}</td>
-                <td className="py-2 px-4 border border-gray-300">{item.name}</td>
-                <td className="py-2 px-4 border border-gray-300 text-left font-bold font-mono" dir="ltr">{formatNum(item.amount)}</td>
+      <div className="grid grid-cols-2 gap-8">
+        <div>
+          <h2 className="text-xl font-bold p-3 mb-4 bg-amber-50 text-amber-900 border border-amber-200 flex justify-between rounded-lg">
+            <span>أموال لنا (سلف/عهد)</span>
+            <span dir="ltr" className="font-mono">{formatNum(sumOwedToUs)}</span>
+          </h2>
+          <table className="w-full text-right border-collapse text-[15px] border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-2 border border-gray-300 w-10 text-center">م</th>
+                <th className="py-2 px-2 border border-gray-300">الاسم</th>
+                <th className="py-2 px-2 border border-gray-300 w-28 text-left">المبلغ</th>
               </tr>
-            )) : <tr><td colSpan={3} className="text-center py-4 text-gray-500 border border-gray-300">لا توجد أموال معلقة لنا</td></tr>}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {pendingOwedToUs.length > 0 ? pendingOwedToUs.map((item: any, idx: number) => (
+                <tr key={item.id} className="border-b border-gray-200">
+                  <td className="py-2 px-2 border border-gray-300 text-center">{idx + 1}</td>
+                  <td className="py-2 px-2 border border-gray-300">{item.name}</td>
+                  <td className="py-2 px-2 border border-gray-300 text-left font-bold font-mono" dir="ltr">{formatNum(item.amount)}</td>
+                </tr>
+              )) : <tr><td colSpan={3} className="text-center py-4 text-gray-500 border border-gray-300">لا توجد أموال معلقة لنا</td></tr>}
+            </tbody>
+          </table>
+        </div>
 
-      <div className="mb-8 break-inside-avoid">
-        <h2 className="text-2xl font-bold p-3 mb-4 bg-slate-100 text-slate-800 border border-slate-200 flex justify-between rounded-lg">
-          <span>أموال معلقة علينا (أمانات/مستحقات)</span>
-          <span dir="ltr" className="font-mono">{formatNum(sumOwedByUs)}</span>
-        </h2>
-        <table className="w-full text-right border-collapse text-lg border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="py-2 px-4 border border-gray-300 w-16 text-center">م</th>
-              <th className="py-2 px-4 border border-gray-300">البيان / الاسم</th>
-              <th className="py-2 px-4 border border-gray-300 w-48 text-left">المبلغ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pendingOwedByUs.length > 0 ? pendingOwedByUs.map((item: any, idx: number) => (
-              <tr key={item.id} className="border-b border-gray-200">
-                <td className="py-2 px-4 border border-gray-300 text-center">{idx + 1}</td>
-                <td className="py-2 px-4 border border-gray-300">{item.name}</td>
-                <td className="py-2 px-4 border border-gray-300 text-left font-bold font-mono" dir="ltr">{formatNum(item.amount)}</td>
+        <div>
+          <h2 className="text-xl font-bold p-3 mb-4 bg-slate-100 text-slate-800 border border-slate-200 flex justify-between rounded-lg">
+            <span>أموال علينا (أمانات/مستحقات)</span>
+            <span dir="ltr" className="font-mono">{formatNum(sumOwedByUs)}</span>
+          </h2>
+          <table className="w-full text-right border-collapse text-[15px] border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-2 border border-gray-300 w-10 text-center">م</th>
+                <th className="py-2 px-2 border border-gray-300">الاسم</th>
+                <th className="py-2 px-2 border border-gray-300 w-28 text-left">المبلغ</th>
               </tr>
-            )) : <tr><td colSpan={3} className="text-center py-4 text-gray-500 border border-gray-300">لا توجد أموال معلقة علينا</td></tr>}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pendingOwedByUs.length > 0 ? pendingOwedByUs.map((item: any, idx: number) => (
+                <tr key={item.id} className="border-b border-gray-200">
+                  <td className="py-2 px-2 border border-gray-300 text-center">{idx + 1}</td>
+                  <td className="py-2 px-2 border border-gray-300">{item.name}</td>
+                  <td className="py-2 px-2 border border-gray-300 text-left font-bold font-mono" dir="ltr">{formatNum(item.amount)}</td>
+                </tr>
+              )) : <tr><td colSpan={3} className="text-center py-4 text-gray-500 border border-gray-300">لا توجد أموال معلقة علينا</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -1854,7 +1881,13 @@ export default function App() {
           pendingFundsOwedToUs: state.pendingFundsOwedToUs,
           pendingFundsOwedByUs: state.pendingFundsOwedByUs,
 
-          posData: state.posData.map(p => ({ ...p, sales: 0, returns: 0, networks: [] })),
+          posData: state.posData.filter(p => p.isPinned || p.sales > 0 || p.returns > 0 || p.networks.length > 0 || p.physicalCash !== undefined).map(p => ({ 
+            ...p, 
+            sales: 0, 
+            returns: 0, 
+            networks: [],
+            physicalCash: undefined
+          })).filter(p => p.isPinned), // Keep only pinned items for the new day
         };
         
         setState(nextState);
@@ -2372,7 +2405,7 @@ export default function App() {
                           <th className="pb-3 font-medium w-[15%]">صافي المبيعات</th>
                           <th className="pb-3 font-medium w-[15%]">الشبكات (تخصم)</th>
                           <th className="pb-3 font-medium w-[15%]">الكاش الفعلي</th>
-                          <th className="pb-3 font-medium w-[8%] print:hidden text-center">طباعة</th>
+                          <th className="pb-3 font-medium w-[12%] print:hidden text-center">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -2418,9 +2451,26 @@ export default function App() {
                                   updateField('posData', newData);
                                 }} dir="ltr" className="text-left font-bold text-blue-700 pointer-events-auto" />
                               </td>
-                              <td className="py-2 pl-2 text-center print:hidden">
+                              <td className="py-2 pl-2 flex justify-center gap-1 print:hidden">
+                                <button 
+                                  onClick={() => {
+                                    const newData = [...state.posData];
+                                    newData[index].isPinned = !newData[index].isPinned;
+                                    updateField('posData', newData);
+                                  }} 
+                                  title="تثبيت النقطة لليوم التالي"
+                                  className={`p-2 rounded-lg transition-colors ${pos.isPinned ? 'text-blue-600 bg-blue-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                                >
+                                  <Pin size={18} className={pos.isPinned ? "fill-current" : ""} />
+                                </button>
                                 <button onClick={() => handlePrintPos(pos.id)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors" title="طباعة تسوية النقطة">
                                   <Printer size={18} />
+                                </button>
+                                <button 
+                                  onClick={() => updateField('posData', state.posData.filter(p => p.id !== pos.id))} 
+                                  className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors" title="إزالة النقطة"
+                                >
+                                  <Trash2 size={18} />
                                 </button>
                               </td>
                             </tr>
@@ -3442,7 +3492,7 @@ export default function App() {
       {printView === 'history' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} />}
       {printView === 'pending' && <PendingPrintView pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />}
       {printView === 'pos' && activePrintPosId && state.posData.find(p => p.id === activePrintPosId) && (
-        <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} />
+        <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} />
       )}
       
       {/* Hidden containers for PDF export calculation */}
