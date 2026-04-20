@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp } from 'lucide-react';
+import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp, ChevronUp, ChevronDown } from 'lucide-react';
 import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, updateDoc, where } from 'firebase/firestore';
@@ -500,6 +500,55 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
 
   return (
     <div className="print:block print:w-full space-y-6">
+      
+      {/* Overall Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 print:hidden">
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-slate-500 font-bold text-sm mb-1">إجمالي الوارد (محصلة البيع)</p>
+              <h3 className="text-3xl font-black text-emerald-600 font-mono" dir="ltr">
+                {formatNum(dailyMetrics.reduce((sum, d) => sum + d.sales, 0))}
+              </h3>
+            </div>
+            <div className="bg-emerald-50 p-3 rounded-2xl text-emerald-600">
+              <TrendingUp size={24} />
+            </div>
+          </div>
+          <p className="text-xs text-slate-400">إجمالي المقبوضات عبر جميع الأيام المسجلة</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-slate-500 font-bold text-sm mb-1">إجمالي المنصرف (مصروفات)</p>
+              <h3 className="text-3xl font-black text-rose-600 font-mono" dir="ltr">
+                {formatNum(dailyMetrics.reduce((sum, d) => sum + d.expenses, 0))}
+              </h3>
+            </div>
+            <div className="bg-rose-50 p-3 rounded-2xl text-rose-600">
+              <BarChart3 size={24} />
+            </div>
+          </div>
+          <p className="text-xs text-slate-400">مجموع كل ما تم صرفه أو سداده</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-slate-500 font-bold text-sm mb-1">صافي الحركة الكلية (الأرباح/الخسائر)</p>
+              <h3 className={`text-3xl font-black font-mono ${dailyMetrics.reduce((sum, d) => sum + d.net, 0) >= 0 ? 'text-blue-600' : 'text-rose-600'}`} dir="ltr">
+                {formatNum(dailyMetrics.reduce((sum, d) => sum + d.net, 0))}
+              </h3>
+            </div>
+            <div className={`p-3 rounded-2xl ${dailyMetrics.reduce((sum, d) => sum + d.net, 0) >= 0 ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600'}`}>
+              <Wallet size={24} />
+            </div>
+          </div>
+          <p className="text-xs text-slate-400">الفرق بين الوارد والمنصرف لكل الأيام</p>
+        </div>
+      </div>
+
       {/* Add Reports Generator Section */}
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 print:hidden">
         <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-slate-800">
@@ -779,19 +828,6 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
 };
 
 const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "rtl", placeholder = "", list, ...props }: any) => {
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-      const elements = Array.from(document.querySelectorAll(focusableElements)) as HTMLElement[];
-      const index = elements.indexOf(e.currentTarget);
-      if (index > -1 && index < elements.length - 1) {
-        elements[index + 1].focus();
-      }
-    }
-    if (props.onKeyDown) props.onKeyDown(e);
-  };
-
   return (
     <input
       type={type}
@@ -799,12 +835,6 @@ const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "
       onChange={onChange}
       onBlur={onBlur}
       onFocus={e => e.target.select()}
-      onWheel={e => {
-        if (type === 'number') {
-           e.currentTarget.blur();
-        }
-      }}
-      onKeyDown={handleKeyDown}
       placeholder={placeholder}
       dir={dir}
       list={list}
@@ -822,9 +852,12 @@ const AddNameInput = ({ onAdd }: { onAdd: (name: string) => void }) => {
         value={val} 
         onChange={(e: any) => setVal(e.target.value)} 
         onKeyDown={(e: any) => {
-          if (e.key === 'Enter' && val.trim()) {
-            onAdd(val.trim());
-            setVal('');
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+            if (val.trim()) {
+              onAdd(val.trim());
+              setVal('');
+            }
           }
         }} 
         placeholder="إضافة اسم جديد..." 
@@ -836,7 +869,7 @@ const AddNameInput = ({ onAdd }: { onAdd: (name: string) => void }) => {
             setVal('');
           }
         }} 
-        className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center shrink-0"
+        className="bg-blue-600 text-white px-3 py-2 rounded-xl border border-blue-700 shadow-sm hover:shadow active:scale-95 hover:bg-blue-700 transition-all flex items-center justify-center shrink-0"
       >
         <Plus size={18} />
       </button>
@@ -844,7 +877,7 @@ const AddNameInput = ({ onAdd }: { onAdd: (name: string) => void }) => {
   );
 };
 
-const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpdate, onRemove, onArchive, onTogglePin, onToggleSummary, onManage, sumTransactions, formatNum, savedNames, onSaveName }: any) => {
+const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpdate, onRemove, onArchive, onTogglePin, onToggleSummary, onManage, onReorder, sumTransactions, formatNum, savedNames, onSaveName }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const total = sumTransactions(data);
   const listId = `list-${field}`;
@@ -887,7 +920,9 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
 
       <div className="p-5 pt-2">
         <AnimatePresence initial={false}>
-        {filteredData.map((item: any, index: number) => (
+        {filteredData.map((item: any, index: number) => {
+          const actualIndex = data.findIndex((d: any) => d.id === item.id);
+          return (
           <motion.div 
             initial={{ opacity: 0, y: -10, height: 0, overflow: 'hidden' }}
             animate={{ opacity: 1, y: 0, height: 'auto', overflow: 'visible' }}
@@ -896,7 +931,17 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
             key={item.id} 
             className="flex gap-2.5 mb-2.5 items-center group/row"
           >
-            <span className="text-slate-300 text-xs w-4 font-bold select-none">{data.findIndex((d: any) => d.id === item.id) + 1}</span>
+            {onReorder && searchQuery === '' && (
+              <div className="flex flex-col opacity-0 group-hover/row:opacity-100 transition-opacity gap-0.5">
+                <button onClick={() => onReorder(item.id, 'up')} disabled={actualIndex === 0} className="text-slate-400 hover:text-blue-600 disabled:opacity-0 disabled:cursor-not-allowed hover:bg-slate-100 rounded">
+                  <ChevronUp size={14} />
+                </button>
+                <button onClick={() => onReorder(item.id, 'down')} disabled={actualIndex === data.length - 1} className="text-slate-400 hover:text-blue-600 disabled:opacity-0 disabled:cursor-not-allowed hover:bg-slate-100 rounded">
+                  <ChevronDown size={14} />
+                </button>
+              </div>
+            )}
+            <span className={`text-slate-300 text-xs font-bold select-none text-center ${onReorder && searchQuery === '' ? 'w-2' : 'w-4'}`}>{actualIndex + 1}</span>
             <div className="flex-1">
               <Input 
                 list={listId}
@@ -942,7 +987,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
               <Trash2 size={20} />
             </button>
           </motion.div>
-        ))}
+        )})}
         </AnimatePresence>
         {data.length === 0 && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-10 px-4 flex flex-col items-center gap-3 bg-slate-50/50 rounded-2xl mx-5 mb-5 border border-dashed border-slate-200">
@@ -1730,9 +1775,43 @@ export default function App() {
           setShowSettingsModal(false);
         }
       }
+
+      // Enter key for navigation
+      if (e.key === 'Enter') {
+        const target = e.target as HTMLElement;
+        // Don't intercept if it's a textarea or a button
+        if (target.tagName !== 'TEXTAREA' && target.tagName !== 'BUTTON') {
+          e.preventDefault();
+          const focusableElements = Array.from(document.querySelectorAll('input, button, select, textarea')) as HTMLElement[];
+          const currentIndex = focusableElements.indexOf(target);
+          if (currentIndex > -1 && currentIndex < focusableElements.length - 1) {
+            focusableElements[currentIndex + 1].focus();
+          }
+        }
+      }
     };
+    
+    const handleMouseWheel = (e: WheelEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' && (document.activeElement as HTMLInputElement).type === 'number') {
+        e.preventDefault();
+      }
+    };
+    
+    const handleFocusIn = (e: FocusEvent) => {
+      if (e.target instanceof HTMLInputElement && e.target.type === 'number') {
+        e.target.select();
+      }
+    };
+    
     window.addEventListener('keydown', handleGlobalKeyDown);
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('wheel', handleMouseWheel, { passive: false });
+    window.addEventListener('focusin', handleFocusIn);
+    
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+      window.removeEventListener('wheel', handleMouseWheel);
+      window.removeEventListener('focusin', handleFocusIn);
+    };
   }, [state]);
 
   const handleSave = () => {
@@ -1813,6 +1892,27 @@ export default function App() {
 
   const updateTransaction = (field: keyof AppState, id: string, key: 'name' | 'amount', value: string | number) => {
     setState(prev => ({ ...prev, [field]: (prev[field] as Transaction[]).map(t => t.id === id ? { ...t, [key]: value } : t) }));
+  };
+
+  const handleReorderTransaction = (field: keyof AppState, id: string, direction: 'up' | 'down') => {
+    setState(prev => {
+      const list = [...(prev[field] as Transaction[])];
+      const index = list.findIndex(item => item.id === id);
+      if (index < 0) return prev;
+      
+      if (direction === 'up' && index > 0) {
+        const temp = list[index - 1];
+        list[index - 1] = list[index];
+        list[index] = temp;
+      } else if (direction === 'down' && index < list.length - 1) {
+        const temp = list[index + 1];
+        list[index + 1] = list[index];
+        list[index] = temp;
+      } else {
+        return prev;
+      }
+      return { ...prev, [field]: list };
+    });
   };
 
   const adjustFundAmount = (field: keyof AppState, id: string, amountChange: number, actionType: 'add' | 'sub') => {
@@ -2084,6 +2184,7 @@ export default function App() {
       onAdd={() => addTransaction(field)}
       onUpdate={(id: string, key: string, val: any) => updateTransaction(field, id, key as any, val)}
       onRemove={(id: string) => removeTransaction(field, id)}
+      onReorder={isPending ? (id: string, direction: 'up'|'down') => handleReorderTransaction(field, id, direction) : undefined}
       onTogglePin={isPending ? undefined : (id: string) => togglePin(field, id)}
       onToggleSummary={canShowInSummary ? (id: string) => toggleSummary(field, id) : undefined}
       onArchive={isPending ? (id: string) => archivePendingFund(field as any, id) : undefined}
@@ -2130,14 +2231,14 @@ export default function App() {
   return (
     <div className={`min-h-screen bg-slate-50 text-slate-800 font-sans ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl">
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
-        <div className="sticky top-0 z-50 bg-slate-900 border-b border-slate-800 shadow-lg print:hidden">
+        <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white p-2 rounded-xl shadow-inner"><Calculator size={24} /></div>
-              <h1 className="font-bold text-xl text-white tracking-tight">الخزينة الذكية</h1>
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-2.5 rounded-xl shadow-md"><Calculator size={22} /></div>
+              <h1 className="font-extrabold text-xl text-slate-800 tracking-tight">الخزينة الذكية</h1>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               {!user ? (
                 <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors font-bold shadow-sm">
                   <LogIn size={18} /> <span className="hidden sm:inline">تسجيل الدخول</span>
@@ -2157,7 +2258,7 @@ export default function App() {
                             setHistory([]);
                           }
                         }}
-                        className="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 outline-none font-medium hover:bg-slate-700 transition-colors"
+                        className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 outline-none font-bold hover:bg-slate-100 transition-colors cursor-pointer"
                       >
                         <option value="">-- اختر الفرع --</option>
                         {branches.map(b => (
@@ -2166,27 +2267,27 @@ export default function App() {
                       </select>
                     </div>
                   )}
-                  <div className="hidden md:flex items-center gap-2 text-sm text-slate-300 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                  <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 font-bold">
+                    <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     <span className="font-mono">{user.email?.split('@')[0]}</span>
                   </div>
-                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center gap-2 text-slate-400 hover:text-white px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors" title="إعدادات">
+                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center gap-2 text-slate-500 hover:text-blue-600 px-2 py-2 rounded-xl hover:bg-blue-50 transition-colors" title="إعدادات">
                     <Settings size={20} />
                   </button>
-                  <button onClick={handleLogout} className="flex items-center gap-2 text-slate-400 hover:text-rose-400 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors" title="تسجيل الخروج">
+                  <button onClick={handleLogout} className="flex items-center gap-2 text-slate-500 hover:text-rose-600 px-2 py-2 rounded-xl hover:bg-rose-50 transition-colors" title="تسجيل الخروج">
                     <LogOut size={20} />
                   </button>
-                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold shadow-sm disabled:opacity-50 hover:shadow-md active:scale-95 ${saving ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30'}`}>
-                    {saving ? <Save size={20} className="animate-pulse" /> : <CheckCircle2 size={20} />}
+                  <div className="w-px h-8 bg-slate-200 mx-1 hidden sm:block"></div>
+                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold shadow-sm disabled:opacity-50 hover:shadow-md active:scale-95 ${saving ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'}`}>
+                    {saving ? <Save size={18} className="animate-pulse" /> : <CheckCircle2 size={18} />}
                     <span className="hidden sm:inline">{saving ? 'جاري الحفظ...' : 'حفظ'}</span>
                   </button>
                 </>
               )}
-              <div className="w-px h-8 bg-slate-700 mx-1 hidden sm:block"></div>
-              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-slate-800 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl hover:bg-slate-700 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
+              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-slate-100 text-slate-700 border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-200 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
                 <Download size={18} /> <span className="hidden sm:inline">تصدير</span>
               </button>
-              <button onClick={handleNewDay} className="flex items-center gap-2 bg-rose-600 text-white border border-rose-500 px-4 py-2 rounded-xl hover:bg-rose-500 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
+              <button onClick={handleNewDay} className="flex items-center gap-2 bg-indigo-600 text-white border border-indigo-500 px-4 py-2 rounded-xl hover:bg-indigo-700 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
                 <FilePlus size={18} /> <span className="hidden sm:inline">يوم جديد</span>
               </button>
             </div>
@@ -2435,7 +2536,7 @@ export default function App() {
                                 <button onClick={() => setViewSnapshot(snap)} className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold flex items-center gap-1">
                                   <Eye size={14} /> التفاصيل
                                 </button>
-                                <button onClick={() => handlePrintHistorySnapshot(snap)} className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold flex items-center gap-1">
+                                <button onClick={() => handlePrintHistory(snap)} className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold flex items-center gap-1">
                                   <Printer size={14} /> طباعة
                                 </button>
                               </div>
@@ -2443,7 +2544,15 @@ export default function App() {
                           </tr>
                         ))}
                         {history.length === 0 && (
-                          <tr><td colSpan={6} className="text-center py-8 text-slate-400">لا يوجد سجل للأيام السابقة</td></tr>
+                          <tr>
+                            <td colSpan={6}>
+                              <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50/50 rounded-xl my-4 border border-dashed border-slate-200">
+                                <CalendarDays size={48} className="opacity-20 mb-3" />
+                                <p className="font-bold text-lg text-slate-500">سجل الأيام السابقة فارغ</p>
+                                <p className="text-sm text-slate-400 mt-1">اضغط على "يوم جديد" للبدء بحفظ التقفيلات اليومية</p>
+                              </div>
+                            </td>
+                          </tr>
                         )}
                       </tbody>
                     </table>
@@ -2531,54 +2640,139 @@ export default function App() {
                           <head>
                             <title>تقرير دفتر الأستاذ</title>
                             <style>
-                              body { font-family: Arial, sans-serif; padding: 20px; }
-                              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                              th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-                              th { background-color: #f4f4f4; }
-                              .header { margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-                              .text-left { text-align: left; }
-                              .summary { display: flex; gap: 20px; margin-top: 10px; font-weight: bold; }
-                              .summary div { padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+                              @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap');
+                              body { 
+                                font-family: 'Cairo', sans-serif; 
+                                padding: 30px; 
+                                color: #1e293b;
+                                background: #fff;
+                              }
+                              .report-header {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: flex-start;
+                                border-bottom: 2px solid #0f172a;
+                                padding-bottom: 15px;
+                                margin-bottom: 30px;
+                              }
+                              .report-header h2 {
+                                margin: 0 0 10px 0;
+                                font-size: 28px;
+                                color: #0f172a;
+                              }
+                              .filters-info {
+                                color: #64748b;
+                                font-size: 14px;
+                                line-height: 1.6;
+                              }
+                              table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                font-size: 14px;
+                              }
+                              th, td { 
+                                border: 1px solid #e2e8f0; 
+                                padding: 12px 10px; 
+                                text-align: right; 
+                              }
+                              th { 
+                                background-color: #f8fafc; 
+                                color: #475569;
+                                font-weight: 800;
+                              }
+                              .text-left { text-align: left; font-family: monospace; font-size: 15px; }
+                              .summary-grid { 
+                                display: grid;
+                                grid-template-columns: repeat(4, 1fr);
+                                gap: 15px; 
+                                margin-bottom: 30px; 
+                              }
+                              .summary-card { 
+                                padding: 15px; 
+                                border: 1px solid #e2e8f0; 
+                                border-radius: 8px; 
+                                text-align: center;
+                                background: #f8fafc;
+                              }
+                              .summary-card span {
+                                display: block;
+                                font-size: 20px;
+                                font-weight: 800;
+                                font-family: monospace;
+                                margin-top: 5px;
+                              }
+                              .val-in { color: #059669; }
+                              .val-out { color: #e11d48; }
+                              .val-net { color: #2563eb; }
+                              
+                              @media print {
+                                body { padding: 0; }
+                                .no-print { display: none; }
+                              }
                             </style>
                           </head>
                           <body>
-                            <div class="header">
-                              <h2>تقرير دفتر الأستاذ</h2>
-                              ${ledgerFilter.startDate || ledgerFilter.endDate ? `<p>الفترة: ${ledgerFilter.startDate || 'البداية'} إلى ${ledgerFilter.endDate || 'النهاية'}</p>` : ''}
-                              ${ledgerFilter.category !== 'all' ? `<p>القسم: ${ledgerFilter.category}</p>` : ''}
-                              ${ledgerFilter.search ? `<p>بحث: ${ledgerFilter.search}</p>` : ''}
-                              <div class="summary">
-                                <div>إجمالي الوارد: <span dir="ltr">${formatNum(filteredIn)}</span></div>
-                                <div>إجمالي المنصرف: <span dir="ltr">${formatNum(filteredOut)}</span></div>
-                                <div>إجمالي المعلق: <span dir="ltr">${formatNum(filteredNeutral)}</span></div>
+                            <div class="report-header">
+                              <div>
+                                <h2>تقرير دفتر الأستاذ</h2>
+                                <div class="filters-info">
+                                  ${ledgerFilter.startDate || ledgerFilter.endDate ? `<div><strong>الفترة:</strong> ${ledgerFilter.startDate || 'البداية'} إلى ${ledgerFilter.endDate || 'النهاية'}</div>` : ''}
+                                  ${ledgerFilter.category !== 'all' ? `<div><strong>القسم:</strong> ${ledgerFilter.category}</div>` : ''}
+                                  ${ledgerFilter.search ? `<div><strong>بحث:</strong> ${ledgerFilter.search}</div>` : ''}
+                                  <div><strong>تاريخ الطباعة:</strong> ${new Date().toLocaleString('ar-EG')}</div>
+                                </div>
                               </div>
                             </div>
+                            
+                            <div class="summary-grid">
+                              <div class="summary-card">
+                                <strong>إجمالي الوارد (مدين)</strong>
+                                <span class="val-in" dir="ltr">${formatNum(filteredIn)}</span>
+                              </div>
+                              <div class="summary-card">
+                                <strong>إجمالي المنصرف (دائن)</strong>
+                                <span class="val-out" dir="ltr">${formatNum(filteredOut)}</span>
+                              </div>
+                              <div class="summary-card">
+                                <strong>إجمالي المعلق</strong>
+                                <span dir="ltr" style="color: #d97706;">${formatNum(filteredNeutral)}</span>
+                              </div>
+                              <div class="summary-card">
+                                <strong>صافي الرصيد</strong>
+                                <span class="val-net" dir="ltr">${formatNum(filteredIn - filteredOut)}</span>
+                              </div>
+                            </div>
+
                             <table>
                               <thead>
                                 <tr>
                                   <th>التاريخ</th>
-                                  <th>البيان</th>
+                                  <th style="width: 35%">البيان</th>
                                   <th>التصنيف</th>
                                   <th>مدين (وارد)</th>
                                   <th>دائن (منصرف)</th>
-                                  <th>الرصيد</th>
+                                  <th>الرصيد التراكمي</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 ${filteredLedger.map((e: any) => `
                                   <tr>
                                     <td>${e.date}</td>
-                                    <td>${e.description}</td>
-                                    <td>${e.category}</td>
-                                    <td class="text-left" dir="ltr">${e.type === 'in' ? formatNum(e.amount) : '-'}</td>
-                                    <td class="text-left" dir="ltr">${e.type === 'out' ? formatNum(e.amount) : '-'}</td>
-                                    <td class="text-left font-bold" dir="ltr">${formatNum(e.balance)}</td>
+                                    <td><strong>${e.description}</strong></td>
+                                    <td style="color: #64748b; font-size: 12px;">${e.category}</td>
+                                    <td class="text-left val-in" dir="ltr">${e.type === 'in' ? formatNum(e.amount) : '-'}</td>
+                                    <td class="text-left val-out" dir="ltr">${e.type === 'out' ? formatNum(e.amount) : '-'}</td>
+                                    <td class="text-left val-net font-bold" dir="ltr" style="background:#f8fafc;">${formatNum(e.balance)}</td>
                                   </tr>
                                 `).join('')}
-                                ${filteredLedger.length === 0 ? '<tr><td colspan="6" style="text-align:center;">لا توجد بيانات مطابقة</td></tr>' : ''}
+                                ${filteredLedger.length === 0 ? '<tr><td colspan="6" style="text-align:center; padding: 30px; color: #94a3b8;">لا توجد حركات مسجلة تطابق البحث</td></tr>' : ''}
                               </tbody>
                             </table>
-                            <script>window.print();</script>
+                            <script>
+                              window.onload = () => {
+                                setTimeout(() => window.print(), 500);
+                              };
+                            </script>
                           </body>
                         </html>
                       `);
@@ -2727,7 +2921,15 @@ export default function App() {
                           </tr>
                         ))}
                         {state.archivedPendingFunds.length === 0 && (
-                          <tr><td colSpan={5} className="text-center py-8 text-slate-400">لا يوجد بيانات في الأرشيف</td></tr>
+                          <tr>
+                            <td colSpan={5}>
+                              <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50/50 rounded-xl my-4 border border-dashed border-slate-200">
+                                <History size={48} className="opacity-20 mb-3" />
+                                <p className="font-bold text-lg text-slate-500">الأرشيف فارغ حالياً</p>
+                                <p className="text-sm text-slate-400 mt-1">تظهر هنا الأموال المعلقة بعد تسويتها</p>
+                              </div>
+                            </td>
+                          </tr>
                         )}
                       </tbody>
                     </table>
@@ -3137,12 +3339,99 @@ export default function App() {
               <button
                 type="submit"
                 disabled={loading || !newBranchName.trim()}
-                className="w-full bg-blue-600 outline-none text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 outline-none text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
               >
                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle2 size={20} />}
                 إضافة
               </button>
             </form>
+          </motion.div>
+        </motion.div>
+      )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+      {showAuthModal && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                <LogIn className="text-blue-600" size={24} />
+                {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
+              </h3>
+              <button onClick={() => setShowAuthModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              {authError && (
+                <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-xl text-sm font-bold border border-red-200 flex items-center gap-2">
+                  <AlertCircle size={18} className="shrink-0" />
+                  {authError}
+                </div>
+              )}
+              <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1.5">البريد الإلكتروني</label>
+                  <input
+                    type="email"
+                    required
+                    dir="ltr"
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1.5">كلمة المرور</label>
+                  <input
+                    type="password"
+                    required
+                    dir="ltr"
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 text-white font-bold py-3.5 px-4 rounded-xl mt-2 hover:bg-blue-700 transition-all shadow-sm active:scale-95"
+                >
+                  {isSignUp ? 'إنشاء الحساب' : 'دخول'}
+                </button>
+              </form>
+
+              <div className="mt-5 relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-slate-500 font-medium">أو</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleGoogleLogin}
+                className="mt-5 w-full bg-white border-2 border-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95 flex items-center justify-center gap-3"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                المتابعة بواسطة Google
+              </button>
+
+              <div className="mt-6 text-center">
+                <button
+                  onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }}
+                  className="text-slate-500 hover:text-blue-600 font-bold transition-colors text-sm relative after:bg-blue-600 after:absolute after:h-[2px] after:w-0 hover:after:w-full after:bottom-0 after:-right-0 after:transition-all after:duration-300"
+                >
+                  {isSignUp ? 'لدي حساب بالفعل، تسجيل الدخول' : 'جديد؟ قم بإنشاء حساب'}
+                </button>
+              </div>
+            </div>
           </motion.div>
         </motion.div>
       )}
