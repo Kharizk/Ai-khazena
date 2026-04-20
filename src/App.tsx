@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp, ChevronUp, ChevronDown } from 'lucide-react';
+import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp, ChevronUp, ChevronDown, ArrowRight, ChevronLeft, Database } from 'lucide-react';
 import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, updateDoc, where } from 'firebase/firestore';
@@ -61,6 +61,7 @@ type AppState = {
     pendingFundsOwedByUs: string[];
     cashDeposits: string[];
     customCashAmounts: string[];
+    posData: string[];
   };
 };
 
@@ -99,6 +100,7 @@ const getInitialState = (): AppState => ({
     pendingFundsOwedByUs: ['مبلغ زائد لعميل'],
     cashDeposits: [],
     customCashAmounts: ['رزمة 50', 'رزمة 100', 'مبلغ معدود مسبقاً'],
+    posData: [],
   }
 });
 
@@ -154,8 +156,93 @@ type DailySnapshot = {
 
 const formatNum = (num: number) => num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id }: any) => (
-  <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white text-black font-sans"}>
+const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4' }: any) => {
+  if (printFormat === 'thermal') {
+    return (
+      <div id={id} className="hidden print:block rtl print:bg-white text-black font-sans mx-auto" style={{ width: '80mm', margin: '0 auto', fontSize: '13px', lineHeight: '1.4' }}>
+        <div style={{ textAlign: 'center', marginBottom: '10px', borderBottom: '1px dashed #000', paddingBottom: '10px' }}>
+          <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0' }}>تقرير التقفيل اليومي</h1>
+          <div style={{ fontSize: '11px' }}>
+            <div>التاريخ: <span dir="ltr">{state.date}</span></div>
+            <div>طباعة: <span dir="ltr">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
+          </div>
+        </div>
+
+        <div style={{ fontWeight: 'bold', borderBottom: '1px solid #000', marginBottom: '5px' }}>ملخص الوارد والمنصرف</div>
+        <table style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse', fontSize: '12px' }}>
+          <tbody>
+            <tr>
+              <td style={{ padding: '2px 0' }}>رصيد أول المدة</td>
+              <td style={{ padding: '2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(state.previousBalance)}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '2px 0' }}>+ إجمالي الإيرادات</td>
+              <td style={{ padding: '2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalCashIn)}</td>
+            </tr>
+            <tr style={{ fontSize: '10px' }}>
+              <td colSpan={2} style={{ padding: '2px 0 6px 10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>صافي المبيعات</span><span dir="ltr">{formatNum(summary.netSales)}</span></div>
+                {summary.totalExpenseRefunds > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>مردود مصروفات</span><span dir="ltr">{formatNum(summary.totalExpenseRefunds)}</span></div>}
+              </td>
+            </tr>
+            <tr style={{ borderTop: '1px dashed #ccc' }}>
+              <td style={{ padding: '4px 0 2px 0' }}>- إجمالي المخصومات</td>
+              <td style={{ padding: '4px 0 2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalCashOut)}</td>
+            </tr>
+            <tr style={{ fontSize: '10px' }}>
+              <td colSpan={2} style={{ padding: '2px 0 6px 10px' }}>
+                {summary.totalNetworks > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>الشبكات</span><span dir="ltr">{formatNum(summary.totalNetworks)}</span></div>}
+                {summary.totalCustomerTransfers > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>تحويلات عملاء</span><span dir="ltr">{formatNum(summary.totalCustomerTransfers)}</span></div>}
+                {summary.totalCompanyPayments > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>شركات وموردين</span><span dir="ltr">{formatNum(summary.totalCompanyPayments)}</span></div>}
+                {summary.generalExpensesTotal > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>مصروفات عامة</span><span dir="ltr">{formatNum(summary.generalExpensesTotal)}</span></div>}
+                {summary.totalCashDeposits > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>إيداعات بنكية</span><span dir="ltr">{formatNum(summary.totalCashDeposits)}</span></div>}
+                {summary.separatedExpenses.map((exp: any) => (
+                  <div key={exp.id} style={{ display: 'flex', justifyContent: 'space-between' }}><span>{exp.name || 'محدد'}</span><span dir="ltr">{formatNum(exp.amount)}</span></div>
+                ))}
+              </td>
+            </tr>
+            <tr style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000' }}>
+              <td style={{ padding: '6px 0', fontWeight: 'bold' }}>الرصيد الدفتري</td>
+              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.expectedCash)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ fontWeight: 'bold', borderBottom: '1px solid #000', marginBottom: '5px' }}>الجرد الفعلي</div>
+        <table style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse', fontSize: '12px' }}>
+          <tbody>
+            <tr>
+              <td style={{ padding: '2px 0' }}>النقدية الفعلية</td>
+              <td style={{ padding: '2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.physicalCash)}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '2px 0' }}>+ معلقة لنا</td>
+              <td style={{ padding: '2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '2px 0' }}>- معلقة علينا</td>
+              <td style={{ padding: '2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td>
+            </tr>
+            <tr style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000' }}>
+              <td style={{ padding: '6px 0', fontWeight: 'bold' }}>الصافي الفعلي</td>
+              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.actualCash)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ textAlign: 'center', marginTop: '15px' }}>
+          <div style={{ fontSize: '14px', fontWeight: 'bold', padding: '8px', border: '1px dashed #000' }}>
+            {summary.difference === 0 ? 'الخزينة مطابقة تماماً' : summary.difference > 0 ? `زيادة: ${formatNum(Math.abs(summary.difference))}` : `عجز: ${formatNum(Math.abs(summary.difference))}`}
+          </div>
+        </div>
+        
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '10px' }}>-- تمت التسوية بنجاح --</div>
+      </div>
+    );
+  }
+
+  return (
+    <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white text-black font-sans"}>
     <div className="text-center mb-6 pb-4 border-b-2 border-gray-300">
       <h1 className="text-3xl font-bold mb-2">الخزينة الذكية - تقرير التقفيل اليومي</h1>
       <p className="text-lg">تاريخ: <span dir="ltr" className="font-bold">{state.date}</span></p>
@@ -231,13 +318,68 @@ const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id }: an
       {summary.difference === 0 ? 'الخزينة مطابقة تماماً' : summary.difference > 0 ? `يوجد زيادة: ${formatNum(Math.abs(summary.difference))}` : `يوجد عجز: ${formatNum(Math.abs(summary.difference))}`}
     </div>
   </div>
-);
+  );
+};
 
-const PosPrintView = ({ pos, summary, formatNum, date }: any) => {
+const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4' }: any) => {
   const net = pos.sales - pos.returns;
   const networksTotal = pos.networks.reduce((a: number, b: any) => a + (typeof b === 'number' ? b : b.amount || 0), 0);
   const diff = (pos.physicalCash !== undefined ? pos.physicalCash : 0) - (net - networksTotal);
   
+  if (printFormat === 'thermal') {
+    return (
+      <div className="hidden print:block rtl print:bg-white text-black font-sans mx-auto" style={{ width: '80mm', margin: '0 auto', fontSize: '13px', lineHeight: '1.4' }}>
+        <div style={{ textAlign: 'center', marginBottom: '10px', borderBottom: '1px dashed #000', paddingBottom: '10px' }}>
+          <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0' }}>تسوية نقطة بيع</h1>
+          <h2 style={{ fontSize: '16px', margin: '0 0 5px 0' }}>{pos.name || 'بدون اسم'}</h2>
+          <div style={{ fontSize: '11px' }}>
+            <div>التاريخ: <span dir="ltr">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span></div>
+            <div>طباعة: <span dir="ltr">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
+          </div>
+        </div>
+        
+        <table style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse' }}>
+          <tbody>
+            <tr>
+              <td style={{ padding: '4px 0' }}>إجمالي المبيعات</td>
+              <td style={{ padding: '4px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(pos.sales)}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '4px 0' }}>المرتجعات</td>
+              <td style={{ padding: '4px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(pos.returns)}</td>
+            </tr>
+            <tr style={{ borderTop: '1px dashed #000', borderBottom: '1px dashed #000' }}>
+              <td style={{ padding: '6px 0', fontWeight: 'bold' }}>صافي المبيعات</td>
+              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(net)}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '4px 0' }}>
+                الشبكات
+                {pos.networks?.length > 0 && <div style={{ fontSize: '10px' }}>({pos.networks.map((n: number) => formatNum(n)).join(' + ')})</div>}
+              </td>
+              <td style={{ padding: '4px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(networksTotal)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000', margin: '15px 0', padding: '10px 0', textAlign: 'center' }}>
+          <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>المطلوب كاش في الدرج</div>
+          <div style={{ fontSize: '24px', fontWeight: 'bold' }} dir="ltr">{formatNum(net - networksTotal)}</div>
+        </div>
+
+        {pos.physicalCash !== undefined && (
+          <div style={{ textAlign: 'center', marginTop: '15px' }}>
+            <div style={{ fontSize: '12px' }}>الكاش الفعلي الموجود: <span dir="ltr" style={{ fontWeight: 'bold' }}>{formatNum(pos.physicalCash)}</span></div>
+            <div style={{ fontSize: '14px', fontWeight: 'bold', marginTop: '8px', padding: '5px', border: '1px dashed #000' }}>
+              {diff === 0 ? 'الدرج مطابق تماماً' : diff > 0 ? `زيادة: ${formatNum(Math.abs(diff))}` : `عجز: ${formatNum(Math.abs(diff))}`}
+            </div>
+          </div>
+        )}
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '10px' }}>-- تم --</div>
+      </div>
+    );
+  }
+
   return (
     <div className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white text-black font-sans mx-auto">
       <div className="text-center mb-8 pb-6 border-b-2 border-gray-400">
@@ -1682,7 +1824,7 @@ export default function App() {
     }
   };
 
-  const [printView, setPrintView] = useState<'none' | 'daily' | 'pending' | 'pos' | 'history'>('none');
+  const [printView, setPrintView] = useState<'none' | 'daily' | 'daily_thermal' | 'pending' | 'pos' | 'pos_thermal' | 'history'>('none');
   const [activePrintPosId, setActivePrintPosId] = useState<string | null>(null);
   const [printSnapshot, setPrintSnapshot] = useState<{state: AppState, summary: ReturnType<typeof getSummary>} | null>(null);
 
@@ -1695,12 +1837,12 @@ export default function App() {
     return () => window.removeEventListener('afterprint', handleAfterPrint);
   }, []);
 
-  const handleExport = () => {
+  const handleExport = (format: 'a4' | 'thermal' = 'a4') => {
     setIsExporting(true);
     setShowExportModal(false);
     
     if (exportMode === 'summary') {
-      setPrintView('daily');
+      setPrintView(format === 'thermal' ? 'daily_thermal' : 'daily');
     } else {
       setPrintView('none');
     }
@@ -1710,9 +1852,9 @@ export default function App() {
     }, 500);
   };
 
-  const handlePrintPos = (posId: string) => {
+  const handlePrintPos = (posId: string, format: 'a4' | 'thermal' = 'a4') => {
     setActivePrintPosId(posId);
-    setPrintView('pos');
+    setPrintView(format === 'thermal' ? 'pos_thermal' : 'pos');
     setIsExporting(true);
     setTimeout(() => {
       window.print();
@@ -1728,9 +1870,9 @@ export default function App() {
     }, 500);
   };
 
-  const handlePrintHistory = (snap: DailySnapshot) => {
+  const handlePrintHistory = (snap: DailySnapshot, format: 'a4' | 'thermal' = 'a4') => {
     setPrintSnapshot({ state: snap.state, summary: snap.summary });
-    setPrintView('history');
+    setPrintView(format === 'thermal' ? 'daily_thermal' : 'history');
     setIsExporting(true);
     setTimeout(() => {
       window.print();
@@ -2395,6 +2537,9 @@ export default function App() {
                   <div className="bg-emerald-50 text-emerald-800 p-4 border-b border-emerald-100 flex items-center gap-2 font-bold">
                     <Receipt size={20} /> مبيعات نقاط البيع
                   </div>
+                  <datalist id="list-posData">
+                    {(state.savedNames.posData || []).map(name => <option key={name} value={name} />)}
+                  </datalist>
                   <div className="p-4 overflow-x-auto">
                     <table className="w-full text-sm text-right">
                       <thead>
@@ -2415,11 +2560,16 @@ export default function App() {
                           return (
                             <tr key={pos.id} className="border-b border-slate-100 last:border-0 relative group">
                               <td className="py-2 pr-2">
-                                <Input value={pos.name} onChange={(e: any) => {
-                                  const newData = [...state.posData];
-                                  newData[index].name = e.target.value;
-                                  updateField('posData', newData);
-                                }} />
+                                <Input 
+                                  value={pos.name} 
+                                  list="list-posData"
+                                  onChange={(e: any) => {
+                                    const newData = [...state.posData];
+                                    newData[index].name = e.target.value;
+                                    updateField('posData', newData);
+                                  }} 
+                                  onBlur={(e: any) => addSavedName('posData', e.target.value)}
+                                />
                               </td>
                               <td className="py-2 px-1"><Input type="number" value={pos.sales} onChange={(e: any) => {
                                   const newData = [...state.posData];
@@ -2463,15 +2613,16 @@ export default function App() {
                                 >
                                   <Pin size={18} className={pos.isPinned ? "fill-current" : ""} />
                                 </button>
-                                <button onClick={() => handlePrintPos(pos.id)} className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition-colors" title="طباعة تسوية النقطة">
-                                  <Printer size={18} />
-                                </button>
                                 <button 
                                   onClick={() => updateField('posData', state.posData.filter(p => p.id !== pos.id))} 
-                                  className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors" title="إزالة النقطة"
+                                  className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors ml-1" title="إزالة النقطة"
                                 >
                                   <Trash2 size={18} />
                                 </button>
+                                <div className="flex bg-blue-50 text-blue-600 rounded-lg overflow-hidden border border-blue-200">
+                                  <button onClick={() => handlePrintPos(pos.id, 'a4')} className="hover:bg-blue-100 p-1.5 px-2 text-xs font-bold transition-colors border-l border-blue-200" title="طباعة A4">A4</button>
+                                  <button onClick={() => handlePrintPos(pos.id, 'thermal')} className="hover:bg-blue-100 p-1.5 px-2 text-[11px] font-bold transition-colors flex items-center" title="طباعة إيصال حراري">إيصال</button>
+                                </div>
                               </td>
                             </tr>
                           );
@@ -3041,20 +3192,29 @@ export default function App() {
                 </div>
               </div>
               
-              <button 
-                onClick={handleExport}
-                disabled={isExporting}
-                className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {isExporting ? (
-                  <>جاري تجهيز الملف...</>
-                ) : (
-                  <>
-                    {exportMode === 'summary' ? <Download size={20} /> : <Printer size={20} />}
-                    {exportMode === 'summary' ? 'تصدير الملخص كـ PDF' : 'طباعة التقرير المفصل'}
-                  </>
+              <div className="flex gap-2 w-full mt-4">
+                <button 
+                  onClick={() => handleExport('a4')}
+                  disabled={isExporting}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isExporting ? 'جاري التحضير...' : (
+                    <>
+                      {exportMode === 'summary' ? <Download size={20} /> : <Printer size={20} />} طباعة A4
+                    </>
+                  )}
+                </button>
+                
+                {exportMode === 'summary' && (
+                  <button 
+                    onClick={() => handleExport('thermal')}
+                    disabled={isExporting}
+                    className="flex-1 bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <Printer size={20} /> حراري
+                  </button>
                 )}
-              </button>
+              </div>
             </div>
           </motion.div>
         </motion.div>
@@ -3072,9 +3232,10 @@ export default function App() {
                 تفاصيل يوم: {viewSnapshot.state.date}
               </h3>
               <div className="flex items-center gap-2">
-                <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot); }} className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-sm font-bold flex items-center gap-2">
-                  <Printer size={16} /> طباعة
-                </button>
+                <div className="flex bg-blue-50 text-blue-600 rounded-lg overflow-hidden border border-blue-200">
+                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'a4'); }} className="hover:bg-blue-100 px-3 py-1.5 text-sm font-bold transition-colors border-l border-blue-200 flex items-center gap-1" title="طباعة A4"><Printer size={16} /> A4</button>
+                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'thermal'); }} className="hover:bg-blue-100 px-3 py-1.5 text-sm font-bold transition-colors" title="طباعة حراري">حراري</button>
+                </div>
                 <button onClick={() => setViewSnapshot(null)} className="text-slate-400 hover:text-slate-600 p-1">
                   <X size={20} />
                 </button>
@@ -3107,28 +3268,28 @@ export default function App() {
       )}
       </AnimatePresence>
 
-      {/* Settings Modal */}
+      {/* Settings Page (Full Screen Android Style) */}
       <AnimatePresence>
       {showSettingsModal && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-start justify-center p-4 overflow-y-auto print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="bg-slate-50 rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
-            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white sticky top-0 z-10 shrink-0 shadow-sm">
-              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                <Settings size={22} className="text-blue-600" /> لوحة الإدارة والإعدادات
-              </h3>
-              <button onClick={() => setShowSettingsModal(false)} className="text-slate-400 hover:text-slate-600 p-1 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
-                <X size={20} />
-              </button>
-            </div>
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} className="fixed inset-0 z-[100] bg-[#f2f2f7] overflow-y-auto print:hidden" dir="rtl">
+          {/* Android-like App Bar */}
+          <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-2 py-3 flex items-center gap-2 shadow-sm">
+            <button onClick={() => setShowSettingsModal(false)} className="p-3 hover:bg-black/5 active:bg-black/10 rounded-full transition-colors">
+              <ArrowRight size={24} className="text-gray-800" />
+            </button>
+            <h2 className="text-xl font-bold text-gray-900 flex-1">الإعدادات</h2>
+          </div>
+          
+          <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-8 pb-12">
             
-            <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-8">
-              
-              {/* Lists Management */}
-              <section>
-                <div className="flex items-center gap-2 font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">
-                  <BookOpen size={20} className="text-indigo-600" /> إدارة القوائم المنسدلة (الأسماء المحفوظة)
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Lists Management */}
+            <section>
+              <div className="px-4 mb-2 flex items-center gap-2">
+                <BookOpen size={18} className="text-blue-600" />
+                <h3 className="font-bold text-gray-600 text-sm tracking-wide">إدارة القوائم المنسدلة (الحفظ التلقائي)</h3>
+              </div>
+              <div className="bg-white rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100">
+                <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-gray-100">
                   {Object.entries({
                     expenseRefunds: 'مردود المصروفات',
                     expenses: 'المصروفات المتنوعة',
@@ -3137,15 +3298,19 @@ export default function App() {
                     pendingFundsOwedToUs: 'أموال معلقة لنا (سلف/عهد)',
                     pendingFundsOwedByUs: 'أموال معلقة علينا (لعملاء)',
                     cashDeposits: 'الإيداعات البنكية',
-                    customCashAmounts: 'المبالغ النقدية المجمعة'
-                  }).map(([fieldKey, label]) => (
-                    <div key={fieldKey} className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
-                      <h3 className="font-bold text-slate-700 mb-3 text-sm">{label}</h3>
+                    customCashAmounts: 'المبالغ النقدية المجمعة',
+                    posData: 'نقاط البيع',
+                  }).map(([fieldKey, label], index) => (
+                    <div key={fieldKey} className={`p-5 ${index % 2 !== 0 ? '' : ''} hover:bg-gray-50/50 transition-colors`}>
+                      <h3 className="font-bold text-gray-800 mb-3 text-base flex justify-between items-center">
+                        {label}
+                        <span className="text-xs font-normal bg-gray-100 text-gray-500 px-2 py-1 rounded-full">{(state.savedNames[fieldKey as keyof typeof state.savedNames] || []).length}</span>
+                      </h3>
                       <div className="flex flex-wrap gap-2 mb-4">
                         {(state.savedNames[fieldKey as keyof typeof state.savedNames] || []).map(name => (
-                          <span key={name} className="bg-slate-50 text-slate-700 px-2 py-1 rounded-md text-xs flex items-center gap-2 border border-slate-200">
+                          <span key={name} className="bg-white group text-gray-700 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 border border-gray-200 shadow-sm">
                             {name}
-                            <button onClick={() => removeSavedName(fieldKey as any, name)} className="text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={12} /></button>
+                            <button onClick={() => removeSavedName(fieldKey as any, name)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1 rounded-md transition-colors"><Trash2 size={14} /></button>
                           </span>
                         ))}
                       </div>
@@ -3153,108 +3318,115 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </section>
+
+            {/* Admin Panel */}
+            {userProfile?.role === 'admin' && (
+              <section>
+                <div className="px-4 mb-2 flex items-center gap-2">
+                  <Database size={18} className="text-amber-600" />
+                  <h3 className="font-bold text-gray-600 text-sm tracking-wide">إدارة النظام المركزية</h3>
+                </div>
+
+                {/* Branches Settings */}
+                <div className="bg-white rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 mb-6">
+                  <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+                    <div>
+                      <h4 className="font-bold text-gray-900 text-lg">الفروع</h4>
+                      <p className="text-gray-500 text-sm mt-1">التحكم في منافذ وفروع المنشأة</p>
+                    </div>
+                    <button onClick={() => { setShowSettingsModal(false); setShowAddBranchModal(true); }} className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2.5 rounded-xl text-sm font-bold transition-transform active:scale-95 flex items-center gap-2 shadow-sm">
+                      <Plus size={18} /> إضافة فرع
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-right">
+                      <thead className="bg-gray-50 text-gray-600 border-b border-gray-100">
+                        <tr>
+                          <th className="p-4 font-semibold">اسم الفرع</th>
+                          <th className="p-4 w-40 text-center font-semibold">إجراء</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {branches.map(b => (
+                          <tr key={b.id} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="p-4">
+                              <Input value={b.name} onChange={(e: any) => {
+                                const newBranches = [...branches];
+                                const idx = newBranches.findIndex(x => x.id === b.id);
+                                if (idx > -1) { newBranches[idx].name = e.target.value; setBranches(newBranches); }
+                              }} onBlur={(e: any) => handleUpdateBranch(b.id, e.target.value)} className="w-full max-w-sm bg-transparent border-gray-200 focus:bg-white" />
+                            </td>
+                            <td className="p-4 text-center">
+                              <button onClick={() => handleDeleteBranch(b.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2.5 rounded-xl transition-colors" title="حذف الفرع">
+                                <Trash2 size={18} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {branches.length === 0 && <tr><td colSpan={2} className="text-center p-8 text-gray-500 font-medium">لا توجد فروع مسجلة</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Users Settings */}
+                <div className="bg-white rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100">
+                  <div className="p-5 border-b border-gray-100 bg-gray-50/30">
+                    <h4 className="font-bold text-gray-900 text-lg">المستخدمون النشطون</h4>
+                    <p className="text-gray-500 text-sm mt-1">صلاحيات التحكم والدخول للمنصة</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-right">
+                      <thead className="bg-gray-50 text-gray-600 border-b border-gray-100 text-sm">
+                        <tr>
+                          <th className="p-4 font-semibold">البريد الإلكتروني</th>
+                          <th className="p-4 font-semibold">تحديد الدور</th>
+                          <th className="p-4 font-semibold">تعيين الفرع</th>
+                          <th className="p-4 font-semibold">حالة الحساب</th>
+                          <th className="p-4 font-semibold text-left">تاريخ الانضمام</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-sm">
+                        {adminUsers.map(u => (
+                          <tr key={u.uid} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="p-4 font-bold text-gray-800">{u.email}</td>
+                            <td className="p-4">
+                              <select value={u.role} onChange={(e) => handleUpdateUser(u.uid, { role: e.target.value as UserRole })} className="cursor-pointer border border-gray-200 rounded-xl px-3 py-2 bg-white outline-none w-full max-w-[150px] shadow-sm hover:border-gray-300 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                <option value="cashier">كاشير (إدخال)</option>
+                                <option value="manager">مدير (تقفيل)</option>
+                                <option value="admin">أدمن (كامل)</option>
+                              </select>
+                            </td>
+                            <td className="p-4">
+                              <select value={u.branchId || ''} onChange={(e) => handleUpdateUser(u.uid, { branchId: e.target.value || null })} className="cursor-pointer border border-gray-200 rounded-xl px-3 py-2 bg-white outline-none w-full max-w-[150px] shadow-sm hover:border-gray-300 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                <option value="">-- بلا فرع --</option>
+                                {branches.map(b => (
+                                  <option key={b.id} value={b.id}>{b.name}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="p-4">
+                              <select value={u.status} onChange={(e) => handleUpdateUser(u.uid, { status: e.target.value as UserStatus })} className={`cursor-pointer border rounded-xl px-3 py-2 outline-none font-bold shadow-sm transition-colors w-full max-w-[150px] focus:ring-2 ${u.status === 'active' ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:border-emerald-300 focus:ring-emerald-100' : u.status === 'pending' ? 'bg-amber-50 text-amber-800 border-amber-200 hover:border-amber-300 focus:ring-amber-100' : 'bg-rose-50 text-rose-800 border-rose-200 hover:border-rose-300 focus:ring-rose-100'}`}>
+                                <option value="pending">قيد الانتظار</option>
+                                <option value="active">حساب نشط</option>
+                                <option value="suspended">موقوف/مجمد</option>
+                              </select>
+                            </td>
+                            <td className="p-4 text-gray-500 font-mono text-left" dir="ltr">{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
+                          </tr>
+                        ))}
+                        {adminUsers.length === 0 && <tr><td colSpan={5} className="text-center p-8 text-gray-500 font-medium">لم يتم تسجيل أي مستخدم</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
               </section>
+            )}
 
-              {/* Admin Panel */}
-              {userProfile?.role === 'admin' && (
-                <section>
-                  <div className="flex items-center gap-2 font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2 mt-4">
-                    <Pin size={20} className="text-amber-600" /> إدارة الفروع والموظفين
-                  </div>
-
-                  {/* Branches Settings */}
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
-                    <h4 className="font-bold text-slate-700 mb-4 flex items-center justify-between">
-                      الفروع
-                      <button onClick={() => { setShowSettingsModal(false); setShowAddBranchModal(true); }} className="bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1">
-                        <Plus size={16} /> إضافة فرع
-                      </button>
-                    </h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm text-right bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
-                        <thead className="bg-slate-100 text-slate-600">
-                          <tr>
-                            <th className="p-3">اسم الفرع</th>
-                            <th className="p-3 w-40 text-center">إجراء</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {branches.map(b => (
-                            <tr key={b.id} className="border-b border-slate-200 last:border-0 hover:bg-white transition-colors">
-                              <td className="p-3">
-                                <Input value={b.name} onChange={(e: any) => {
-                                  const newBranches = [...branches];
-                                  const idx = newBranches.findIndex(x => x.id === b.id);
-                                  if (idx > -1) { newBranches[idx].name = e.target.value; setBranches(newBranches); }
-                                }} onBlur={(e: any) => handleUpdateBranch(b.id, e.target.value)} className="w-full max-w-sm" />
-                              </td>
-                              <td className="p-3 text-center">
-                                <button onClick={() => handleDeleteBranch(b.id)} className="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors" title="حذف الفرع">
-                                  <Trash2 size={16} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                          {branches.length === 0 && <tr><td colSpan={2} className="text-center p-6 text-slate-500">لا يوجد فروع</td></tr>}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* Users Settings */}
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-                    <h4 className="font-bold text-slate-700 mb-4">المستخدمون</h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm text-right bg-slate-50 border border-slate-200 rounded-lg overflow-hidden">
-                        <thead className="bg-slate-100 text-slate-600">
-                          <tr>
-                            <th className="p-3">الإيميل</th>
-                            <th className="p-3">الدور</th>
-                            <th className="p-3">الفرع</th>
-                            <th className="p-3">الحالة</th>
-                            <th className="p-3">تاريخ التسجيل</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {adminUsers.map(u => (
-                            <tr key={u.uid} className="border-b border-slate-200 last:border-0 hover:bg-white transition-colors">
-                              <td className="p-3 font-medium text-slate-800">{u.email}</td>
-                              <td className="p-3">
-                                <select value={u.role} onChange={(e) => handleUpdateUser(u.uid, { role: e.target.value as UserRole })} className="border border-slate-200 rounded-lg px-2 py-1 bg-white outline-none">
-                                  <option value="cashier">كاشير</option>
-                                  <option value="manager">مدير</option>
-                                  <option value="admin">أدمن</option>
-                                </select>
-                              </td>
-                              <td className="p-3">
-                                <select value={u.branchId || ''} onChange={(e) => handleUpdateUser(u.uid, { branchId: e.target.value || null })} className="border border-slate-200 rounded-lg px-2 py-1 bg-white outline-none">
-                                  <option value="">-- بدون فرع --</option>
-                                  {branches.map(b => (
-                                    <option key={b.id} value={b.id}>{b.name}</option>
-                                  ))}
-                                </select>
-                              </td>
-                              <td className="p-3">
-                                <select value={u.status} onChange={(e) => handleUpdateUser(u.uid, { status: e.target.value as UserStatus })} className={`border rounded-lg px-2 py-1 outline-none font-bold ${u.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : u.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                                  <option value="pending">قيد الانتظار</option>
-                                  <option value="active">نشط</option>
-                                  <option value="suspended">موقوف</option>
-                                </select>
-                              </td>
-                              <td className="p-3 text-slate-500" dir="ltr">{new Date(u.createdAt).toLocaleDateString()}</td>
-                            </tr>
-                          ))}
-                          {adminUsers.length === 0 && <tr><td colSpan={5} className="text-center p-6 text-slate-500">لا يوجد مستخدمين</td></tr>}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                </section>
-              )}
-
-            </div>
-          </motion.div>
+          </div>
         </motion.div>
       )}
       </AnimatePresence>
@@ -3489,10 +3661,14 @@ export default function App() {
       </div>
 
       {printView === 'daily' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} />}
+      {printView === 'daily_thermal' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" />}
       {printView === 'history' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} />}
       {printView === 'pending' && <PendingPrintView pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />}
       {printView === 'pos' && activePrintPosId && state.posData.find(p => p.id === activePrintPosId) && (
-        <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} />
+        <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="a4" />
+      )}
+      {printView === 'pos_thermal' && activePrintPosId && state.posData.find(p => p.id === activePrintPosId) && (
+        <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" />
       )}
       
       {/* Hidden containers for PDF export calculation */}
