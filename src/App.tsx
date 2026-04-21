@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp, ChevronUp, ChevronDown, ArrowRight, ChevronLeft, Database } from 'lucide-react';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp, ChevronUp, ChevronDown, ArrowRight, ChevronLeft, Database, Sparkles } from 'lucide-react';
 import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, updateDoc, where } from 'firebase/firestore';
@@ -63,6 +65,13 @@ type AppState = {
     customCashAmounts: string[];
     posData: string[];
   };
+  historicalMonths?: { monthYear: string, netSales: number }[];
+  historicalSales?: {
+    id: string;
+    type: 'day' | 'month' | 'year';
+    dateStr: string;
+    netSales: number;
+  }[];
 };
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -101,7 +110,8 @@ const getInitialState = (): AppState => ({
     cashDeposits: [],
     customCashAmounts: ['رزمة 50', 'رزمة 100', 'مبلغ معدود مسبقاً'],
     posData: [],
-  }
+  },
+  historicalMonths: []
 });
 
 const sumTransactions = (arr: Transaction[]) => arr.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
@@ -160,6 +170,13 @@ const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, prin
   if (printFormat === 'thermal') {
     return (
       <div id={id} className="hidden print:block rtl print:bg-white text-black font-sans mx-auto" style={{ width: '80mm', margin: '0 auto', fontSize: '13px', lineHeight: '1.4' }}>
+        <style dangerouslySetInnerHTML={{__html: `
+          @media print {
+            @page { margin: 0; padding: 0; }
+            body { margin: 0; padding: 10px; }
+            * { box-shadow: none !important; }
+          }
+        `}} />
         <div style={{ textAlign: 'center', marginBottom: '10px', borderBottom: '1px dashed #000', paddingBottom: '10px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0' }}>تقرير التقفيل اليومي</h1>
           <div style={{ fontSize: '11px' }}>
@@ -231,12 +248,17 @@ const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, prin
         </table>
 
         <div style={{ textAlign: 'center', marginTop: '15px' }}>
-          <div style={{ fontSize: '14px', fontWeight: 'bold', padding: '8px', border: '1px dashed #000' }}>
-            {summary.difference === 0 ? 'الخزينة مطابقة تماماً' : summary.difference > 0 ? `زيادة: ${formatNum(Math.abs(summary.difference))}` : `عجز: ${formatNum(Math.abs(summary.difference))}`}
+          <div style={{ fontSize: '18px', fontWeight: 'bold', padding: '8px', border: '2px dashed #000' }}>
+            {summary.difference === 0 ? 'الخزينة مطابقة تماماً' : summary.difference > 0 ? `النتيجة: زيادة ${formatNum(Math.abs(summary.difference))}` : `النتيجة: عجز ${formatNum(Math.abs(summary.difference))}`}
           </div>
         </div>
         
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '10px' }}>-- تمت التسوية بنجاح --</div>
+        <div style={{ marginTop: '30px', textAlign: 'center' }}>
+          <div style={{ fontSize: '14px', fontWeight: 'bold' }}>توقيع الكاشير / المسؤول</div>
+          <div style={{ marginTop: '25px', borderBottom: '1px dashed #000', margin: '25px 20px 0 20px' }}></div>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '10px', paddingBottom: '10px' }}>-- تمت التسوية بنجاح --</div>
       </div>
     );
   }
@@ -329,9 +351,16 @@ const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4' }: any
   if (printFormat === 'thermal') {
     return (
       <div className="hidden print:block rtl print:bg-white text-black font-sans mx-auto" style={{ width: '80mm', margin: '0 auto', fontSize: '13px', lineHeight: '1.4' }}>
+        <style dangerouslySetInnerHTML={{__html: `
+          @media print {
+            @page { margin: 0; padding: 0; }
+            body { margin: 0; padding: 10px; }
+            * { box-shadow: none !important; }
+          }
+        `}} />
         <div style={{ textAlign: 'center', marginBottom: '10px', borderBottom: '1px dashed #000', paddingBottom: '10px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0' }}>تسوية نقطة بيع</h1>
-          <h2 style={{ fontSize: '16px', margin: '0 0 5px 0' }}>{pos.name || 'بدون اسم'}</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{pos.name || 'بدون اسم'}</h2>
           <div style={{ fontSize: '11px' }}>
             <div>التاريخ: <span dir="ltr">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span></div>
             <div>طباعة: <span dir="ltr">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
@@ -363,19 +392,25 @@ const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4' }: any
         </table>
 
         <div style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000', margin: '15px 0', padding: '10px 0', textAlign: 'center' }}>
-          <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>المطلوب كاش في الدرج</div>
-          <div style={{ fontSize: '24px', fontWeight: 'bold' }} dir="ltr">{formatNum(net - networksTotal)}</div>
+          <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '5px' }}>المطلوب كاش في الدرج</div>
+          <div style={{ fontSize: '26px', fontWeight: 'bold' }} dir="ltr">{formatNum(net - networksTotal)}</div>
         </div>
 
         {pos.physicalCash !== undefined && (
           <div style={{ textAlign: 'center', marginTop: '15px' }}>
-            <div style={{ fontSize: '12px' }}>الكاش الفعلي الموجود: <span dir="ltr" style={{ fontWeight: 'bold' }}>{formatNum(pos.physicalCash)}</span></div>
-            <div style={{ fontSize: '14px', fontWeight: 'bold', marginTop: '8px', padding: '5px', border: '1px dashed #000' }}>
-              {diff === 0 ? 'الدرج مطابق تماماً' : diff > 0 ? `زيادة: ${formatNum(Math.abs(diff))}` : `عجز: ${formatNum(Math.abs(diff))}`}
+            <div style={{ fontSize: '14px' }}>الكاش الفعلي الموجود: <span dir="ltr" style={{ fontWeight: 'bold', fontSize: '18px' }}>{formatNum(pos.physicalCash)}</span></div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '8px', padding: '8px', border: '2px dashed #000' }}>
+              {diff === 0 ? 'الدرج مطابق تماماً' : diff > 0 ? `النتيجة: زيادة ${formatNum(Math.abs(diff))}` : `النتيجة: عجز ${formatNum(Math.abs(diff))}`}
             </div>
           </div>
         )}
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '10px' }}>-- تم --</div>
+        
+        <div style={{ marginTop: '30px', textAlign: 'center' }}>
+          <div style={{ fontSize: '14px', fontWeight: 'bold' }}>توقيع الكاشير</div>
+          <div style={{ marginTop: '25px', borderBottom: '1px dashed #000', margin: '25px 20px 0 20px' }}></div>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '10px', paddingBottom: '10px' }}>-- تم --</div>
       </div>
     );
   }
@@ -516,10 +551,10 @@ const PendingPrintView = ({ pendingOwedToUs, pendingOwedByUs, formatNum, isPdfMo
   );
 };
 
-const AnalyticsView = ({ history, currentState, formatNum }: any) => {
+const AnalyticsView = ({ history, currentState, formatNum, onUpdate }: any) => {
   const allData = [...history.map((s: any) => ({ ...s.state, isCurrent: false })), { ...currentState, isCurrent: true }];
   
-  const dailyMetrics = allData.map(state => {
+  let metricsRawData = allData.map(state => {
     const netSales = state.posData ? state.posData.reduce((acc: number, pos: any) => acc + (pos.sales - pos.returns), 0) : 0;
     const refunds = state.expenseRefunds ? state.expenseRefunds.reduce((a:number, c:any)=>a+c.amount, 0) : 0;
     const totalIn = netSales + refunds;
@@ -543,27 +578,241 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
       dateObj: dObj,
       monthYear: parts.length === 3 ? `${month}/${year}` : 'غير محدد',
       sales: totalIn,
+      pureNetSales: netSales,
       expenses: totalOut,
       net: totalIn - totalOut,
       isCurrent: state.isCurrent,
       dateName: parts.length === 3 ? `${day}/${month}` : state.date
     };
-  }).sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+  });
 
-  const monthlyAgg = dailyMetrics.reduce((acc: any, curr: any) => {
-    if (!acc[curr.monthYear]) acc[curr.monthYear] = { monthYear: curr.monthYear, dateObj: curr.dateObj, totalSales: 0, totalExpenses: 0, totalNet: 0, daysCount: 0 };
-    acc[curr.monthYear].totalSales += curr.sales;
-    acc[curr.monthYear].totalExpenses += curr.expenses;
-    acc[curr.monthYear].totalNet += curr.net;
-    acc[curr.monthYear].daysCount += 1;
+  if (currentState.historicalSales && Array.isArray(currentState.historicalSales)) {
+    currentState.historicalSales.forEach((hist: any) => {
+      if (hist.type === 'day') {
+        const parts = hist.dateStr.split('/');
+        if (parts.length === 3) {
+          metricsRawData.push({
+            dateStr: hist.dateStr,
+            dateObj: new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])),
+            monthYear: `${parts[1]}/${parts[2]}`,
+            sales: hist.netSales,
+            pureNetSales: hist.netSales,
+            expenses: 0,
+            net: hist.netSales,
+            isCurrent: false,
+            isHistoricalDay: true,
+            historicalId: hist.id,
+            dateName: `${parts[0]}/${parts[1]}`
+          });
+        }
+      }
+    });
+  }
+
+  const dailyMetrics = metricsRawData.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+
+  const yearlyAgg = dailyMetrics.reduce((acc: any, curr: any) => {
+    const year = curr.dateObj.getFullYear().toString();
+    if (!acc[year]) acc[year] = { year, totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, months: {} };
+    if (!acc[year].months[curr.monthYear]) acc[year].months[curr.monthYear] = { monthYear: curr.monthYear, dateObj: curr.dateObj, totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, daysCount: 0 };
+    
+    acc[year].totalSales += curr.sales;
+    acc[year].totalPureNetSales += curr.pureNetSales;
+    acc[year].totalExpenses += curr.expenses;
+    acc[year].totalNet += curr.net;
+    
+    acc[year].months[curr.monthYear].totalSales += curr.sales;
+    acc[year].months[curr.monthYear].totalPureNetSales += curr.pureNetSales;
+    acc[year].months[curr.monthYear].totalExpenses += curr.expenses;
+    acc[year].months[curr.monthYear].totalNet += curr.net;
+    
+    if (!curr.isHistoricalDay) {
+       // normal days count
+       acc[year].months[curr.monthYear].daysCount += 1;
+    } else {
+       // historical days also count as 1
+       acc[year].months[curr.monthYear].daysCount += 1;
+    }
+    
     return acc;
   }, {});
 
-  const monthlyList = Object.values(monthlyAgg).sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime());
+  // Add historical data directly into yearlyAgg
+  if (currentState.historicalMonths && Array.isArray(currentState.historicalMonths)) {
+    currentState.historicalMonths.forEach((hist: any) => {
+      const parts = hist.monthYear.split('/');
+      if (parts.length === 2) {
+        const month = parts[0];
+        const year = parts[1];
+        if (!yearlyAgg[year]) yearlyAgg[year] = { year, totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, months: {} };
+        if (!yearlyAgg[year].months[hist.monthYear]) {
+           yearlyAgg[year].months[hist.monthYear] = { 
+             monthYear: hist.monthYear, 
+             dateObj: new Date(Number(year), Number(month) - 1, 1), 
+             totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, daysCount: 0, isHistorical: true 
+           };
+        }
+        
+        // Add to historical month
+        yearlyAgg[year].totalSales += hist.netSales;
+        yearlyAgg[year].totalPureNetSales += hist.netSales;
+        yearlyAgg[year].months[hist.monthYear].totalSales += hist.netSales;
+        yearlyAgg[year].months[hist.monthYear].totalPureNetSales += hist.netSales;
+        yearlyAgg[year].months[hist.monthYear].daysCount = new Date(Number(year), Number(month), 0).getDate();
+      }
+    });
+  }
+
+  if (currentState.historicalSales && Array.isArray(currentState.historicalSales)) {
+    currentState.historicalSales.forEach((hist: any) => {
+      let year = '';
+      let monthYear = '';
+      let dateObj = new Date();
+      let daysCount = 1;
+      
+      if (hist.type === 'year') {
+         year = hist.dateStr;
+         monthYear = `إجمالي/${year}`;
+         dateObj = new Date(Number(year), 0, 1);
+         daysCount = 365;
+      } else if (hist.type === 'month') {
+         const parts = hist.dateStr.split('/');
+         year = parts[1];
+         monthYear = hist.dateStr;
+         dateObj = new Date(Number(year), Number(parts[0]) - 1, 1);
+         daysCount = new Date(Number(year), Number(parts[0]), 0).getDate();
+      } else if (hist.type === 'day') {
+         const parts = hist.dateStr.split('/');
+         year = parts[2];
+         monthYear = `${parts[1]}/${year}`;
+         dateObj = new Date(Number(year), Number(parts[1]) - 1, Number(parts[0]));
+         daysCount = 1;
+      }
+
+      // Important: for day type, it's already in dailyMetrics which adds to yearlyAgg.
+      // So we only need to add month or year types here, to avoid double counting days!
+      if (hist.type === 'day') return; 
+
+      if (!yearlyAgg[year]) yearlyAgg[year] = { year, totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, months: {} };
+      if (!yearlyAgg[year].months[monthYear]) {
+         yearlyAgg[year].months[monthYear] = { 
+           monthYear, 
+           dateObj, 
+           totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, daysCount: 0, isHistorical: true, isYearlyOnly: hist.type === 'year',
+           historicalId: hist.id
+         };
+      }
+      
+      yearlyAgg[year].totalSales += hist.netSales;
+      yearlyAgg[year].totalPureNetSales += hist.netSales;
+      yearlyAgg[year].months[monthYear].totalSales += hist.netSales;
+      yearlyAgg[year].months[monthYear].totalPureNetSales += hist.netSales;
+      yearlyAgg[year].months[monthYear].daysCount = daysCount;
+    });
+  }
+
+  const yearlyList = Object.values(yearlyAgg).sort((a: any, b: any) => Number(b.year) - Number(a.year));
+  const latestYear = yearlyList.length > 0 ? (yearlyList[0] as any).year : null;
+
+  const [expandedYears, setExpandedYears] = useState<string[]>(latestYear ? [latestYear] : []);
+  const toggleYear = (year: string) => setExpandedYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
+
+  const [expandedMonths, setExpandedMonths] = useState<string[]>([]);
+  const toggleMonth = (month: string) => setExpandedMonths(prev => prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]);
 
   const [reportType, setReportType] = useState<'daily'|'monthly'|'yearly'>('daily');
   const [reportDateInput, setReportDateInput] = useState<string>(new Date().toISOString().split('T')[0]);
   const [copySuccess, setCopySuccess] = useState(false);
+  
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [histType, setHistType] = useState('month'); // 'day', 'month', 'year'
+  const [histMonth, setHistMonth] = useState('');
+  const [histYear, setHistYear] = useState('');
+  const [histDayDate, setHistDayDate] = useState('');
+  const [histSales, setHistSales] = useState('');
+  
+  const handleAddHistoricalMonth = () => {
+    if (!histSales) return;
+    
+    let dateStr = '';
+    if (histType === 'year') {
+      if (!histYear) return;
+      dateStr = histYear;
+    } else if (histType === 'month') {
+       if (!histMonth || !histYear) return;
+       dateStr = `${histMonth.padStart(2, '0')}/${histYear}`;
+    } else if (histType === 'day') {
+       if (!histDayDate) return;
+       const parts = histDayDate.split('-'); // YYYY-MM-DD
+       dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    const newId = generateId();
+    const newHist = { id: newId, type: histType, dateStr, netSales: Number(histSales) };
+    
+    onUpdate((prevState: any) => ({
+      ...prevState,
+      historicalSales: [...(prevState.historicalSales || []), newHist]
+    }));
+    
+    setHistMonth('');
+    setHistYear('');
+    setHistDayDate('');
+    setHistSales('');
+    setShowHistoryModal(false);
+  };
+  
+  const handleDeleteHistoricalItem = (itemId: string) => {
+    onUpdate((prevState: any) => ({
+      ...prevState,
+      historicalSales: (prevState.historicalSales || []).filter((h: any) => h.id !== itemId)
+    }));
+  };
+
+  const handleAnalyzeSales = async () => {
+    setAiLoading(true);
+    try {
+      const flattenedMonths = yearlyList.flatMap((y: any) => Object.values(y.months));
+      
+      const currentMonthYearStr = `${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`;
+      
+      const summaryText = flattenedMonths.map((m: any) => {
+          const isCurrent = m.monthYear === currentMonthYearStr;
+          return `- شهر ${m.monthYear}: صافي المبيعات ${formatNum(m.totalPureNetSales)} ريال (أيام العمل المسجلة: ${m.daysCount})${isCurrent ? ' [تنبيه: هذا هو الشهر الجاري الحالي وهو غير مكتمل بعد]' : ''}`;
+      }).join('\n');
+      
+      const prompt = `بصفتك محلل مبيعات استراتيجي، قم بتحليل بيانات المبيعات التالية وقدم تقريراً مفصلاً باللغة العربية يركز فقط على "صافي المبيعات":
+
+1. **جدول ملخص الأداء:** قم بإنشاء جدول Markdown أنيق يقارن بين الأشهر (الشهر، المبيعات، المتوسط اليومي).
+2. **رؤى المبيعات:** ما هو أفضل وأسوأ شهر؟ (تنبيه هام جداً: الشهر الجاري ${currentMonthYearStr} هو شهر "غير مكتمل" ولديك فقط جزء من أيامه! لذا يُمنع منعاً باتاً اعتباره أسوأ شهر لمجرد أن مبيعاته لم تكتمل. لتحديد قوة الشهر الجاري، احسب "المتوسط اليومي" وقارنه بالمتوسط اليومي للأشهر السابقة، وتنبأ استنتاجياً بالمبيعات الإجمالية إذا استمر الشهر بنفس الريتم).
+3. **التوصيات:** 3 نصائح دقيقة ومباشرة لزيادة المبيعات الشهر القادم.
+
+البيانات المتاحة:
+${summaryText}
+
+ملاحظات هامة:
+- استخدم "جداول Markdown" لعرض الأرقام بشكل منتظم، واحرص على دقة الأرقام.
+- استخدم الرموز التعبيرية بحيوية (مثل 📊، 📈، 💡، ⚠️) لتجميل التقرير.
+- نسق النص بشكل احترافي ليستفيد منه مدير المبيعات مباشرة.`;
+
+      const { GoogleGenAI } = await import('@google/genai');
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+      
+      setAiAnalysis(response.text);
+    } catch (err) {
+      console.error("AI Analysis failed:", err);
+      setAiAnalysis("عذراً، حدث خطأ أثناء الاتصال بمنصة الذكاء الاصطناعي للمحاسبة. تأكد من إعدادات الشبكة وحاول مرة أخرى.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const generateReportText = () => {
     // Parse the input date YYYY-MM-DD to DD/MM/YYYY
@@ -581,26 +830,26 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
 
     if (reportType === 'daily') {
       const dayData = dailyMetrics.find((d: any) => d.dateStr === targetDateStr);
-      const dailySales = dayData ? dayData.sales : 0;
+      const dailySales = dayData ? dayData.pureNetSales : 0;
       
       const monthData = dailyMetrics.filter((d: any) => d.monthYear === targetMonthYear && d.dateObj.getTime() <= inputDateObj.getTime());
-      const monthTotalSales = monthData.reduce((sum: number, d: any) => sum + d.sales, 0);
+      const monthTotalSales = monthData.reduce((sum: number, d: any) => sum + d.pureNetSales, 0);
       const daysCountInMonth = monthData.length;
       const avgMonthly = daysCountInMonth > 0 ? monthTotalSales / daysCountInMonth : 0;
 
       return `═══════════════════════════════════════
-           📊 تقرير مبيعات اليوم
+           📊 تقرير المبيعات اليومي
 ═══════════════════════════════════════
 
 📅 التاريخ: ${targetDateStr}
 
-💰 إجمالي مبيعات اليوم
+💰 صافي مبيعات اليوم
    ${formatNum(dailySales)} ريال
 
 📈 المتوسط اليومي (لهذا الشهر حتى اليوم)
-   ${formatNum(avgMonthly)} ريال
+   ${formatNum(avgMonthly)} ريال بناءً على ${daysCountInMonth} يوم عمل مسجل
 
-📊 إجمالي مبيعات الشهر (تراكمي)
+📊 إجمالي صافي المبيعات خلال الشهر (تراكمي)
    ${formatNum(monthTotalSales)} ريال
 
 ═══════════════════════════════════════
@@ -608,26 +857,43 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
     } 
     else if (reportType === 'monthly') {
       const monthData = dailyMetrics.filter((d: any) => d.monthYear === targetMonthYear);
-      const monthTotalSales = monthData.reduce((sum: number, d: any) => sum + d.sales, 0);
+      const monthTotalSales = monthData.reduce((sum: number, d: any) => sum + d.pureNetSales, 0);
       const daysCountInMonth = monthData.length;
       const avgDaily = daysCountInMonth > 0 ? monthTotalSales / daysCountInMonth : 0;
       
       const yearData = dailyMetrics.filter((d: any) => d.dateObj.getFullYear().toString() === targetYear && d.dateObj.getTime() <= inputDateObj.getTime());
-      const yearTotalSales = yearData.reduce((sum: number, d: any) => sum + d.sales, 0);
+      const yearTotalSales = yearData.reduce((sum: number, d: any) => sum + d.pureNetSales, 0);
+
+      // historical injection checking
+      const currentYearObj = yearlyList.find((y:any) => y.year === targetYear);
+      let injectedAvgMonthlyText = '';
+      if (currentYearObj) {
+         const numMonths = Object.keys(currentYearObj.months).length;
+         const avgMonthlyThisYear = numMonths > 0 ? (currentYearObj as any).totalPureNetSales / numMonths : 0;
+         let comparison = '';
+         if (monthTotalSales > avgMonthlyThisYear) {
+             comparison = `(أعلى من المتوسط السنوي البالغ ${formatNum(avgMonthlyThisYear)} ريال)`;
+         } else if (monthTotalSales < avgMonthlyThisYear) {
+             comparison = `(أقل من المتوسط السنوي البالغ ${formatNum(avgMonthlyThisYear)} ريال)`;
+         } else {
+             comparison = '(يساوي المتوسط السنوي)';
+         }
+         injectedAvgMonthlyText = `\n🔄 مقارنة بالمتوسط: \n   ${comparison}`;
+      }
 
       return `═══════════════════════════════════════
-           📊 تقرير مبيعات الشهر
+           📊 تقرير المبيعات الشهري
 ═══════════════════════════════════════
 
 📅 الشهر: ${targetMonthYear}
 
-💰 إجمالي مبيعات الشهر
+💰 إجمالي صافي مبيعات الشهر
    ${formatNum(monthTotalSales)} ريال
 
-📈 المتوسط اليومي
-   ${formatNum(avgDaily)} ريال
+📈 المتوسط اليومي للمبيعات
+   ${formatNum(avgDaily)} ريال بناءً على ${daysCountInMonth} يوم عمل مسجل${injectedAvgMonthlyText}
 
-📊 إجمالي مبيعات السنة (تراكمي)
+📊 إجمالي مبيعات السنة حتى الآن (تراكمي)
    ${formatNum(yearTotalSales)} ريال
 
 ═══════════════════════════════════════
@@ -635,23 +901,23 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
     }
     else {
       // Yearly
-      const yearData = dailyMetrics.filter((d: any) => d.dateObj.getFullYear().toString() === targetYear);
-      const yearTotalSales = yearData.reduce((sum: number, d: any) => sum + d.sales, 0);
+      const yearData = yearlyList.find((y:any) => y.year === targetYear) as any;
+      const yearTotalSales = yearData ? yearData.totalPureNetSales : 0;
       
-      const uniqueMonths = new Set(yearData.map((d:any) => d.monthYear)).size;
+      const uniqueMonths = yearData ? Object.keys(yearData.months).length : 0;
       const avgMonthly = uniqueMonths > 0 ? yearTotalSales / uniqueMonths : 0;
 
       return `═══════════════════════════════════════
-           📊 تقرير مبيعات السنة
+           📊 تقرير المبيعات السنوي
 ═══════════════════════════════════════
 
 📅 السنة: ${targetYear}
 
-💰 إجمالي مبيعات السنة
+💰 إجمالي صافي مبيعات السنة
    ${formatNum(yearTotalSales)} ريال
 
-📈 المتوسط الشهري
-   ${formatNum(avgMonthly)} ريال
+📈 المتوسط الشهري للمبيعات
+   ${formatNum(avgMonthly)} ريال بناءً على ${uniqueMonths} أشهر مسجلة
 
 ═══════════════════════════════════════
    تم إنشاء التقرير في: ${timeStr}`;
@@ -667,54 +933,84 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
     });
   };
 
+  const handlePrintSales = () => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html dir="rtl">
+          <head>
+            <title>تقرير المبيعات</title>
+            <style>
+              body { font-family: 'Cairo', system-ui, -apple-system, sans-serif; padding: 40px; margin: 0; line-height: 1.8; color: #1e293b; background: white; }
+              .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
+              .header h2 { margin: 0; color: #0f172a; font-size: 24px; }
+              .content { white-space: pre-wrap; font-size: 16px; font-weight: 500; font-family: 'Courier New', Courier, monospace; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+              @media print {
+                 body { padding: 0; }
+                 .content { border: none; background: transparent; padding: 0; font-size: 14px; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h2>تقرير المبيعات - الخزينة الذكية</h2>
+            </div>
+            <div class="content">${reportText}</div>
+            <script>
+              window.onload = () => { window.print(); window.close(); }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
   return (
     <div className="print:block print:w-full space-y-6">
       
       {/* Overall Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 print:hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:hidden">
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <p className="text-slate-500 font-bold text-sm mb-1">إجمالي الوارد (محصلة البيع)</p>
+              <p className="text-slate-500 font-bold text-sm mb-1">إجمالي صافي المبيعات المسجلة</p>
+              <h3 className="text-4xl font-black text-blue-600 font-mono" dir="ltr">
+                {formatNum(dailyMetrics.reduce((sum, d) => sum + d.pureNetSales, 0) + (currentState.historicalMonths?.reduce((acc: number, h: any)=>acc+h.netSales,0) || 0))}
+              </h3>
+            </div>
+            <div className="bg-blue-50 p-4 rounded-2xl text-blue-600">
+              <TrendingUp size={28} />
+            </div>
+          </div>
+          <p className="text-xs text-slate-400">إجمالي المبيعات الصافية عبر جميع الأيام والشهور التراكمية</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-slate-500 font-bold text-sm mb-1">أعلى شهر بالمبيعات</p>
               <h3 className="text-3xl font-black text-emerald-600 font-mono" dir="ltr">
-                {formatNum(dailyMetrics.reduce((sum, d) => sum + d.sales, 0))}
+                {(() => {
+                  const flattened = yearlyList.flatMap((y: any) => Object.values(y.months)) as any[];
+                  if (flattened.length === 0) return '0';
+                  const maxMonth = flattened.reduce((max, current) => (max.totalPureNetSales > current.totalPureNetSales) ? max : current, flattened[0]);
+                  return `${formatNum(maxMonth.totalPureNetSales)}`;
+                })()}
               </h3>
             </div>
-            <div className="bg-emerald-50 p-3 rounded-2xl text-emerald-600">
-              <TrendingUp size={24} />
+            <div className="bg-emerald-50 p-4 rounded-2xl text-emerald-600">
+              <BarChart3 size={28} />
             </div>
           </div>
-          <p className="text-xs text-slate-400">إجمالي المقبوضات عبر جميع الأيام المسجلة</p>
-        </div>
-        
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <p className="text-slate-500 font-bold text-sm mb-1">إجمالي المنصرف (مصروفات)</p>
-              <h3 className="text-3xl font-black text-rose-600 font-mono" dir="ltr">
-                {formatNum(dailyMetrics.reduce((sum, d) => sum + d.expenses, 0))}
-              </h3>
-            </div>
-            <div className="bg-rose-50 p-3 rounded-2xl text-rose-600">
-              <BarChart3 size={24} />
-            </div>
-          </div>
-          <p className="text-xs text-slate-400">مجموع كل ما تم صرفه أو سداده</p>
-        </div>
-        
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <p className="text-slate-500 font-bold text-sm mb-1">صافي الحركة الكلية (الأرباح/الخسائر)</p>
-              <h3 className={`text-3xl font-black font-mono ${dailyMetrics.reduce((sum, d) => sum + d.net, 0) >= 0 ? 'text-blue-600' : 'text-rose-600'}`} dir="ltr">
-                {formatNum(dailyMetrics.reduce((sum, d) => sum + d.net, 0))}
-              </h3>
-            </div>
-            <div className={`p-3 rounded-2xl ${dailyMetrics.reduce((sum, d) => sum + d.net, 0) >= 0 ? 'bg-blue-50 text-blue-600' : 'bg-rose-50 text-rose-600'}`}>
-              <Wallet size={24} />
-            </div>
-          </div>
-          <p className="text-xs text-slate-400">الفرق بين الوارد والمنصرف لكل الأيام</p>
+          <p className="text-xs text-slate-400">
+             في {(() => {
+                  const flattened = yearlyList.flatMap((y: any) => Object.values(y.months)) as any[];
+                  if (flattened.length === 0) return '-';
+                  const maxMonth = flattened.reduce((max, current) => (max.totalPureNetSales > current.totalPureNetSales) ? max : current, flattened[0]);
+                  return `شهر ${maxMonth.monthYear}`;
+                })()}
+          </p>
         </div>
       </div>
 
@@ -753,13 +1049,22 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
               />
             </div>
             
-            <button 
-              onClick={handleCopy}
-              className={`mt-auto flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${copySuccess ? 'bg-emerald-100 text-emerald-700 pointer-events-none' : 'bg-purple-600 text-white hover:bg-purple-700 active:scale-95 shadow-sm hover:shadow-md'}`}
-            >
-              {copySuccess ? <Check size={20} /> : <Copy size={20} />}
-              {copySuccess ? 'تم النسخ بنجاح!' : 'نسخ التقرير (WhatsApp)'}
-            </button>
+            <div className="flex gap-2 mt-auto">
+              <button 
+                onClick={handlePrintSales}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-sm hover:shadow-md"
+              >
+                <Printer size={20} />
+                طباعة التقرير
+              </button>
+              <button 
+                onClick={handleCopy}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${copySuccess ? 'bg-emerald-100 text-emerald-700 pointer-events-none' : 'bg-purple-600 text-white hover:bg-purple-700 active:scale-95 shadow-sm hover:shadow-md'}`}
+              >
+                {copySuccess ? <Check size={20} /> : <Copy size={20} />}
+                {copySuccess ? 'تم' : 'WhatsApp'}
+              </button>
+            </div>
           </div>
           
           <div className="w-full lg:w-2/3 bg-slate-800 text-slate-300 rounded-2xl p-4 md:p-6 relative overflow-hidden font-mono text-sm leading-relaxed whitespace-pre-wrap flex items-center justify-center min-h-[250px]" dir="rtl">
@@ -769,43 +1074,224 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
       </div>
 
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-        <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-slate-800">
-          <BarChart3 className="text-blue-600" size={28} /> ملخص الأداء الشهري
+        <h2 className="text-2xl font-bold flex flex-col md:flex-row md:items-center justify-between mb-6 text-slate-800 border-b border-slate-100 pb-4 gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-3">
+            <BarChart3 className="text-blue-600" size={28} /> ملخص الأداء الشهري والسنوي
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+               onClick={() => {
+                 setExpandedYears(yearlyList.map((y: any) => y.year));
+                 setTimeout(() => window.print(), 300);
+               }}
+               className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm active:scale-95 print:hidden border border-slate-300"
+            >
+              <Printer size={20} /> طباعة
+            </button>
+            <button
+               onClick={() => setShowHistoryModal(true)}
+               className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm active:scale-95 print:hidden"
+            >
+              <PlusCircle size={20} /> إدخال تاريخي
+            </button>
+            <button 
+              onClick={handleAnalyzeSales}
+              disabled={aiLoading}
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-md active:scale-95 disabled:opacity-50 print:hidden"
+            >
+              {aiLoading ? (
+                <div className="flex items-center gap-2 animate-pulse">جاري تحليل البيانات...</div>
+              ) : (
+                <>تحليل بواسطة الذكاء الاصطناعي <span className="bg-white/20 px-2 py-0.5 rounded-lg text-xs leading-none">AI</span></>
+              )}
+            </button>
+          </div>
         </h2>
-        {monthlyList.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {monthlyList.map((m: any) => (
-              <div key={m.monthYear} className="bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col hover:bg-white hover:shadow-md transition-all relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                <div className="flex justify-between items-center mb-6">
-                  <span className="text-slate-700 font-bold text-xl">شهر {m.monthYear}</span>
-                  <span className="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-md">{m.daysCount} أيام مسجلة</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <span className="text-xs text-emerald-600 font-bold block mb-1">المقبوضات (الوارد)</span>
-                    <span className="text-lg font-black text-emerald-700 font-mono" dir="ltr">{formatNum(m.totalSales)}</span>
+
+        {aiAnalysis && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="mb-8 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-3xl p-6 md:p-8 shadow-sm"
+          >
+            <h3 className="font-black text-indigo-900 text-xl mb-6 flex items-center gap-3">
+              <Sparkles className="text-purple-600" /> تحليل خبير الذكاء الاصطناعي
+            </h3>
+            <div className="prose prose-indigo prose-sm sm:prose-base max-w-none 
+               prose-headings:text-indigo-900 prose-headings:font-bold prose-h3:text-lg 
+               prose-p:leading-relaxed text-slate-700
+               prose-table:w-full prose-table:border-collapse prose-table:rounded-xl prose-table:overflow-hidden prose-table:shadow-sm prose-table:my-6
+               prose-th:bg-indigo-100 prose-th:text-indigo-900 prose-th:p-3 prose-th:text-right prose-th:border-b-2 prose-th:border-indigo-200
+               prose-td:p-3 prose-td:border-b prose-td:border-indigo-50 prose-tr:bg-white
+               prose-strong:text-indigo-800" dir="rtl">
+              <Markdown remarkPlugins={[remarkGfm]}>{aiAnalysis}</Markdown>
+            </div>
+            <div className="mt-6 flex justify-end border-t border-indigo-100 pt-4">
+               <button onClick={() => setAiAnalysis(null)} className="text-indigo-500 hover:text-indigo-700 font-bold transition-colors text-sm flex items-center gap-2">
+                 <X size={16} /> إغلاق التحليل
+               </button>
+            </div>
+          </motion.div>
+        )}
+
+        {yearlyList.length > 0 ? (
+          <div className="space-y-6">
+            {yearlyList.map((yData: any) => (
+              <div key={yData.year} className="bg-slate-50 border border-slate-200 rounded-3xl overflow-hidden transition-all">
+                <button 
+                  onClick={() => toggleYear(yData.year)}
+                  className="w-full bg-white p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors border-b border-slate-200"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-full transition-transform ${expandedYears.includes(yData.year) ? 'rotate-180 bg-slate-200 text-slate-700' : 'bg-blue-100 text-blue-700'}`}>
+                      <ChevronDown size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-slate-800 text-right">سنة {yData.year}</h3>
+                      <p className="text-slate-500 text-sm text-right">{Object.keys(yData.months).length} أشهر مسجلة</p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-xs text-rose-600 font-bold block mb-1">المدفوعات (المنصرف)</span>
-                    <span className="text-lg font-black text-rose-700 font-mono" dir="ltr">{formatNum(m.totalExpenses)}</span>
+                  <div className="flex items-center gap-6 self-start md:self-auto">
+                    <div className="text-right">
+                      <span className="text-xs text-slate-500 font-bold block mb-1">صافي المبيعات الكلي السنة</span>
+                      <span className="text-xl font-bold text-blue-600 font-mono" dir="ltr">{formatNum(yData.totalPureNetSales)}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="pt-4 border-t border-slate-200">
-                    <span className="text-sm text-slate-600 font-bold block mb-1">صافي الحركة (الرصيد)</span>
-                    <span className={`text-2xl font-black font-mono ${m.totalNet >= 0 ? 'text-blue-700' : 'text-rose-600'}`} dir="ltr">{formatNum(m.totalNet)}</span>
-                </div>
+                </button>
+                
+                <AnimatePresence>
+                  {expandedYears.includes(yData.year) && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-100/50">
+                        {Object.values(yData.months).sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime()).map((m: any) => (
+                          <div key={m.monthYear} className="bg-white border text-center relative border-slate-200 rounded-2xl hover:shadow-md transition-all overflow-hidden flex flex-col">
+                             <div className="p-5 relative flex-1">
+                               <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
+                               {m.isHistorical && (
+                                 <button 
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     if (m.historicalId) {
+                                       handleDeleteHistoricalItem(m.historicalId);
+                                     } else {
+                                       // backward compatibility for old historicalMonths
+                                       onUpdate((prevState: any) => ({
+                                         ...prevState,
+                                         historicalMonths: (prevState.historicalMonths || []).filter((h: any) => h.monthYear !== m.monthYear)
+                                       }));
+                                     }
+                                   }}
+                                   className="absolute top-3 left-3 text-rose-400 hover:text-rose-600 border border-slate-100 p-1 rounded-md hover:bg-rose-50"
+                                   title="حذف هذه البيانات"
+                                 >
+                                   <Trash2 size={14} />
+                                 </button>
+                               )}
+                               <h4 className="text-xl font-bold text-slate-700 mb-1 border-b border-slate-100 pb-2">
+                                 {m.isHistorical ? (
+                                    m.monthYear.startsWith('إجمالي/') ? `إجمالي سنة ${m.monthYear.split('/')[1]}` : (m.monthYear.split('/').length === 3 ? `يوم ${m.monthYear}` : `شهر ${m.monthYear}`)
+                                 ) : `شهر ${m.monthYear}`}
+                               </h4>
+                               <p className="text-xs text-slate-500 mb-4">{m.isHistorical ? 'تم إدخاله يدوياً' : `${m.daysCount} أيام عمل مسجلة`}</p>
+                               
+                               <div className="flex flex-col gap-1 items-center mb-3">
+                                 <span className="text-sm text-slate-500 font-bold">صافي المبيعات</span>
+                                 <span className="text-2xl font-black text-blue-700 font-mono" dir="ltr">{formatNum(m.totalPureNetSales)}</span>
+                               </div>
+                             </div>
+                             
+                             <div className="pt-3 border-t border-slate-100 bg-slate-50 relative mt-auto p-4 rounded-b-2xl">
+                                <div className="flex justify-between items-center text-xs px-1">
+                                  <span className="text-slate-500 font-bold">المتوسط اليومي</span>
+                                  <span className="font-bold text-slate-700 font-mono" dir="ltr">{formatNum(m.daysCount > 0 ? m.totalPureNetSales / m.daysCount : 0)}</span>
+                                </div>
+                             </div>
+
+                             {/* Toggle days visibility button */}
+                             {(!m.isHistorical || m.monthYear.split('/').length < 3) && (
+                                <button 
+                                  onClick={() => toggleMonth(m.monthYear)}
+                                  className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs flex justify-center items-center gap-2 border-t border-slate-200 transition-colors"
+                                >
+                                  {expandedMonths.includes(m.monthYear) ? (
+                                    <>إخفاء الأيام <ChevronDown size={14} className="rotate-180" /></>
+                                  ) : (
+                                    <>عرض الأيام <ChevronDown size={14} /></>
+                                  )}
+                                </button>
+                             )}
+
+                             {/* Days Breakdown Table */}
+                             <AnimatePresence>
+                               {expandedMonths.includes(m.monthYear) && (!m.isHistorical || m.monthYear.split('/').length < 3) && (
+                                 <motion.div
+                                   initial={{ height: 0, opacity: 0 }}
+                                   animate={{ height: 'auto', opacity: 1 }}
+                                   exit={{ height: 0, opacity: 0 }}
+                                   className="overflow-hidden bg-white border-t border-slate-200 text-right"
+                                 >
+                                   <div className="overflow-y-auto max-h-48 text-xs">
+                                     <table className="w-full border-collapse">
+                                       <thead className="bg-slate-50 sticky top-0 border-b border-slate-200">
+                                         <tr>
+                                           <th className="py-2 px-3 font-bold text-slate-600">التاريخ</th>
+                                           <th className="py-2 px-3 font-bold text-slate-600 border-r border-slate-200 text-center">المبيعات</th>
+                                           <th className="py-2 px-3 w-10 text-center border-r border-slate-200"></th>
+                                         </tr>
+                                       </thead>
+                                       <tbody>
+                                          {dailyMetrics.filter((d: any) => d.monthYear === m.monthYear).map((day: any) => (
+                                            <tr key={day.dateStr} className={`border-b border-slate-100 hover:bg-blue-50/50 ${day.isCurrent ? 'bg-blue-50/30' : ''}`}>
+                                               <td className="py-2 px-3 font-mono text-slate-700">{day.dateName}</td>
+                                               <td className="py-2 px-3 font-mono font-bold text-blue-700 border-r border-slate-100 text-center" dir="ltr">{formatNum(day.pureNetSales)}</td>
+                                               <td className="py-1 px-1 border-r border-slate-100 text-center">
+                                                 {day.isHistoricalDay ? (
+                                                   <button
+                                                     onClick={(e) => {
+                                                       e.stopPropagation();
+                                                       handleDeleteHistoricalItem(day.historicalId);
+                                                     }}
+                                                     className="text-rose-400 hover:text-rose-600 p-1"
+                                                     title="حذف"
+                                                   ><Trash2 size={12} /></button>
+                                                 ) : (
+                                                    <span className="text-slate-300 text-[10px]" title="مسجل بالنظام">--</span>
+                                                 )}
+                                               </td>
+                                            </tr>
+                                          ))}
+                                          {dailyMetrics.filter((d: any) => d.monthYear === m.monthYear).length === 0 && (
+                                            <tr>
+                                              <td colSpan={3} className="py-3 text-center text-slate-400">لا توجد تفاصيل يومية</td>
+                                            </tr>
+                                          )}
+                                       </tbody>
+                                     </table>
+                                   </div>
+                                 </motion.div>
+                               )}
+                             </AnimatePresence>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-slate-500 text-center py-6">لا توجد بيانات كافية لعرض التقرير الشهري</p>
+          <p className="text-slate-500 text-center py-6">لا توجد بيانات كافية لعرض التقرير</p>
         )}
       </div>
 
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 print:break-inside-avoid">
         <h2 className="text-2xl font-bold flex items-center gap-3 mb-8 text-slate-800">
-          <TrendingUp className="text-emerald-600" size={28} /> حركة الماليّات اليومية
+          <TrendingUp className="text-blue-600" size={28} /> حركة المبيعات الصافية اليومية
         </h2>
         
         {dailyMetrics.length >= 2 ? (
@@ -816,29 +1302,25 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
                 <XAxis dataKey="dateName" tick={{ fill: '#64748b', fontSize: 13, fontFamily: 'monospace' }} tickMargin={10} />
                 <YAxis tick={{ fill: '#64748b', fontSize: 13, fontFamily: 'monospace' }} tickFormatter={(val) => Math.floor(val).toLocaleString()} width={80} />
                 <RechartsTooltip 
-                  formatter={(value: number, name: string) => [formatNum(value), name === 'sales' ? 'المقبوضات' : name === 'expenses' ? 'المدفوعات' : 'الصافي']}
+                  formatter={(value: number, name: string) => [formatNum(value), 'صافي المبيعات']}
                   labelFormatter={(label) => `التاريخ: ${label}`}
                   contentStyle={{ borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', fontFamily: 'Cairo', textAlign: 'right', padding: '12px 16px' }}
                 />
-                <Legend wrapperStyle={{ fontFamily: 'Cairo', paddingTop: '20px' }} formatter={(value) => value === 'sales' ? 'المقبوضات' : value === 'expenses' ? 'المدفوعات' : 'الصافي'} />
-                <Line type="monotone" dataKey="sales" name="sales" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 7, strokeWidth: 0 }} />
-                <Line type="monotone" dataKey="expenses" name="expenses" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4, fill: '#f43f5e', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 7, strokeWidth: 0 }} />
-                <Line type="monotone" dataKey="net" name="net" stroke="#3b82f6" strokeWidth={4} dot={{ r: 5, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8, strokeWidth: 0 }} />
+                <Legend wrapperStyle={{ fontFamily: 'Cairo', paddingTop: '20px' }} formatter={() => 'صافي المبيعات'} />
+                <Line type="monotone" dataKey="pureNetSales" name="pureNetSales" stroke="#3b82f6" strokeWidth={4} dot={{ r: 5, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8, strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="text-slate-500 text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300 font-medium">نحتاج إلى تسجيل يومين على الأقل لرسم مخطط المقارنة البياني.</p>
+          <p className="text-slate-500 text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300 font-medium">نحتاج إلى تسجيل يومين على الأقل لرسم مخطط المقارنة البياني للمبيعات.</p>
         )}
 
         <div className="overflow-x-auto print:mt-8">
           <table className="w-full text-right text-base border-collapse">
             <thead>
               <tr className="bg-slate-100 border-b-2 border-slate-200 text-slate-700">
-                <th className="py-4 px-6 font-bold w-1/4">التاريخ</th>
-                <th className="py-4 px-6 font-bold text-center text-emerald-700">المقبوضات</th>
-                <th className="py-4 px-6 font-bold text-center text-rose-700">المدفوعات</th>
-                <th className="py-4 px-6 font-bold text-left text-blue-700">صافي الحركة</th>
+                <th className="py-4 px-6 font-bold w-1/3">التاريخ</th>
+                <th className="py-4 px-6 font-bold text-center text-blue-700">صافي المبيعات</th>
               </tr>
             </thead>
             <tbody>
@@ -848,15 +1330,113 @@ const AnalyticsView = ({ history, currentState, formatNum }: any) => {
                     <span className="font-mono text-sm">{day.dateStr}</span>
                     {day.isCurrent && <span className="bg-blue-600 text-white px-2 py-0.5 rounded-md text-xs">اليوم (جاري)</span>}
                   </td>
-                  <td className="py-4 px-6 font-bold text-center text-emerald-700 font-mono border-l border-slate-100 bg-emerald-50/20" dir="ltr">{formatNum(day.sales)}</td>
-                  <td className="py-4 px-6 font-bold text-center text-rose-700 font-mono border-l border-slate-100 bg-rose-50/20" dir="ltr">{formatNum(day.expenses)}</td>
-                  <td className="py-4 px-6 font-black text-left text-blue-800 font-mono text-lg bg-blue-50/20" dir="ltr">{formatNum(day.net)}</td>
+                  <td className="py-4 px-6 font-black text-center text-blue-800 font-mono text-lg bg-blue-50/20" dir="ltr">{formatNum(day.pureNetSales)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showHistoryModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:hidden"
+            dir="rtl"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-200"
+            >
+              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 className="font-bold text-lg text-slate-800">إدخال مبيعات تاريخية سابقة</h3>
+                <button onClick={() => setShowHistoryModal(false)} className="text-slate-400 hover:text-slate-600 bg-white shadow-sm p-1.5 rounded-xl border border-slate-200"><X size={20} /></button>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div>
+                   <label className="block text-sm font-bold text-slate-700 mb-2">نوع الإدخال</label>
+                   <select 
+                      value={histType} onChange={(e) => setHistType(e.target.value)} 
+                      className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-bold" 
+                   >
+                     <option value="year">تجميع على مستوى السنة</option>
+                     <option value="month">تجميع على مستوى الشهر</option>
+                     <option value="day">يوم محدد</option>
+                   </select>
+                </div>
+                
+                {histType === 'year' && (
+                  <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">السنة</label>
+                      <input 
+                        type="number" min="2000" max="2100" placeholder="مثال: 2025" 
+                        value={histYear} onChange={(e) => setHistYear(e.target.value)} 
+                        className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono" 
+                      />
+                  </div>
+                )}
+                
+                {histType === 'month' && (
+                  <div className="grid grid-cols-2 gap-4">
+                     <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">الشهر رقم</label>
+                        <input 
+                          type="number" min="1" max="12" placeholder="مثال: 1" 
+                          value={histMonth} onChange={(e) => setHistMonth(e.target.value)} 
+                          className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono" 
+                        />
+                     </div>
+                     <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">السنة</label>
+                        <input 
+                          type="number" min="2000" max="2100" placeholder="مثال: 2025" 
+                          value={histYear} onChange={(e) => setHistYear(e.target.value)} 
+                          className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono" 
+                        />
+                     </div>
+                  </div>
+                )}
+                
+                {histType === 'day' && (
+                  <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-2">التاريخ</label>
+                      <input 
+                        type="date"
+                        value={histDayDate} onChange={(e) => setHistDayDate(e.target.value)} 
+                        className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono" 
+                      />
+                  </div>
+                )}
+
+                <div>
+                   <label className="block text-sm font-bold text-slate-700 mb-2">المبيعات الصافية</label>
+                   <input 
+                      type="number" placeholder="مثال: 120000" 
+                      value={histSales} onChange={(e) => setHistSales(e.target.value)} 
+                      className="w-full bg-slate-50 hover:bg-white border text-left text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono text-lg" 
+                   />
+                </div>
+              </div>
+              
+              <div className="p-5 border-t border-slate-100 bg-slate-50">
+                <button 
+                  onClick={handleAddHistoricalMonth}
+                  className="w-full py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Plus size={20} /> إضافة للسجل
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };
@@ -1558,7 +2138,7 @@ export default function App() {
   const [adminUsers, setAdminUsers] = useState<UserProfile[]>([]);
   
   const [history, setHistory] = useState<DailySnapshot[]>([]);
-  const [activeTab, setActiveTab] = useState<'sales' | 'payments' | 'pending' | 'cash' | 'archive' | 'history' | 'ledger' | 'settings' | 'admin'>('sales');
+  const [activeTab, setActiveTab] = useState<'sales' | 'payments' | 'pending' | 'cash' | 'archive' | 'history' | 'ledger' | 'analytics' | 'settings' | 'admin'>('sales');
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1587,6 +2167,15 @@ export default function App() {
   
   // Modals State
   const [activeNetworkPosId, setActiveNetworkPosId] = useState<string | null>(null);
+
+  // UI Scale State
+  const [uiScale, setUiScale] = useState<number>(() => {
+    return Number(localStorage.getItem('smart_safe_ui_scale') || 1);
+  });
+
+  useEffect(() => {
+    localStorage.setItem('smart_safe_ui_scale', uiScale.toString());
+  }, [uiScale]);
 
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
     setToast({message, type});
@@ -2404,7 +2993,7 @@ export default function App() {
   const activePos = state.posData.find(p => p.id === activeNetworkPosId);
 
   return (
-    <div className={`min-h-screen bg-slate-50 text-slate-800 font-sans ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl">
+    <div className={`min-h-screen bg-slate-50 text-slate-800 font-sans ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl" style={{ zoom: uiScale }}>
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
         <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2544,13 +3133,13 @@ export default function App() {
                     <table className="w-full text-sm text-right">
                       <thead>
                         <tr className="text-slate-500 border-b border-slate-200">
-                          <th className="pb-3 font-medium">نقطة البيع</th>
-                          <th className="pb-3 font-medium w-[15%]">إجمالي المبيعات</th>
-                          <th className="pb-3 font-medium w-[15%]">المرتجعات</th>
-                          <th className="pb-3 font-medium w-[15%]">صافي المبيعات</th>
-                          <th className="pb-3 font-medium w-[15%]">الشبكات (تخصم)</th>
-                          <th className="pb-3 font-medium w-[15%]">الكاش الفعلي</th>
-                          <th className="pb-3 font-medium w-[12%] print:hidden text-center">إجراءات</th>
+                          <th className="pb-3 font-medium w-[22%]">نقطة البيع</th>
+                          <th className="pb-3 font-medium w-[13%]">إجمالي المبيعات</th>
+                          <th className="pb-3 font-medium w-[13%]">المرتجعات</th>
+                          <th className="pb-3 font-medium w-[13%]">صافي المبيعات</th>
+                          <th className="pb-3 font-medium w-[13%]">الشبكات (تخصم)</th>
+                          <th className="pb-3 font-medium w-[13%]">الكاش الفعلي</th>
+                          <th className="pb-3 font-medium w-[13%] print:hidden text-center">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3140,7 +3729,7 @@ export default function App() {
               
               {/* Analytics Tab */}
               <div className={`${activeTab === 'analytics' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
-                <AnalyticsView history={history} currentState={state} formatNum={formatNum} />
+                <AnalyticsView history={history} currentState={state} formatNum={formatNum} onUpdate={setState} />
               </div>
             </div>
             </div>
@@ -3281,6 +3870,26 @@ export default function App() {
           </div>
           
           <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-8 pb-12">
+
+            {/* UI Preferences */}
+            <section>
+              <div className="px-4 mb-2 flex items-center gap-2">
+                <Settings size={18} className="text-blue-600" />
+                <h3 className="font-bold text-gray-600 text-sm tracking-wide">تفضيلات الواجهة</h3>
+              </div>
+              <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-gray-900 text-base">حجم الخط (تكبير/تصغير)</h4>
+                  <p className="text-gray-500 text-sm mt-1">التحكم في حجم الخط والواجهة في جميع أنحاء التطبيق.</p>
+                </div>
+                <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-200">
+                  <button onClick={() => setUiScale(Math.min(uiScale + 0.1, 1.5))} className="p-2 hover:bg-white rounded-xl shadow-sm text-gray-700 transition" title="تكبير">+</button>
+                  <span className="font-bold w-12 text-center text-blue-700 dir-ltr">{Math.round(uiScale * 100)}%</span>
+                  <button onClick={() => setUiScale(Math.max(uiScale - 0.1, 0.7))} className="p-2 hover:bg-white rounded-xl shadow-sm text-gray-700 transition" title="تصغير">-</button>
+                  <button onClick={() => setUiScale(1)} className="p-2 hover:bg-zinc-200 bg-zinc-100 rounded-xl shadow-sm text-xs font-bold mr-1 transition" title="افتراضي">افتراضي</button>
+                </div>
+              </div>
+            </section>
             
             {/* Lists Management */}
             <section>
