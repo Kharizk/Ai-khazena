@@ -111,7 +111,8 @@ const getInitialState = (): AppState => ({
     customCashAmounts: ['رزمة 50', 'رزمة 100', 'مبلغ معدود مسبقاً'],
     posData: [],
   },
-  historicalMonths: []
+  historicalMonths: [],
+  historicalSales: []
 });
 
 const sumTransactions = (arr: Transaction[]) => arr.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
@@ -169,96 +170,96 @@ const formatNum = (num: number) => num.toLocaleString('en-US', { minimumFraction
 const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4' }: any) => {
   if (printFormat === 'thermal') {
     return (
-      <div id={id} className="hidden print:block rtl print:bg-white text-black font-sans mx-auto" style={{ width: '80mm', margin: '0 auto', fontSize: '13px', lineHeight: '1.4' }}>
+      <div id={id} className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans" style={{ width: '100vw', margin: 0, padding: '10px', fontSize: '18px', lineHeight: '1.6' }}>
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
-            @page { margin: 0; padding: 0; }
-            body { margin: 0; padding: 10px; }
+            @page { margin: 0; padding: 0; width: 100vw; }
+            body { margin: 0; padding: 0; width: 100vw; background: white; }
             * { box-shadow: none !important; }
           }
         `}} />
-        <div style={{ textAlign: 'center', marginBottom: '10px', borderBottom: '1px dashed #000', paddingBottom: '10px' }}>
-          <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0' }}>تقرير التقفيل اليومي</h1>
-          <div style={{ fontSize: '11px' }}>
-            <div>التاريخ: <span dir="ltr">{state.date}</span></div>
+        <div style={{ textAlign: 'center', marginBottom: '15px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
+          <h1 style={{ fontSize: '26px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تقرير التقفيل اليومي</h1>
+          <div style={{ fontSize: '16px' }}>
+            <div style={{ marginBottom: '4px' }}>التاريخ: <span dir="ltr" style={{ fontWeight: 'bold' }}>{state.date}</span></div>
             <div>طباعة: <span dir="ltr">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
           </div>
         </div>
 
-        <div style={{ fontWeight: 'bold', borderBottom: '1px solid #000', marginBottom: '5px' }}>ملخص الوارد والمنصرف</div>
-        <table style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse', fontSize: '12px' }}>
+        <div style={{ fontWeight: 'bold', borderBottom: '2px solid #000', marginBottom: '10px', paddingBottom: '5px', fontSize: '20px' }}>ملخص الوارد والمنصرف</div>
+        <table style={{ width: '100%', marginBottom: '20px', borderCollapse: 'collapse', fontSize: '18px' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '2px 0' }}>رصيد أول المدة</td>
-              <td style={{ padding: '2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(state.previousBalance)}</td>
+              <td style={{ padding: '6px 0' }}>رصيد أول المدة</td>
+              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(state.previousBalance)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '2px 0' }}>+ إجمالي الإيرادات</td>
-              <td style={{ padding: '2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalCashIn)}</td>
+              <td style={{ padding: '6px 0' }}>+ إجمالي الإيرادات</td>
+              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalCashIn)}</td>
             </tr>
-            <tr style={{ fontSize: '10px' }}>
-              <td colSpan={2} style={{ padding: '2px 0 6px 10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>صافي المبيعات</span><span dir="ltr">{formatNum(summary.netSales)}</span></div>
+            <tr style={{ fontSize: '16px' }}>
+              <td colSpan={2} style={{ padding: '4px 0 10px 10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>صافي المبيعات</span><span dir="ltr">{formatNum(summary.netSales)}</span></div>
                 {summary.totalExpenseRefunds > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>مردود مصروفات</span><span dir="ltr">{formatNum(summary.totalExpenseRefunds)}</span></div>}
               </td>
             </tr>
-            <tr style={{ borderTop: '1px dashed #ccc' }}>
-              <td style={{ padding: '4px 0 2px 0' }}>- إجمالي المخصومات</td>
-              <td style={{ padding: '4px 0 2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalCashOut)}</td>
+            <tr style={{ borderTop: '2px dashed #000' }}>
+              <td style={{ padding: '8px 0 6px 0' }}>- إجمالي المخصومات</td>
+              <td style={{ padding: '8px 0 6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalCashOut)}</td>
             </tr>
-            <tr style={{ fontSize: '10px' }}>
-              <td colSpan={2} style={{ padding: '2px 0 6px 10px' }}>
-                {summary.totalNetworks > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>الشبكات</span><span dir="ltr">{formatNum(summary.totalNetworks)}</span></div>}
-                {summary.totalCustomerTransfers > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>تحويلات عملاء</span><span dir="ltr">{formatNum(summary.totalCustomerTransfers)}</span></div>}
-                {summary.totalCompanyPayments > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>شركات وموردين</span><span dir="ltr">{formatNum(summary.totalCompanyPayments)}</span></div>}
-                {summary.generalExpensesTotal > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>مصروفات عامة</span><span dir="ltr">{formatNum(summary.generalExpensesTotal)}</span></div>}
-                {summary.totalCashDeposits > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>إيداعات بنكية</span><span dir="ltr">{formatNum(summary.totalCashDeposits)}</span></div>}
+            <tr style={{ fontSize: '16px' }}>
+              <td colSpan={2} style={{ padding: '6px 0 10px 10px' }}>
+                {summary.totalNetworks > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>الشبكات</span><span dir="ltr">{formatNum(summary.totalNetworks)}</span></div>}
+                {summary.totalCustomerTransfers > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>تحويلات عملاء</span><span dir="ltr">{formatNum(summary.totalCustomerTransfers)}</span></div>}
+                {summary.totalCompanyPayments > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>شركات وموردين</span><span dir="ltr">{formatNum(summary.totalCompanyPayments)}</span></div>}
+                {summary.generalExpensesTotal > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>مصروفات عامة</span><span dir="ltr">{formatNum(summary.generalExpensesTotal)}</span></div>}
+                {summary.totalCashDeposits > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>إيداعات بنكية</span><span dir="ltr">{formatNum(summary.totalCashDeposits)}</span></div>}
                 {summary.separatedExpenses.map((exp: any) => (
-                  <div key={exp.id} style={{ display: 'flex', justifyContent: 'space-between' }}><span>{exp.name || 'محدد'}</span><span dir="ltr">{formatNum(exp.amount)}</span></div>
+                  <div key={exp.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>{exp.name || 'محدد'}</span><span dir="ltr">{formatNum(exp.amount)}</span></div>
                 ))}
               </td>
             </tr>
-            <tr style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000' }}>
-              <td style={{ padding: '6px 0', fontWeight: 'bold' }}>الرصيد الدفتري</td>
-              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.expectedCash)}</td>
+            <tr style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
+              <td style={{ padding: '12px 0', fontWeight: 'bold', fontSize: '22px' }}>الرصيد الدفتري</td>
+              <td style={{ padding: '12px 0', textAlign: 'left', fontWeight: 'bold', fontSize: '22px' }} dir="ltr">{formatNum(summary.expectedCash)}</td>
             </tr>
           </tbody>
         </table>
 
-        <div style={{ fontWeight: 'bold', borderBottom: '1px solid #000', marginBottom: '5px' }}>الجرد الفعلي</div>
-        <table style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse', fontSize: '12px' }}>
+        <div style={{ fontWeight: 'bold', borderBottom: '2px solid #000', marginBottom: '10px', paddingBottom: '5px', fontSize: '20px' }}>الجرد الفعلي</div>
+        <table style={{ width: '100%', marginBottom: '20px', borderCollapse: 'collapse', fontSize: '18px' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '2px 0' }}>النقدية الفعلية</td>
-              <td style={{ padding: '2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.physicalCash)}</td>
+              <td style={{ padding: '6px 0' }}>النقدية الفعلية</td>
+              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.physicalCash)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '2px 0' }}>+ معلقة لنا</td>
-              <td style={{ padding: '2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td>
+              <td style={{ padding: '6px 0' }}>+ معلقة لنا</td>
+              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '2px 0' }}>- معلقة علينا</td>
-              <td style={{ padding: '2px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td>
+              <td style={{ padding: '6px 0' }}>- معلقة علينا</td>
+              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td>
             </tr>
-            <tr style={{ borderTop: '1px solid #000', borderBottom: '1px solid #000' }}>
-              <td style={{ padding: '6px 0', fontWeight: 'bold' }}>الصافي الفعلي</td>
-              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.actualCash)}</td>
+            <tr style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
+              <td style={{ padding: '12px 0', fontWeight: 'bold', fontSize: '22px' }}>الصافي الفعلي</td>
+              <td style={{ padding: '12px 0', textAlign: 'left', fontWeight: 'bold', fontSize: '22px' }} dir="ltr">{formatNum(summary.actualCash)}</td>
             </tr>
           </tbody>
         </table>
 
-        <div style={{ textAlign: 'center', marginTop: '15px' }}>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', padding: '8px', border: '2px dashed #000' }}>
+        <div style={{ textAlign: 'center', marginTop: '25px', marginBottom: '15px' }}>
+          <div style={{ fontSize: '24px', fontWeight: 'bold', padding: '12px', border: '3px dashed #000', borderRadius: '8px' }}>
             {summary.difference === 0 ? 'الخزينة مطابقة تماماً' : summary.difference > 0 ? `النتيجة: زيادة ${formatNum(Math.abs(summary.difference))}` : `النتيجة: عجز ${formatNum(Math.abs(summary.difference))}`}
           </div>
         </div>
         
-        <div style={{ marginTop: '30px', textAlign: 'center' }}>
-          <div style={{ fontSize: '14px', fontWeight: 'bold' }}>توقيع الكاشير / المسؤول</div>
-          <div style={{ marginTop: '25px', borderBottom: '1px dashed #000', margin: '25px 20px 0 20px' }}></div>
+        <div style={{ marginTop: '45px', textAlign: 'center' }}>
+          <div style={{ fontSize: '18px', fontWeight: 'bold' }}>توقيع الكاشير / المسؤول</div>
+          <div style={{ marginTop: '40px', borderBottom: '2px dashed #000', margin: '40px 30px 0 30px' }}></div>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '10px', paddingBottom: '10px' }}>-- تمت التسوية بنجاح --</div>
+        <div style={{ textAlign: 'center', marginTop: '30px', fontSize: '18px', paddingBottom: '20px', fontWeight: 'bold' }}>-- تمت التسوية بنجاح --</div>
       </div>
     );
   }
@@ -350,67 +351,67 @@ const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4' }: any
   
   if (printFormat === 'thermal') {
     return (
-      <div className="hidden print:block rtl print:bg-white text-black font-sans mx-auto" style={{ width: '80mm', margin: '0 auto', fontSize: '13px', lineHeight: '1.4' }}>
+      <div className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans" style={{ width: '100vw', margin: 0, padding: '10px', fontSize: '18px', lineHeight: '1.6' }}>
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
-            @page { margin: 0; padding: 0; }
-            body { margin: 0; padding: 10px; }
+            @page { margin: 0; padding: 0; width: 100vw; }
+            body { margin: 0; padding: 0; width: 100vw; background: white; }
             * { box-shadow: none !important; }
           }
         `}} />
-        <div style={{ textAlign: 'center', marginBottom: '10px', borderBottom: '1px dashed #000', paddingBottom: '10px' }}>
-          <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0' }}>تسوية نقطة بيع</h1>
-          <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{pos.name || 'بدون اسم'}</h2>
-          <div style={{ fontSize: '11px' }}>
-            <div>التاريخ: <span dir="ltr">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span></div>
+        <div style={{ textAlign: 'center', marginBottom: '15px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تسوية نقطة بيع</h1>
+          <h2 style={{ fontSize: '26px', fontWeight: 'bold', margin: '0 0 8px 0' }}>{pos.name || 'بدون اسم'}</h2>
+          <div style={{ fontSize: '16px' }}>
+            <div style={{ marginBottom: '4px' }}>التاريخ: <span dir="ltr" style={{ fontWeight: 'bold' }}>{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span></div>
             <div>طباعة: <span dir="ltr">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
           </div>
         </div>
         
-        <table style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse' }}>
+        <table style={{ width: '100%', marginBottom: '20px', borderCollapse: 'collapse', fontSize: '18px' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '4px 0' }}>إجمالي المبيعات</td>
-              <td style={{ padding: '4px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(pos.sales)}</td>
+              <td style={{ padding: '6px 0' }}>إجمالي المبيعات</td>
+              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(pos.sales)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '4px 0' }}>المرتجعات</td>
-              <td style={{ padding: '4px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(pos.returns)}</td>
+              <td style={{ padding: '6px 0' }}>المرتجعات</td>
+              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(pos.returns)}</td>
             </tr>
-            <tr style={{ borderTop: '1px dashed #000', borderBottom: '1px dashed #000' }}>
-              <td style={{ padding: '6px 0', fontWeight: 'bold' }}>صافي المبيعات</td>
-              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(net)}</td>
+            <tr style={{ borderTop: '2px dashed #000', borderBottom: '2px dashed #000' }}>
+              <td style={{ padding: '10px 0', fontWeight: 'bold', fontSize: '22px' }}>صافي المبيعات</td>
+              <td style={{ padding: '10px 0', textAlign: 'left', fontWeight: 'bold', fontSize: '22px' }} dir="ltr">{formatNum(net)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '4px 0' }}>
+              <td style={{ padding: '8px 0' }}>
                 الشبكات
-                {pos.networks?.length > 0 && <div style={{ fontSize: '10px' }}>({pos.networks.map((n: number) => formatNum(n)).join(' + ')})</div>}
+                {pos.networks?.length > 0 && <div style={{ fontSize: '14px', marginTop: '2px' }}>({pos.networks.map((n: number) => formatNum(n)).join(' + ')})</div>}
               </td>
-              <td style={{ padding: '4px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(networksTotal)}</td>
+              <td style={{ padding: '8px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(networksTotal)}</td>
             </tr>
           </tbody>
         </table>
 
-        <div style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000', margin: '15px 0', padding: '10px 0', textAlign: 'center' }}>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '5px' }}>المطلوب كاش في الدرج</div>
-          <div style={{ fontSize: '26px', fontWeight: 'bold' }} dir="ltr">{formatNum(net - networksTotal)}</div>
+        <div style={{ borderTop: '3px solid #000', borderBottom: '3px solid #000', margin: '25px 0', padding: '20px 0', textAlign: 'center' }}>
+          <div style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '8px' }}>المطلوب كاش في الدرج</div>
+          <div style={{ fontSize: '36px', fontWeight: 'bold' }} dir="ltr">{formatNum(net - networksTotal)}</div>
         </div>
 
         {pos.physicalCash !== undefined && (
-          <div style={{ textAlign: 'center', marginTop: '15px' }}>
-            <div style={{ fontSize: '14px' }}>الكاش الفعلي الموجود: <span dir="ltr" style={{ fontWeight: 'bold', fontSize: '18px' }}>{formatNum(pos.physicalCash)}</span></div>
-            <div style={{ fontSize: '18px', fontWeight: 'bold', marginTop: '8px', padding: '8px', border: '2px dashed #000' }}>
+          <div style={{ textAlign: 'center', marginTop: '25px' }}>
+            <div style={{ fontSize: '22px' }}>الكاش الفعلي الموجود: <span dir="ltr" style={{ fontWeight: 'bold', fontSize: '28px', display: 'block', marginTop: '5px' }}>{formatNum(pos.physicalCash)}</span></div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '15px', padding: '12px', border: '3px dashed #000', borderRadius: '8px' }}>
               {diff === 0 ? 'الدرج مطابق تماماً' : diff > 0 ? `النتيجة: زيادة ${formatNum(Math.abs(diff))}` : `النتيجة: عجز ${formatNum(Math.abs(diff))}`}
             </div>
           </div>
         )}
         
-        <div style={{ marginTop: '30px', textAlign: 'center' }}>
-          <div style={{ fontSize: '14px', fontWeight: 'bold' }}>توقيع الكاشير</div>
-          <div style={{ marginTop: '25px', borderBottom: '1px dashed #000', margin: '25px 20px 0 20px' }}></div>
+        <div style={{ marginTop: '45px', textAlign: 'center' }}>
+          <div style={{ fontSize: '18px', fontWeight: 'bold' }}>توقيع الكاشير</div>
+          <div style={{ marginTop: '40px', borderBottom: '2px dashed #000', margin: '40px 30px 0 30px' }}></div>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '10px', paddingBottom: '10px' }}>-- تم --</div>
+        <div style={{ textAlign: 'center', marginTop: '30px', fontSize: '18px', paddingBottom: '20px', fontWeight: 'bold' }}>-- تم --</div>
       </div>
     );
   }
@@ -1136,18 +1137,18 @@ ${summaryText}
         {yearlyList.length > 0 ? (
           <div className="space-y-6">
             {yearlyList.map((yData: any) => (
-              <div key={yData.year} className="bg-slate-50 border border-slate-200 rounded-3xl overflow-hidden transition-all">
+              <div key={yData.year} className="bg-white/60 backdrop-blur-sm border border-slate-200/80 rounded-[2rem] overflow-hidden transition-all shadow-sm">
                 <button 
                   onClick={() => toggleYear(yData.year)}
-                  className="w-full bg-white p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors border-b border-slate-200"
+                  className="w-full bg-white p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors border-b border-slate-100"
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-full transition-transform ${expandedYears.includes(yData.year) ? 'rotate-180 bg-slate-200 text-slate-700' : 'bg-blue-100 text-blue-700'}`}>
-                      <ChevronDown size={20} />
+                    <div className={`p-2.5 rounded-2xl transition-all duration-300 ${expandedYears.includes(yData.year) ? 'rotate-180 bg-slate-100 text-slate-700' : 'bg-blue-50 text-blue-600 shadow-sm'}`}>
+                      <ChevronDown size={22} />
                     </div>
                     <div>
                       <h3 className="text-2xl font-black text-slate-800 text-right">سنة {yData.year}</h3>
-                      <p className="text-slate-500 text-sm text-right">{Object.keys(yData.months).length} أشهر مسجلة</p>
+                      <p className="text-slate-500 text-sm text-right mt-1">{Object.keys(yData.months).length} أشهر مسجلة</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-6 self-start md:self-auto">
@@ -1587,7 +1588,7 @@ const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "
       placeholder={placeholder}
       dir={dir}
       list={list}
-      className={`w-full bg-slate-50/80 hover:bg-white border text-slate-700 border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-sm placeholder-slate-400 shadow-sm ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
+      className={`w-full bg-slate-50/50 hover:bg-slate-50 border text-slate-800 border-slate-200/80 rounded-xl px-4 py-3 outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 focus:bg-white transition-all text-sm placeholder-slate-400 shadow-sm shadow-slate-100 ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
       {...props}
     />
   );
@@ -2612,6 +2613,14 @@ export default function App() {
           pendingFundsOwedToUs: state.pendingFundsOwedToUs,
           pendingFundsOwedByUs: state.pendingFundsOwedByUs,
 
+          historicalSales: [...(state.historicalSales || []), {
+            id: generateId(),
+            type: 'day',
+            dateStr: state.date,
+            netSales: currentSummary.netSales
+          }],
+          historicalMonths: state.historicalMonths || [],
+
           posData: state.posData.filter(p => p.isPinned || p.sales > 0 || p.returns > 0 || p.networks.length > 0 || p.physicalCash !== undefined).map(p => ({ 
             ...p, 
             sales: 0, 
@@ -2993,18 +3002,18 @@ export default function App() {
   const activePos = state.posData.find(p => p.id === activeNetworkPosId);
 
   return (
-    <div className={`min-h-screen bg-slate-50 text-slate-800 font-sans ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl" style={{ zoom: uiScale }}>
+    <div className={`min-h-screen bg-[#f4f7fa] text-slate-800 font-sans selection:bg-blue-200 selection:text-blue-900 ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl" style={{ zoom: uiScale }}>
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
-        <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm print:hidden">
+        <div className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-white/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] print:hidden transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-[4.5rem]">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-2.5 rounded-xl shadow-md"><Calculator size={22} /></div>
-              <h1 className="font-extrabold text-xl text-slate-800 tracking-tight">الخزينة الذكية</h1>
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2.5 rounded-[14px] shadow-lg shadow-blue-600/30 ring-1 ring-white/20"><Calculator size={22} className="drop-shadow-sm" /></div>
+              <h1 className="font-extrabold text-2xl text-slate-800 tracking-tight">الخزينة الذكية</h1>
             </div>
             <div className="flex items-center gap-2 md:gap-3">
               {!user ? (
-                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors font-bold shadow-sm">
+                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2.5 rounded-xl hover:from-blue-500 hover:to-indigo-500 transition-all font-bold shadow-lg shadow-blue-500/20 active:scale-95">
                   <LogIn size={18} /> <span className="hidden sm:inline">تسجيل الدخول</span>
                 </button>
               ) : (
@@ -3022,7 +3031,7 @@ export default function App() {
                             setHistory([]);
                           }
                         }}
-                        className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 outline-none font-bold hover:bg-slate-100 transition-colors cursor-pointer"
+                        className="bg-white/50 border border-slate-200/60 text-slate-700 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white block w-full px-4 py-2.5 outline-none font-bold hover:bg-white transition-all cursor-pointer shadow-sm"
                       >
                         <option value="">-- اختر الفرع --</option>
                         {branches.map(b => (
@@ -3031,27 +3040,27 @@ export default function App() {
                       </select>
                     </div>
                   )}
-                  <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 font-bold">
+                  <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 bg-white/60 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-slate-200/60 font-medium shadow-sm">
                     <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     <span className="font-mono">{user.email?.split('@')[0]}</span>
                   </div>
-                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center gap-2 text-slate-500 hover:text-blue-600 px-2 py-2 rounded-xl hover:bg-blue-50 transition-colors" title="إعدادات">
+                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center justify-center text-slate-500 hover:text-blue-600 w-10 h-10 rounded-xl hover:bg-blue-50 transition-all active:scale-90" title="إعدادات">
                     <Settings size={20} />
                   </button>
-                  <button onClick={handleLogout} className="flex items-center gap-2 text-slate-500 hover:text-rose-600 px-2 py-2 rounded-xl hover:bg-rose-50 transition-colors" title="تسجيل الخروج">
+                  <button onClick={handleLogout} className="flex items-center justify-center text-slate-500 hover:text-rose-600 w-10 h-10 rounded-xl hover:bg-rose-50 transition-all active:scale-90" title="تسجيل الخروج">
                     <LogOut size={20} />
                   </button>
-                  <div className="w-px h-8 bg-slate-200 mx-1 hidden sm:block"></div>
-                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold shadow-sm disabled:opacity-50 hover:shadow-md active:scale-95 ${saving ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'}`}>
+                  <div className="w-px h-8 bg-slate-200/80 mx-1 hidden sm:block"></div>
+                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold shadow-sm disabled:opacity-50 hover:shadow-md active:scale-95 ${saving ? 'bg-amber-100 text-amber-700 border border-amber-200/60' : 'bg-emerald-50/80 text-emerald-700 border border-emerald-200/60 hover:bg-emerald-100'}`}>
                     {saving ? <Save size={18} className="animate-pulse" /> : <CheckCircle2 size={18} />}
-                    <span className="hidden sm:inline">{saving ? 'جاري الحفظ...' : 'حفظ'}</span>
+                    <span className="hidden sm:inline">{saving ? 'جاري الحفظ...' : 'صافي وحفظ'}</span>
                   </button>
                 </>
               )}
-              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-slate-100 text-slate-700 border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-200 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
+              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-white text-slate-700 border border-slate-200/80 px-5 py-2.5 rounded-xl hover:bg-slate-50 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
                 <Download size={18} /> <span className="hidden sm:inline">تصدير</span>
               </button>
-              <button onClick={handleNewDay} className="flex items-center gap-2 bg-indigo-600 text-white border border-indigo-500 px-4 py-2 rounded-xl hover:bg-indigo-700 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
+              <button onClick={handleNewDay} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-all font-bold shadow-sm hover:shadow-md active:scale-95 shadow-indigo-600/20 ring-1 ring-indigo-500/50">
                 <FilePlus size={18} /> <span className="hidden sm:inline">يوم جديد</span>
               </button>
             </div>
@@ -3061,7 +3070,7 @@ export default function App() {
 
       <div id="export-container" className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${isExporting ? 'bg-white' : ''}`}>
         {isExporting && (
-          <div className="text-center mb-8 pb-4 border-b border-slate-200">
+          <div className="text-center mb-8 pb-4 border-b border-slate-200/80">
             <h1 className="text-2xl font-bold text-slate-900">الخزينة الذكية - تقرير التسوية</h1>
             <p className="text-slate-500 mt-2">تاريخ: {state.date}</p>
             <p className="text-slate-500">نوع التقرير: {exportMode === 'detailed' ? 'مفصل' : 'ملخص'}</p>
@@ -3069,14 +3078,15 @@ export default function App() {
         )}
 
         {(!isExporting || exportMode === 'detailed') && (
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-6 items-center print:hidden">
+          <div className="bg-white/90 backdrop-blur-md p-5 rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 mb-8 flex flex-wrap gap-8 items-center print:hidden">
             <div className="flex items-center gap-3">
               <label className="font-semibold text-slate-600">تاريخ اليوم:</label>
-              <Input value={state.date} onChange={(e: any) => updateField('date', e.target.value)} className="w-40 text-center font-bold" />
+              <Input value={state.date} onChange={(e: any) => updateField('date', e.target.value)} className="w-44 text-center font-bold text-lg" />
             </div>
+            <div className="w-px h-8 bg-slate-200/80 hidden sm:block"></div>
             <div className="flex items-center gap-3">
               <label className="font-semibold text-slate-600">رصيد أول المدة:</label>
-              <Input type="number" value={state.previousBalance} onChange={(e: any) => updateField('previousBalance', Number(e.target.value))} className="w-40 text-left font-bold text-blue-600 bg-blue-50" dir="ltr" />
+              <Input type="number" value={state.previousBalance} onChange={(e: any) => updateField('previousBalance', Number(e.target.value))} className="w-44 text-left font-bold text-blue-700 bg-blue-50/50 hover:bg-blue-50 border-blue-200/80 text-lg focus:ring-blue-500/20" dir="ltr" />
             </div>
           </div>
         )}
@@ -3085,7 +3095,7 @@ export default function App() {
           {(!isExporting || exportMode === 'detailed') && (
             <div className="flex-1 min-w-0 print:w-full">
               {!isExporting && (
-                <div className="flex overflow-x-auto gap-2 mb-6 pb-2 print:hidden scrollbar-hide">
+                <div className="flex overflow-x-auto gap-3 mb-8 pb-3 print:hidden scrollbar-hide">
                   {[
                     { id: 'sales', label: 'الإيرادات والمبيعات', icon: Receipt },
                     { id: 'payments', label: 'المخصومات والمدفوعات', icon: ArrowUpRight },
@@ -3099,8 +3109,8 @@ export default function App() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`relative flex items-center gap-2 px-5 py-3 rounded-2xl font-bold transition-all whitespace-nowrap transform hover:scale-[1.02] active:scale-95 ${
-                        activeTab === tab.id ? 'text-white shadow-lg shadow-blue-500/30' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200 hover:border-slate-300'
+                      className={`relative flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all whitespace-nowrap transform hover:scale-[1.02] active:scale-95 border ${
+                        activeTab === tab.id ? 'text-white border-transparent shadow-[0_8px_16px_-6px_rgba(37,99,235,0.4)]' : 'bg-white text-slate-600 border-slate-200/80 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'
                       }`}
                     >
                       {activeTab === tab.id && (
@@ -3108,7 +3118,7 @@ export default function App() {
                           layoutId="activeTabIndicator"
                           className="absolute inset-0 bg-blue-600 rounded-2xl"
                           style={{ zIndex: 0 }}
-                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                          transition={{ type: "spring", stiffness: 350, damping: 25 }}
                         />
                       )}
                       <span className="relative z-10 flex items-center gap-2">
@@ -3122,7 +3132,7 @@ export default function App() {
               <div className="print:block">
                 {/* Sales Tab */}
                 <div className={`${activeTab === 'sales' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                <div className="bg-white/95 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                   <div className="bg-emerald-50 text-emerald-800 p-4 border-b border-emerald-100 flex items-center gap-2 font-bold">
                     <Receipt size={20} /> مبيعات نقاط البيع
                   </div>
@@ -3158,27 +3168,28 @@ export default function App() {
                                     updateField('posData', newData);
                                   }} 
                                   onBlur={(e: any) => addSavedName('posData', e.target.value)}
+                                  className="bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl"
                                 />
                               </td>
                               <td className="py-2 px-1"><Input type="number" value={pos.sales} onChange={(e: any) => {
                                   const newData = [...state.posData];
                                   newData[index].sales = Number(e.target.value);
                                   updateField('posData', newData);
-                                }} dir="ltr" className="text-left" /></td>
+                                }} dir="ltr" className="text-left bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl" /></td>
                               <td className="py-2 px-1"><Input type="number" value={pos.returns} onChange={(e: any) => {
                                   const newData = [...state.posData];
                                   newData[index].returns = Number(e.target.value);
                                   updateField('posData', newData);
-                                }} dir="ltr" className="text-left text-rose-600" /></td>
+                                }} dir="ltr" className="text-left text-rose-600 bg-transparent border-transparent shadow-none hover:bg-rose-50 focus:bg-white focus:border-rose-200 transition-colors rounded-xl" /></td>
                               <td className="py-2 px-2 text-left font-bold text-emerald-600" dir="ltr">{formatNum(net)}</td>
                               <td className="py-2 px-1">
                                 <button 
                                   onClick={() => setActiveNetworkPosId(pos.id)}
-                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-left hover:bg-amber-50 hover:border-amber-300 transition-colors text-amber-700 font-medium flex justify-between items-center"
+                                  className="w-full bg-slate-50/70 border border-slate-200/60 rounded-xl px-3 py-2 text-left hover:bg-amber-50 hover:border-amber-300 transition-colors text-amber-700 font-medium flex justify-between items-center"
                                   dir="ltr"
                                 >
                                   <span>{formatNum(posNetworksTotal)}</span>
-                                  <span className="text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                                  <span className="text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-lg">
                                     {pos.networks.length} مبالغ
                                   </span>
                                 </button>
@@ -3188,7 +3199,7 @@ export default function App() {
                                   const newData = [...state.posData];
                                   newData[index].physicalCash = e.target.value === '' ? undefined : Number(e.target.value);
                                   updateField('posData', newData);
-                                }} dir="ltr" className="text-left font-bold text-blue-700 pointer-events-auto" />
+                                }} dir="ltr" className="text-left font-bold text-blue-700 pointer-events-auto bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl font-mono text-lg tracking-tight" />
                               </td>
                               <td className="py-2 pl-2 flex justify-center gap-1 print:hidden">
                                 <button 
@@ -3269,7 +3280,7 @@ export default function App() {
 
               {/* Cash Count Tab */}
               <div className={`${activeTab === 'cash' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                <div className="bg-white/95 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                   <div className="bg-indigo-50 text-indigo-800 p-4 border-b border-indigo-100 flex items-center justify-between font-bold">
                     <div className="flex items-center gap-2"><Wallet size={20} /> جرد الخزينة (الفئات النقدية)</div>
                     <div className="bg-white/60 px-3 py-1 rounded-lg" dir="ltr">{formatNum(currentSummary.physicalDenominations)}</div>
@@ -3293,7 +3304,7 @@ export default function App() {
 
               {/* History Tab */}
               <div className={`${activeTab === 'history' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                <div className="bg-white/95 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                   <div className="bg-blue-50 text-blue-800 p-4 flex items-center gap-2 font-bold border-b border-blue-100">
                     <CalendarDays size={20} /> سجل الأيام السابقة
                   </div>
@@ -3599,7 +3610,7 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                      <div className="bg-white rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                         <div className="bg-slate-800 text-white p-4 flex justify-between items-center border-b border-slate-700">
                           <div className="flex items-center gap-2 font-bold">
                             <BookOpen size={20} className="text-slate-300" /> كشف حساب (النتائج: {filteredLedger.length})
@@ -3669,7 +3680,7 @@ export default function App() {
 
               {/* Archive Tab */}
               <div className={`${activeTab === 'archive' && !isExporting ? 'block' : 'hidden'} print:block`}>
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                <div className="bg-white/95 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                   <div className="bg-slate-800 text-white p-4 flex items-center gap-2 font-bold">
                     <History size={20} /> أرشيف الأموال المعلقة (المسددة)
                   </div>
