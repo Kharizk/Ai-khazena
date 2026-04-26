@@ -6,6 +6,7 @@ import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, updateDoc, where } from 'firebase/firestore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import CalculatorWidget from './components/Calculator';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { motion, AnimatePresence } from 'motion/react';
@@ -115,39 +116,40 @@ const getInitialState = (): AppState => ({
   historicalSales: []
 });
 
-const sumTransactions = (arr: Transaction[]) => arr.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-const sumNetworks = (networks: number[]) => networks.reduce((sum, val) => sum + (Number(val) || 0), 0);
+const round2 = (num: number) => Math.round(num * 100) / 100;
+const sumTransactions = (arr: Transaction[]) => round2(arr.reduce((sum, item) => sum + (Number(item.amount) || 0), 0));
+const sumNetworks = (networks: number[]) => round2(networks.reduce((sum, val) => sum + (Number(val) || 0), 0));
 
 const getSummary = (s: AppState) => {
-  const totalSales = s.posData.reduce((sum, item) => sum + (Number(item.sales) || 0), 0);
-  const totalReturns = s.posData.reduce((sum, item) => sum + (Number(item.returns) || 0), 0);
-  const netSales = totalSales - totalReturns;
+  const totalSales = round2(s.posData.reduce((sum, item) => sum + (Number(item.sales) || 0), 0));
+  const totalReturns = round2(s.posData.reduce((sum, item) => sum + (Number(item.returns) || 0), 0));
+  const netSales = round2(totalSales - totalReturns);
   const totalExpenseRefunds = sumTransactions(s.expenseRefunds);
-  const totalCashIn = netSales + totalExpenseRefunds;
+  const totalCashIn = round2(netSales + totalExpenseRefunds);
 
-  const totalNetworks = s.posData.reduce((sum, item) => sum + sumNetworks(item.networks), 0);
+  const totalNetworks = round2(s.posData.reduce((sum, item) => sum + sumNetworks(item.networks), 0));
   const totalCustomerTransfers = sumTransactions(s.customerTransfers);
   const totalCompanyPayments = sumTransactions(s.companyPayments);
   
   const separatedExpenses = s.expenses.filter(e => e.showInSummary && e.amount > 0);
   const separatedExpensesTotal = sumTransactions(separatedExpenses);
   const generalExpensesTotal = sumTransactions(s.expenses.filter(e => !e.showInSummary));
-  const totalExpenses = generalExpensesTotal + separatedExpensesTotal;
+  const totalExpenses = round2(generalExpensesTotal + separatedExpensesTotal);
   
   const totalCashDeposits = sumTransactions(s.cashDeposits);
-  const totalCashOut = totalNetworks + totalCustomerTransfers + totalCompanyPayments + totalExpenses + totalCashDeposits;
+  const totalCashOut = round2(totalNetworks + totalCustomerTransfers + totalCompanyPayments + totalExpenses + totalCashDeposits);
 
-  const expectedCash = s.previousBalance + totalCashIn - totalCashOut;
+  const expectedCash = round2(s.previousBalance + totalCashIn - totalCashOut);
 
-  const physicalDenominations = Object.entries(s.cashDenominations).reduce((sum, [denom, count]) => sum + (Number(denom) * (Number(count) || 0)), 0);
+  const physicalDenominations = round2(Object.entries(s.cashDenominations).reduce((sum, [denom, count]) => sum + (Number(denom) * (Number(count) || 0)), 0));
   const physicalCustomCash = sumTransactions(s.customCashAmounts);
-  const physicalCash = physicalDenominations + physicalCustomCash;
+  const physicalCash = round2(physicalDenominations + physicalCustomCash);
   
   const totalPendingOwedToUs = sumTransactions(s.pendingFundsOwedToUs);
   const totalPendingOwedByUs = sumTransactions(s.pendingFundsOwedByUs);
 
-  const actualCash = physicalCash + totalPendingOwedToUs - totalPendingOwedByUs;
-  const difference = actualCash - expectedCash;
+  const actualCash = round2(physicalCash + totalPendingOwedToUs - totalPendingOwedByUs);
+  const difference = round2(actualCash - expectedCash);
 
   return {
     totalSales, totalReturns, netSales, totalExpenseRefunds, totalCashIn,
@@ -170,80 +172,80 @@ const formatNum = (num: number) => num.toLocaleString('en-US', { minimumFraction
 const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4' }: any) => {
   if (printFormat === 'thermal') {
     return (
-      <div id={id} className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans" style={{ width: '100vw', margin: 0, padding: '10px', fontSize: '18px', lineHeight: '1.6' }}>
+      <div id={id} className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans box-border" style={{ width: '100%', margin: 0, padding: '10px 24px', fontSize: '20px', lineHeight: '1.6' }}>
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
-            @page { margin: 0; padding: 0; width: 100vw; }
-            body { margin: 0; padding: 0; width: 100vw; background: white; }
-            * { box-shadow: none !important; }
+            @page { margin: 0; padding: 0; }
+            body { margin: 0; padding: 0; background: white; width: 100%; box-sizing: border-box; }
+            * { box-shadow: none !important; box-sizing: border-box !important; }
           }
         `}} />
-        <div style={{ textAlign: 'center', marginBottom: '15px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
-          <h1 style={{ fontSize: '26px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تقرير التقفيل اليومي</h1>
-          <div style={{ fontSize: '16px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
+          <h1 style={{ fontSize: '30px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تقرير التقفيل اليومي</h1>
+          <div style={{ fontSize: '18px' }}>
             <div style={{ marginBottom: '4px' }}>التاريخ: <span dir="ltr" style={{ fontWeight: 'bold' }}>{state.date}</span></div>
             <div>طباعة: <span dir="ltr">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
           </div>
         </div>
 
-        <div style={{ fontWeight: 'bold', borderBottom: '2px solid #000', marginBottom: '10px', paddingBottom: '5px', fontSize: '20px' }}>ملخص الوارد والمنصرف</div>
-        <table style={{ width: '100%', marginBottom: '20px', borderCollapse: 'collapse', fontSize: '18px' }}>
+        <div style={{ fontWeight: 'bold', borderBottom: '2px solid #000', marginBottom: '10px', paddingBottom: '5px', fontSize: '24px' }}>ملخص الوارد والمنصرف</div>
+        <table style={{ width: '100%', marginBottom: '25px', borderCollapse: 'collapse', fontSize: '20px' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '6px 0' }}>رصيد أول المدة</td>
-              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(state.previousBalance)}</td>
+              <td style={{ padding: '8px 0' }}>رصيد أول المدة</td>
+              <td style={{ padding: '8px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(state.previousBalance)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '6px 0' }}>+ إجمالي الإيرادات</td>
-              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalCashIn)}</td>
+              <td style={{ padding: '8px 0' }}>+ إجمالي الإيرادات</td>
+              <td style={{ padding: '8px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalCashIn)}</td>
             </tr>
-            <tr style={{ fontSize: '16px' }}>
-              <td colSpan={2} style={{ padding: '4px 0 10px 10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>صافي المبيعات</span><span dir="ltr">{formatNum(summary.netSales)}</span></div>
+            <tr style={{ fontSize: '18px' }}>
+              <td colSpan={2} style={{ padding: '6px 0 12px 10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>صافي المبيعات</span><span dir="ltr">{formatNum(summary.netSales)}</span></div>
                 {summary.totalExpenseRefunds > 0 && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>مردود مصروفات</span><span dir="ltr">{formatNum(summary.totalExpenseRefunds)}</span></div>}
               </td>
             </tr>
             <tr style={{ borderTop: '2px dashed #000' }}>
-              <td style={{ padding: '8px 0 6px 0' }}>- إجمالي المخصومات</td>
-              <td style={{ padding: '8px 0 6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalCashOut)}</td>
+              <td style={{ padding: '10px 0 8px 0' }}>- إجمالي المخصومات</td>
+              <td style={{ padding: '10px 0 8px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalCashOut)}</td>
             </tr>
-            <tr style={{ fontSize: '16px' }}>
-              <td colSpan={2} style={{ padding: '6px 0 10px 10px' }}>
-                {summary.totalNetworks > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>الشبكات</span><span dir="ltr">{formatNum(summary.totalNetworks)}</span></div>}
-                {summary.totalCustomerTransfers > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>تحويلات عملاء</span><span dir="ltr">{formatNum(summary.totalCustomerTransfers)}</span></div>}
-                {summary.totalCompanyPayments > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>شركات وموردين</span><span dir="ltr">{formatNum(summary.totalCompanyPayments)}</span></div>}
-                {summary.generalExpensesTotal > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>مصروفات عامة</span><span dir="ltr">{formatNum(summary.generalExpensesTotal)}</span></div>}
-                {summary.totalCashDeposits > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>إيداعات بنكية</span><span dir="ltr">{formatNum(summary.totalCashDeposits)}</span></div>}
+            <tr style={{ fontSize: '18px' }}>
+              <td colSpan={2} style={{ padding: '8px 0 12px 10px' }}>
+                {summary.totalNetworks > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>الشبكات</span><span dir="ltr">{formatNum(summary.totalNetworks)}</span></div>}
+                {summary.totalCustomerTransfers > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>تحويلات عملاء</span><span dir="ltr">{formatNum(summary.totalCustomerTransfers)}</span></div>}
+                {summary.totalCompanyPayments > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>شركات وموردين</span><span dir="ltr">{formatNum(summary.totalCompanyPayments)}</span></div>}
+                {summary.generalExpensesTotal > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>مصروفات عامة</span><span dir="ltr">{formatNum(summary.generalExpensesTotal)}</span></div>}
+                {summary.totalCashDeposits > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>إيداعات بنكية</span><span dir="ltr">{formatNum(summary.totalCashDeposits)}</span></div>}
                 {summary.separatedExpenses.map((exp: any) => (
-                  <div key={exp.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}><span>{exp.name || 'محدد'}</span><span dir="ltr">{formatNum(exp.amount)}</span></div>
+                  <div key={exp.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}><span>{exp.name || 'محدد'}</span><span dir="ltr">{formatNum(exp.amount)}</span></div>
                 ))}
               </td>
             </tr>
             <tr style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
-              <td style={{ padding: '12px 0', fontWeight: 'bold', fontSize: '22px' }}>الرصيد الدفتري</td>
-              <td style={{ padding: '12px 0', textAlign: 'left', fontWeight: 'bold', fontSize: '22px' }} dir="ltr">{formatNum(summary.expectedCash)}</td>
+              <td style={{ padding: '14px 0', fontWeight: 'bold', fontSize: '26px' }}>الرصيد الدفتري</td>
+              <td style={{ padding: '14px 0', textAlign: 'left', fontWeight: 'bold', fontSize: '26px' }} dir="ltr">{formatNum(summary.expectedCash)}</td>
             </tr>
           </tbody>
         </table>
 
-        <div style={{ fontWeight: 'bold', borderBottom: '2px solid #000', marginBottom: '10px', paddingBottom: '5px', fontSize: '20px' }}>الجرد الفعلي</div>
-        <table style={{ width: '100%', marginBottom: '20px', borderCollapse: 'collapse', fontSize: '18px' }}>
+        <div style={{ fontWeight: 'bold', borderBottom: '2px solid #000', marginBottom: '10px', paddingBottom: '5px', fontSize: '24px' }}>الجرد الفعلي</div>
+        <table style={{ width: '100%', marginBottom: '25px', borderCollapse: 'collapse', fontSize: '20px' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '6px 0' }}>النقدية الفعلية</td>
-              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.physicalCash)}</td>
+              <td style={{ padding: '8px 0' }}>النقدية الفعلية</td>
+              <td style={{ padding: '8px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.physicalCash)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '6px 0' }}>+ معلقة لنا</td>
-              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td>
+              <td style={{ padding: '8px 0' }}>+ معلقة لنا</td>
+              <td style={{ padding: '8px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '6px 0' }}>- معلقة علينا</td>
-              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td>
+              <td style={{ padding: '8px 0' }}>- معلقة علينا</td>
+              <td style={{ padding: '8px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td>
             </tr>
             <tr style={{ borderTop: '2px solid #000', borderBottom: '2px solid #000' }}>
-              <td style={{ padding: '12px 0', fontWeight: 'bold', fontSize: '22px' }}>الصافي الفعلي</td>
-              <td style={{ padding: '12px 0', textAlign: 'left', fontWeight: 'bold', fontSize: '22px' }} dir="ltr">{formatNum(summary.actualCash)}</td>
+              <td style={{ padding: '14px 0', fontWeight: 'bold', fontSize: '26px' }}>الصافي الفعلي</td>
+              <td style={{ padding: '14px 0', textAlign: 'left', fontWeight: 'bold', fontSize: '26px' }} dir="ltr">{formatNum(summary.actualCash)}</td>
             </tr>
           </tbody>
         </table>
@@ -351,67 +353,67 @@ const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4' }: any
   
   if (printFormat === 'thermal') {
     return (
-      <div className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans" style={{ width: '100vw', margin: 0, padding: '10px', fontSize: '18px', lineHeight: '1.6' }}>
+      <div className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans box-border" style={{ width: '100%', margin: 0, padding: '10px 24px', fontSize: '20px', lineHeight: '1.6' }}>
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
-            @page { margin: 0; padding: 0; width: 100vw; }
-            body { margin: 0; padding: 0; width: 100vw; background: white; }
-            * { box-shadow: none !important; }
+            @page { margin: 0; padding: 0; }
+            body { margin: 0; padding: 0; background: white; width: 100%; box-sizing: border-box; }
+            * { box-shadow: none !important; box-sizing: border-box !important; }
           }
         `}} />
-        <div style={{ textAlign: 'center', marginBottom: '15px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تسوية نقطة بيع</h1>
-          <h2 style={{ fontSize: '26px', fontWeight: 'bold', margin: '0 0 8px 0' }}>{pos.name || 'بدون اسم'}</h2>
-          <div style={{ fontSize: '16px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تسوية نقطة بيع</h1>
+          <h2 style={{ fontSize: '32px', fontWeight: 'bold', margin: '0 0 8px 0' }}>{pos.name || 'بدون اسم'}</h2>
+          <div style={{ fontSize: '18px' }}>
             <div style={{ marginBottom: '4px' }}>التاريخ: <span dir="ltr" style={{ fontWeight: 'bold' }}>{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span></div>
             <div>طباعة: <span dir="ltr">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
           </div>
         </div>
         
-        <table style={{ width: '100%', marginBottom: '20px', borderCollapse: 'collapse', fontSize: '18px' }}>
+        <table style={{ width: '100%', marginBottom: '25px', borderCollapse: 'collapse', fontSize: '20px' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '6px 0' }}>إجمالي المبيعات</td>
-              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(pos.sales)}</td>
+              <td style={{ padding: '8px 0' }}>إجمالي المبيعات</td>
+              <td style={{ padding: '8px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(pos.sales)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '6px 0' }}>المرتجعات</td>
-              <td style={{ padding: '6px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(pos.returns)}</td>
+              <td style={{ padding: '8px 0' }}>المرتجعات</td>
+              <td style={{ padding: '8px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(pos.returns)}</td>
             </tr>
             <tr style={{ borderTop: '2px dashed #000', borderBottom: '2px dashed #000' }}>
-              <td style={{ padding: '10px 0', fontWeight: 'bold', fontSize: '22px' }}>صافي المبيعات</td>
-              <td style={{ padding: '10px 0', textAlign: 'left', fontWeight: 'bold', fontSize: '22px' }} dir="ltr">{formatNum(net)}</td>
+              <td style={{ padding: '12px 0', fontWeight: 'bold', fontSize: '26px' }}>صافي المبيعات</td>
+              <td style={{ padding: '12px 0', textAlign: 'left', fontWeight: 'bold', fontSize: '26px' }} dir="ltr">{formatNum(net)}</td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0' }}>
+              <td style={{ padding: '10px 0' }}>
                 الشبكات
-                {pos.networks?.length > 0 && <div style={{ fontSize: '14px', marginTop: '2px' }}>({pos.networks.map((n: number) => formatNum(n)).join(' + ')})</div>}
+                {pos.networks?.length > 0 && <div style={{ fontSize: '16px', marginTop: '4px' }}>({pos.networks.map((n: number) => formatNum(n)).join(' + ')})</div>}
               </td>
-              <td style={{ padding: '8px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(networksTotal)}</td>
+              <td style={{ padding: '10px 0', textAlign: 'left', fontWeight: 'bold' }} dir="ltr">{formatNum(networksTotal)}</td>
             </tr>
           </tbody>
         </table>
 
-        <div style={{ borderTop: '3px solid #000', borderBottom: '3px solid #000', margin: '25px 0', padding: '20px 0', textAlign: 'center' }}>
-          <div style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '8px' }}>المطلوب كاش في الدرج</div>
-          <div style={{ fontSize: '36px', fontWeight: 'bold' }} dir="ltr">{formatNum(net - networksTotal)}</div>
+        <div style={{ borderTop: '3px solid #000', borderBottom: '3px solid #000', margin: '30px 0', padding: '25px 0', textAlign: 'center' }}>
+          <div style={{ fontSize: '26px', fontWeight: 'bold', marginBottom: '10px' }}>المطلوب كاش في الدرج</div>
+          <div style={{ fontSize: '42px', fontWeight: 'bold' }} dir="ltr">{formatNum(net - networksTotal)}</div>
         </div>
 
         {pos.physicalCash !== undefined && (
-          <div style={{ textAlign: 'center', marginTop: '25px' }}>
-            <div style={{ fontSize: '22px' }}>الكاش الفعلي الموجود: <span dir="ltr" style={{ fontWeight: 'bold', fontSize: '28px', display: 'block', marginTop: '5px' }}>{formatNum(pos.physicalCash)}</span></div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '15px', padding: '12px', border: '3px dashed #000', borderRadius: '8px' }}>
+          <div style={{ textAlign: 'center', marginTop: '30px' }}>
+            <div style={{ fontSize: '26px' }}>الكاش الفعلي الموجود: <span dir="ltr" style={{ fontWeight: 'bold', fontSize: '32px', display: 'block', marginTop: '8px' }}>{formatNum(pos.physicalCash)}</span></div>
+            <div style={{ fontSize: '28px', fontWeight: 'bold', marginTop: '20px', padding: '15px', border: '3px dashed #000', borderRadius: '8px' }}>
               {diff === 0 ? 'الدرج مطابق تماماً' : diff > 0 ? `النتيجة: زيادة ${formatNum(Math.abs(diff))}` : `النتيجة: عجز ${formatNum(Math.abs(diff))}`}
             </div>
           </div>
         )}
         
-        <div style={{ marginTop: '45px', textAlign: 'center' }}>
-          <div style={{ fontSize: '18px', fontWeight: 'bold' }}>توقيع الكاشير</div>
-          <div style={{ marginTop: '40px', borderBottom: '2px dashed #000', margin: '40px 30px 0 30px' }}></div>
+        <div style={{ marginTop: '50px', textAlign: 'center' }}>
+          <div style={{ fontSize: '20px', fontWeight: 'bold' }}>توقيع الكاشير</div>
+          <div style={{ marginTop: '50px', borderBottom: '2px dashed #000', margin: '50px 30px 0 30px' }}></div>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '30px', fontSize: '18px', paddingBottom: '20px', fontWeight: 'bold' }}>-- تم --</div>
+        <div style={{ textAlign: 'center', marginTop: '40px', fontSize: '22px', paddingBottom: '30px', fontWeight: 'bold' }}>-- تم --</div>
       </div>
     );
   }
@@ -1167,6 +1169,19 @@ ${summaryText}
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
+                      <div className="p-6 pb-2 border-b border-slate-200">
+                        <div className="h-64 w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={Object.values(yData.months).sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime())} margin={{ top: 10, right: 30, left: 0, bottom: 0 }} dir="ltr">
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                              <XAxis dataKey="monthYear" tick={{ fill: '#64748B', fontSize: 12 }} axisLine={false} tickLine={false} />
+                              <YAxis tick={{ fill: '#64748B', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(value) => `${value / 1000}k`} />
+                              <RechartsTooltip cursor={{ fill: '#F1F5F9' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
+                              <Bar dataKey="totalPureNetSales" name="المبيعات" fill="#4F46E5" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
                       <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-100/50">
                         {Object.values(yData.months).sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime()).map((m: any) => (
                           <div key={m.monthYear} className="bg-white border text-center relative border-slate-200 rounded-2xl hover:shadow-md transition-all overflow-hidden flex flex-col">
@@ -1588,7 +1603,7 @@ const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "
       placeholder={placeholder}
       dir={dir}
       list={list}
-      className={`w-full bg-slate-50/50 hover:bg-slate-50 border text-slate-800 border-slate-200/80 rounded-xl px-4 py-3 outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-blue-500 focus:bg-white transition-all text-sm placeholder-slate-400 shadow-sm shadow-slate-100 ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
+      className={`w-full bg-slate-50 hover:bg-slate-100/50 border text-slate-800 border-slate-200/80 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-sm placeholder-slate-400 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
       {...props}
     />
   );
@@ -1699,11 +1714,11 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
                 onChange={(e: any) => onUpdate(item.id, 'name', e.target.value)} 
                 onBlur={(e: any) => onSaveName(field, e.target.value)}
                 placeholder="البيان (اختر من القائمة أو اكتب)" 
-                className="group-hover/row:border-blue-200/60"
+                className="group-hover/row:border-blue-200/60 rounded-xl"
               />
             </div>
             <div className="w-1/3">
-              <Input type="number" value={item.amount} onChange={(e: any) => onUpdate(item.id, 'amount', Number(e.target.value))} placeholder="المبلغ" className="text-left font-bold group-hover/row:border-blue-200/60" dir="ltr" />
+              <Input type="number" value={item.amount !== undefined && item.amount !== 0 ? round2(item.amount) : item.amount === 0 ? 0 : ''} onChange={(e: any) => onUpdate(item.id, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="المبلغ" className="text-left font-bold group-hover/row:border-blue-200/60 rounded-xl" dir="ltr" />
             </div>
             {onManage && (
               <button onClick={() => onManage(item)} title="إدارة الحساب وكشف الحساب" className="p-2.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-all hover:scale-105 active:scale-95">
@@ -2414,9 +2429,10 @@ export default function App() {
     }
   };
 
-  const [printView, setPrintView] = useState<'none' | 'daily' | 'daily_thermal' | 'pending' | 'pos' | 'pos_thermal' | 'history'>('none');
+  const [printView, setPrintView] = useState<'none' | 'daily' | 'daily_thermal' | 'pending' | 'pos' | 'pos_thermal' | 'history' | 'history_thermal'>('none');
   const [activePrintPosId, setActivePrintPosId] = useState<string | null>(null);
   const [printSnapshot, setPrintSnapshot] = useState<{state: AppState, summary: ReturnType<typeof getSummary>} | null>(null);
+  const [showCalculator, setShowCalculator] = useState(false);
 
   useEffect(() => {
     const handleAfterPrint = () => {
@@ -2462,7 +2478,7 @@ export default function App() {
 
   const handlePrintHistory = (snap: DailySnapshot, format: 'a4' | 'thermal' = 'a4') => {
     setPrintSnapshot({ state: snap.state, summary: snap.summary });
-    setPrintView(format === 'thermal' ? 'daily_thermal' : 'history');
+    setPrintView(format === 'thermal' ? 'history_thermal' : 'history');
     setIsExporting(true);
     setTimeout(() => {
       window.print();
@@ -3044,6 +3060,9 @@ export default function App() {
                     <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     <span className="font-mono">{user.email?.split('@')[0]}</span>
                   </div>
+                  <button onClick={() => setShowCalculator(true)} className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-90 ${showCalculator ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50'}`} title="آلة حاسبة">
+                    <Calculator size={20} />
+                  </button>
                   <button onClick={() => setShowSettingsModal(true)} className="flex items-center justify-center text-slate-500 hover:text-blue-600 w-10 h-10 rounded-xl hover:bg-blue-50 transition-all active:scale-90" title="إعدادات">
                     <Settings size={20} />
                   </button>
@@ -3086,7 +3105,7 @@ export default function App() {
             <div className="w-px h-8 bg-slate-200/80 hidden sm:block"></div>
             <div className="flex items-center gap-3">
               <label className="font-semibold text-slate-600">رصيد أول المدة:</label>
-              <Input type="number" value={state.previousBalance} onChange={(e: any) => updateField('previousBalance', Number(e.target.value))} className="w-44 text-left font-bold text-blue-700 bg-blue-50/50 hover:bg-blue-50 border-blue-200/80 text-lg focus:ring-blue-500/20" dir="ltr" />
+              <Input type="number" value={state.previousBalance !== undefined ? Math.round(state.previousBalance * 100) / 100 : ''} onChange={(e: any) => updateField('previousBalance', Number(e.target.value))} className="w-44 text-left font-bold text-blue-700 bg-blue-50/50 hover:bg-blue-50 border-blue-200/80 text-lg focus:ring-blue-500/20" dir="ltr" />
             </div>
           </div>
         )}
@@ -3171,12 +3190,12 @@ export default function App() {
                                   className="bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl"
                                 />
                               </td>
-                              <td className="py-2 px-1"><Input type="number" value={pos.sales} onChange={(e: any) => {
+                              <td className="py-2 px-1"><Input type="number" value={pos.sales !== undefined ? round2(pos.sales) : ''} onChange={(e: any) => {
                                   const newData = [...state.posData];
                                   newData[index].sales = Number(e.target.value);
                                   updateField('posData', newData);
                                 }} dir="ltr" className="text-left bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl" /></td>
-                              <td className="py-2 px-1"><Input type="number" value={pos.returns} onChange={(e: any) => {
+                              <td className="py-2 px-1"><Input type="number" value={pos.returns !== undefined ? round2(pos.returns) : ''} onChange={(e: any) => {
                                   const newData = [...state.posData];
                                   newData[index].returns = Number(e.target.value);
                                   updateField('posData', newData);
@@ -3195,13 +3214,13 @@ export default function App() {
                                 </button>
                               </td>
                               <td className="py-2 px-1">
-                                <Input type="number" value={pos.physicalCash !== undefined ? pos.physicalCash : ''} placeholder="" onChange={(e: any) => {
+                                <Input type="number" value={pos.physicalCash !== undefined ? round2(pos.physicalCash) : ''} placeholder="" onChange={(e: any) => {
                                   const newData = [...state.posData];
                                   newData[index].physicalCash = e.target.value === '' ? undefined : Number(e.target.value);
                                   updateField('posData', newData);
                                 }} dir="ltr" className="text-left font-bold text-blue-700 pointer-events-auto bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl font-mono text-lg tracking-tight" />
                               </td>
-                              <td className="py-2 pl-2 flex justify-center gap-1 print:hidden">
+                              <td className="py-2 pl-2 flex justify-center items-center gap-1.5 print:hidden h-full mt-2">
                                 <button 
                                   onClick={() => {
                                     const newData = [...state.posData];
@@ -3209,20 +3228,20 @@ export default function App() {
                                     updateField('posData', newData);
                                   }} 
                                   title="تثبيت النقطة لليوم التالي"
-                                  className={`p-2 rounded-lg transition-colors ${pos.isPinned ? 'text-blue-600 bg-blue-50' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                                  className={`p-2 rounded-xl transition-all ${pos.isPinned ? 'text-blue-600 bg-blue-50 border-blue-200 shadow-sm' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
                                 >
                                   <Pin size={18} className={pos.isPinned ? "fill-current" : ""} />
                                 </button>
                                 <button 
                                   onClick={() => updateField('posData', state.posData.filter(p => p.id !== pos.id))} 
-                                  className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors ml-1" title="إزالة النقطة"
+                                  className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-xl transition-all ml-1" title="إزالة النقطة"
                                 >
                                   <Trash2 size={18} />
                                 </button>
-                                <div className="flex bg-blue-50 text-blue-600 rounded-lg overflow-hidden border border-blue-200">
-                                  <button onClick={() => handlePrintPos(pos.id, 'a4')} className="hover:bg-blue-100 p-1.5 px-2 text-xs font-bold transition-colors border-l border-blue-200" title="طباعة A4">A4</button>
-                                  <button onClick={() => handlePrintPos(pos.id, 'thermal')} className="hover:bg-blue-100 p-1.5 px-2 text-[11px] font-bold transition-colors flex items-center" title="طباعة إيصال حراري">إيصال</button>
-                                </div>
+                                  <div className="flex bg-slate-50 text-slate-600 hover:text-blue-700 hover:bg-blue-50 hover:border-blue-200 transition-all rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                                    <button onClick={() => handlePrintPos(pos.id, 'a4')} className="hover:bg-slate-200 hover:text-blue-700 p-1.5 px-2 text-xs font-bold transition-colors border-l border-slate-200" title="طباعة A4">A4</button>
+                                    <button onClick={() => handlePrintPos(pos.id, 'thermal')} className="hover:bg-slate-200 hover:text-blue-700 p-1.5 px-2 text-[11px] font-bold transition-colors flex items-center" title="طباعة إيصال حراري">إيصال</button>
+                                  </div>
                               </td>
                             </tr>
                           );
@@ -3240,8 +3259,8 @@ export default function App() {
                         </tr>
                       </tfoot>
                     </table>
-                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors">
-                      <Plus size={16} /> إضافة نقطة بيع
+                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 bg-blue-50 text-blue-700 hover:text-blue-800 hover:bg-blue-100 text-sm font-bold px-4 py-2.5 rounded-xl border border-blue-100 shadow-sm transition-all active:scale-95">
+                      <Plus size={16} /> إضافة نقطة بيع جديدة
                     </button>
                   </div>
                 </div>
@@ -3941,6 +3960,82 @@ export default function App() {
               </div>
             </section>
 
+            {/* System Actions (Backup / Restore) */}
+            <section>
+              <div className="px-4 mb-2 flex items-center gap-2">
+                <Database size={18} className="text-blue-600" />
+                <h3 className="font-bold text-gray-600 text-sm tracking-wide">النسخ الاحتياطي للأجهزة السحابية</h3>
+              </div>
+              <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-bold text-gray-900 text-base">حفظ واستعادة البيانات</h4>
+                  <p className="text-gray-500 text-sm mt-1">يمكنك تصدير نسخة احتياطية من بيانات التطبيق أو استعادتها. مفيد عند مسح بيانات المتصفح.</p>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button 
+                    onClick={() => {
+                      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ state, history }, null, 2));
+                      const downloadAnchorNode = document.createElement('a');
+                      downloadAnchorNode.setAttribute("href", dataStr);
+                      downloadAnchorNode.setAttribute("download", `khazna_backup_${new Date().toISOString().split('T')[0]}.json`);
+                      document.body.appendChild(downloadAnchorNode);
+                      downloadAnchorNode.click();
+                      downloadAnchorNode.remove();
+                      showToast("تم تنزيل النسخة الاحتياطية بنجاح", "success");
+                    }} 
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl font-bold transition-colors"
+                  >
+                    <Download size={18} /> تصدير نسخة
+                  </button>
+                  <label className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-bold transition-colors cursor-pointer">
+                    <Database size={18} /> استعادة نسخة
+                    <input 
+                      type="file" 
+                      accept=".json" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            try {
+                              const result = JSON.parse(event.target?.result as string);
+                              if (result.state && result.history) {
+                                if (window.confirm('هل أنت متأكد من استعادة هذه النسخة؟ سيتم استبدال جميع البيانات الحالية.')) {
+                                  setState(result.state);
+                                  setHistory(result.history);
+                                  showToast('تمت استعادة البيانات بنجاح', 'success');
+                                  setShowSettingsModal(false);
+                                }
+                              } else {
+                                showToast('ملف النسخة الاحتياطية غير صالح', 'error');
+                              }
+                            } catch (err) {
+                              showToast('حدث خطأ أثناء قراءة الملف', 'error');
+                            }
+                          };
+                          reader.readAsText(file);
+                        }
+                      }} 
+                    />
+                  </label>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm("تحذير ⚠️: سيتم حذف جميع البيانات والتقارير بشكل نهائي! هل أنت متأكد من مسح كافة بيانات التطبيق واسترجاع الحالة الافتراضية؟")) {
+                        setState(getInitialState());
+                        setHistory([]);
+                        showToast("تم مسح كافة البيانات بنجاح", "success");
+                        setShowSettingsModal(false);
+                      }
+                    }} 
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-xl font-bold transition-colors mt-4 sm:mt-0"
+                  >
+                    <Trash2 size={18} /> مسح كل البيانات
+                  </button>
+                </div>
+              </div>
+            </section>
+
             {/* Admin Panel */}
             {userProfile?.role === 'admin' && (
               <section>
@@ -4100,7 +4195,7 @@ export default function App() {
                   <span className="text-slate-400 text-sm mt-2">{idx + 1}.</span>
                   <Input 
                     type="number" 
-                    value={amount} 
+                    value={amount !== undefined ? round2(amount) : ''} 
                     onChange={(e: any) => {
                       const newNetworks = [...activePos.networks];
                       newNetworks[idx] = Number(e.target.value);
@@ -4283,6 +4378,7 @@ export default function App() {
       {printView === 'daily' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} />}
       {printView === 'daily_thermal' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" />}
       {printView === 'history' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} />}
+      {printView === 'history_thermal' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} printFormat="thermal" />}
       {printView === 'pending' && <PendingPrintView pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />}
       {printView === 'pos' && activePrintPosId && state.posData.find(p => p.id === activePrintPosId) && (
         <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="a4" />
@@ -4290,6 +4386,8 @@ export default function App() {
       {printView === 'pos_thermal' && activePrintPosId && state.posData.find(p => p.id === activePrintPosId) && (
         <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" />
       )}
+      
+      {showCalculator && <CalculatorWidget onClose={() => setShowCalculator(false)} />}
       
       {/* Hidden containers for PDF export calculation */}
       <div className="absolute top-0 left-0 -z-50 opacity-0 pointer-events-none">
