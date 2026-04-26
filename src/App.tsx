@@ -169,10 +169,10 @@ type DailySnapshot = {
 
 const formatNum = (num: number) => num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4' }: any) => {
+const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4', thermalMargins = { right: 24, left: 24 } }: any) => {
   if (printFormat === 'thermal') {
     return (
-      <div id={id} className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans box-border" style={{ width: '100%', margin: 0, padding: '10px 24px', fontSize: '20px', lineHeight: '1.6' }}>
+      <div id={id} className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans box-border" style={{ width: '100%', margin: 0, padding: `0px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page { margin: 0; padding: 0; }
@@ -346,14 +346,14 @@ const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, prin
   );
 };
 
-const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4' }: any) => {
+const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4', thermalMargins = { right: 24, left: 24 } }: any) => {
   const net = pos.sales - pos.returns;
   const networksTotal = pos.networks.reduce((a: number, b: any) => a + (typeof b === 'number' ? b : b.amount || 0), 0);
   const diff = (pos.physicalCash !== undefined ? pos.physicalCash : 0) - (net - networksTotal);
   
   if (printFormat === 'thermal') {
     return (
-      <div className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans box-border" style={{ width: '100%', margin: 0, padding: '10px 24px', fontSize: '20px', lineHeight: '1.6' }}>
+      <div className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans box-border" style={{ width: '100%', margin: 0, padding: `0px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page { margin: 0; padding: 0; }
@@ -2188,10 +2188,23 @@ export default function App() {
   const [uiScale, setUiScale] = useState<number>(() => {
     return Number(localStorage.getItem('smart_safe_ui_scale') || 1);
   });
+  
+  const [thermalMargins, setThermalMargins] = useState<{ right: number, left: number }>(() => {
+    try {
+      const stored = localStorage.getItem('smart_safe_thermal_margins');
+      return stored ? JSON.parse(stored) : { right: 24, left: 24 };
+    } catch {
+      return { right: 24, left: 24 };
+    }
+  });
 
   useEffect(() => {
     localStorage.setItem('smart_safe_ui_scale', uiScale.toString());
   }, [uiScale]);
+
+  useEffect(() => {
+    localStorage.setItem('smart_safe_thermal_margins', JSON.stringify(thermalMargins));
+  }, [thermalMargins]);
 
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
     setToast({message, type});
@@ -3919,6 +3932,27 @@ export default function App() {
                   <button onClick={() => setUiScale(1)} className="p-2 hover:bg-zinc-200 bg-zinc-100 rounded-xl shadow-sm text-xs font-bold mr-1 transition" title="افتراضي">افتراضي</button>
                 </div>
               </div>
+
+              <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-4">
+                <div>
+                  <h4 className="font-bold text-gray-900 text-base">هوامش الطباعة الحرارية (يمين/يسار)</h4>
+                  <p className="text-gray-500 text-sm mt-1">تحديد هوامش الإيصال الحراري لتصحيح العرض التلقائي.</p>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-200">
+                    <span className="text-sm font-semibold px-2 text-slate-500">اليمين:</span>
+                    <button onClick={() => setThermalMargins(p => ({...p, right: p.right + 2}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-gray-700 transition">+</button>
+                    <span className="font-bold w-8 text-center text-blue-700">{thermalMargins.right}</span>
+                    <button onClick={() => setThermalMargins(p => ({...p, right: Math.max(0, p.right - 2)}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-gray-700 transition">-</button>
+                  </div>
+                  <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-200">
+                    <span className="text-sm font-semibold px-2 text-slate-500">اليسار:</span>
+                    <button onClick={() => setThermalMargins(p => ({...p, left: p.left + 2}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-gray-700 transition">+</button>
+                    <span className="font-bold w-8 text-center text-blue-700">{thermalMargins.left}</span>
+                    <button onClick={() => setThermalMargins(p => ({...p, left: Math.max(0, p.left - 2)}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-gray-700 transition">-</button>
+                  </div>
+                </div>
+              </div>
             </section>
             
             {/* Lists Management */}
@@ -4376,15 +4410,15 @@ export default function App() {
       </div>
 
       {printView === 'daily' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} />}
-      {printView === 'daily_thermal' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" />}
+      {printView === 'daily_thermal' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} />}
       {printView === 'history' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} />}
-      {printView === 'history_thermal' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} printFormat="thermal" />}
+      {printView === 'history_thermal' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} />}
       {printView === 'pending' && <PendingPrintView pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />}
       {printView === 'pos' && activePrintPosId && state.posData.find(p => p.id === activePrintPosId) && (
         <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="a4" />
       )}
       {printView === 'pos_thermal' && activePrintPosId && state.posData.find(p => p.id === activePrintPosId) && (
-        <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" />
+        <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" thermalMargins={thermalMargins} />
       )}
       
       {showCalculator && <CalculatorWidget onClose={() => setShowCalculator(false)} />}
