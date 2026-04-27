@@ -16,8 +16,8 @@
       background-color: white !important;
       -webkit-print-color-adjust: exact;
       color-adjust: exact;
-      width: 100vw;
-      height: 100vh;
+      width: auto;
+      height: auto;
       overflow: visible;
     }
     
@@ -92,7 +92,8 @@
   .rounded-2xl {
     border-radius: 4px !important;
   }
-  table {
+  tr {
     page-break-inside: avoid;
+    break-inside: avoid;
   }
 }

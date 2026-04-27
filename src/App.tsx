@@ -3236,7 +3236,7 @@ export default function App() {
                 </>
               )}
               <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-white text-slate-700 border border-slate-200/80 px-5 py-2.5 rounded-xl hover:bg-slate-50 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
-                <Download size={18} /> <span className="hidden sm:inline">تصدير</span>
+                <Printer size={18} /> <span className="hidden sm:inline">طباعة / تصدير</span>
               </button>
               <button onClick={handleNewDay} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-all font-bold shadow-sm hover:shadow-md active:scale-95 shadow-indigo-600/20 ring-1 ring-indigo-500/50">
                 <FilePlus size={18} /> <span className="hidden sm:inline">يوم جديد</span>
