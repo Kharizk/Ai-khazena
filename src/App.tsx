@@ -169,10 +169,10 @@ type DailySnapshot = {
 
 const formatNum = (num: number) => num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4', thermalMargins = { right: 24, left: 24 }, isPreviewMode = false }: any) => {
+const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4', thermalMargins = { right: 24, left: 24, top: 0 }, isPreviewMode = false }: any) => {
   if (printFormat === 'thermal') {
     return (
-      <div id={id} className={`${isPreviewMode ? 'flex flex-col bg-white' : 'hidden print:flex print:flex-col print:bg-white'} rtl text-black font-sans box-border ${isPreviewMode && 'rounded-xl shadow-sm border border-slate-200'}`} style={{ width: '100%', margin: 0, padding: `0px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
+      <div id={id} className={`${isPreviewMode ? 'flex flex-col bg-white' : 'hidden print:flex print:flex-col print:bg-white'} rtl text-black font-sans box-border ${isPreviewMode && 'rounded-xl shadow-sm border border-slate-200'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
         {!isPreviewMode && <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page { margin: 0; padding: 0; }
@@ -346,14 +346,14 @@ const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, prin
   );
 };
 
-const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4', thermalMargins = { right: 24, left: 24 }, isPreviewMode = false }: any) => {
+const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4', thermalMargins = { right: 24, left: 24, top: 0 }, isPreviewMode = false }: any) => {
   const net = pos.sales - pos.returns;
   const networksTotal = pos.networks.reduce((a: number, b: any) => a + (typeof b === 'number' ? b : b.amount || 0), 0);
   const diff = (pos.physicalCash !== undefined ? pos.physicalCash : 0) - (net - networksTotal);
   
   if (printFormat === 'thermal') {
     return (
-      <div className={`${isPreviewMode ? 'flex flex-col bg-white' : 'hidden print:flex print:flex-col print:bg-white'} rtl text-black font-sans box-border ${isPreviewMode && 'rounded-xl shadow-sm border border-slate-200'}`} style={{ width: '100%', margin: 0, padding: `0px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
+      <div className={`${isPreviewMode ? 'flex flex-col bg-white' : 'hidden print:flex print:flex-col print:bg-white'} rtl text-black font-sans box-border ${isPreviewMode && 'rounded-xl shadow-sm border border-slate-200'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
         {!isPreviewMode && <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page { margin: 0; padding: 0; }
@@ -2319,12 +2319,12 @@ export default function App() {
     return Number(localStorage.getItem('smart_safe_ui_scale') || 1);
   });
   
-  const [thermalMargins, setThermalMargins] = useState<{ right: number, left: number }>(() => {
+  const [thermalMargins, setThermalMargins] = useState<{ right: number, left: number, top: number }>(() => {
     try {
       const stored = localStorage.getItem('smart_safe_thermal_margins');
-      return stored ? JSON.parse(stored) : { right: 24, left: 24 };
+      return stored ? { top: 0, ...JSON.parse(stored) } : { right: 24, left: 24, top: 0 };
     } catch {
-      return { right: 24, left: 24 };
+      return { right: 24, left: 24, top: 0 };
     }
   });
 
@@ -4586,33 +4586,76 @@ export default function App() {
               <button onClick={() => setThermalPreviewData(null)} className="text-slate-400 hover:text-slate-600 p-1 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
             </div>
             
-            <div className="p-4 bg-white border-b border-slate-200 flex flex-col gap-3">
-              <p className="text-sm text-slate-500 text-center font-bold">هوامش الطباعة (اضبطها لتوسيط الإيصال)</p>
-              <div className="flex items-center justify-center gap-6">
-                 <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-200">
-                   <span className="text-sm font-semibold px-2 text-slate-500">اليمين:</span>
-                   <button onClick={() => setThermalMargins(p => ({...p, right: p.right + 2}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm font-bold text-gray-700 w-8 h-8 flex items-center justify-center">+</button>
-                   <span className="font-bold w-8 text-center text-blue-700">{thermalMargins.right}</span>
-                   <button onClick={() => setThermalMargins(p => ({...p, right: Math.max(0, p.right - 2)}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm font-bold text-gray-700 w-8 h-8 flex items-center justify-center">-</button>
+            <div className="p-4 bg-white border-b border-slate-200 flex flex-col gap-4">
+              <p className="text-sm text-slate-500 text-center font-bold">هوامش الطباعة (اسحب المسطرة لتوسيط الإيصال)</p>
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="flex flex-col gap-1 bg-gray-50 p-2.5 rounded-2xl border border-gray-200">
+                   <div className="flex justify-between items-center px-1">
+                     <span className="text-sm font-semibold text-slate-600">أعلى (Top)</span>
+                     <span className="font-bold text-sm text-blue-700">{thermalMargins.top}px</span>
+                   </div>
+                   <input type="range" min="0" max="100" value={thermalMargins.top} onChange={(e) => setThermalMargins(p => ({...p, top: parseInt(e.target.value)}))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
                  </div>
-                 <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-200">
-                   <span className="text-sm font-semibold px-2 text-slate-500">اليسار:</span>
-                   <button onClick={() => setThermalMargins(p => ({...p, left: p.left + 2}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm font-bold text-gray-700 w-8 h-8 flex items-center justify-center">+</button>
-                   <span className="font-bold w-8 text-center text-blue-700">{thermalMargins.left}</span>
-                   <button onClick={() => setThermalMargins(p => ({...p, left: Math.max(0, p.left - 2)}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm font-bold text-gray-700 w-8 h-8 flex items-center justify-center">-</button>
+                 <div className="flex flex-col gap-1 bg-gray-50 p-2.5 rounded-2xl border border-gray-200 hidden">
+                   <div className="flex justify-between items-center px-1">
+                     <span className="text-sm font-semibold text-slate-600">أسفل</span>
+                     <span className="font-bold text-sm text-blue-700">0px</span>
+                   </div>
+                   <input type="range" min="0" max="100" value="0" disabled className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-not-allowed accent-gray-400" />
+                 </div>
+                 <div className="flex flex-col gap-1 bg-gray-50 p-2.5 rounded-2xl border border-gray-200">
+                   <div className="flex justify-between items-center px-1">
+                     <span className="text-sm font-semibold text-slate-600">اليمين (Right)</span>
+                     <span className="font-bold text-sm text-blue-700">{thermalMargins.right}px</span>
+                   </div>
+                   <input type="range" min="0" max="200" value={thermalMargins.right} onChange={(e) => setThermalMargins(p => ({...p, right: parseInt(e.target.value)}))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+                 </div>
+                 <div className="flex flex-col gap-1 bg-gray-50 p-2.5 rounded-2xl border border-gray-200">
+                   <div className="flex justify-between items-center px-1">
+                     <span className="text-sm font-semibold text-slate-600">اليسار (Left)</span>
+                     <span className="font-bold text-sm text-blue-700">{thermalMargins.left}px</span>
+                   </div>
+                   <input type="range" min="0" max="200" value={thermalMargins.left} onChange={(e) => setThermalMargins(p => ({...p, left: parseInt(e.target.value)}))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
                  </div>
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 flex justify-center bg-slate-200 shadow-inner">
-              <div style={{ width: '80mm', minHeight: '100mm' }} className="bg-white shadow border border-slate-300 mx-auto origin-top transition-transform shrink-0">
+              <div id="thermal-receipt-preview" style={{ width: '80mm', minHeight: '100mm' }} className="bg-white shadow border border-slate-300 mx-auto origin-top transition-transform shrink-0">
                 {thermalPreviewData.type === 'daily' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
                 {thermalPreviewData.type === 'history' && <DailyPrintView state={thermalPreviewData.snap.state} summary={thermalPreviewData.snap.summary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
                 {thermalPreviewData.type === 'pos' && <PosPrintView pos={state.posData.find(p => p.id === thermalPreviewData.id)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
               </div>
             </div>
             
-            <div className="p-4 bg-white border-t border-slate-200">
+            <div className="p-4 bg-white border-t border-slate-200 flex flex-col gap-3">
+              <button 
+                onClick={async () => {
+                  const element = document.getElementById('thermal-receipt-preview');
+                  if (!element) return;
+                  const originalShadow = element.style.boxShadow;
+                  const originalBorder = element.style.border;
+                  element.style.boxShadow = 'none';
+                  element.style.border = 'none';
+                  try {
+                    const html2canvas = (await import('html2canvas')).default;
+                    const canvas = await html2canvas(element, { scale: 2 });
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.download = `receipt-${state.date.split('/').join('-')}.png`;
+                    link.href = dataUrl;
+                    link.click();
+                  } catch (err) {
+                    console.error("Failed to export image", err);
+                  } finally {
+                    element.style.boxShadow = originalShadow;
+                    element.style.border = originalBorder;
+                  }
+                }}
+                className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2"
+              >
+                <Download size={20} /> تصدير كصورة (Image)
+              </button>
               <button 
                 onClick={() => {
                   let v = '';
