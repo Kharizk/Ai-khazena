@@ -169,17 +169,17 @@ type DailySnapshot = {
 
 const formatNum = (num: number) => num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4', thermalMargins = { right: 24, left: 24 } }: any) => {
+const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4', thermalMargins = { right: 24, left: 24 }, isPreviewMode = false }: any) => {
   if (printFormat === 'thermal') {
     return (
-      <div id={id} className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans box-border" style={{ width: '100%', margin: 0, padding: `0px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
-        <style dangerouslySetInnerHTML={{__html: `
+      <div id={id} className={`${isPreviewMode ? 'flex flex-col bg-white' : 'hidden print:flex print:flex-col print:bg-white'} rtl text-black font-sans box-border ${isPreviewMode && 'rounded-xl shadow-sm border border-slate-200'}`} style={{ width: '100%', margin: 0, padding: `0px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
+        {!isPreviewMode && <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page { margin: 0; padding: 0; }
             body { margin: 0; padding: 0; background: white; width: 100%; box-sizing: border-box; }
             * { box-shadow: none !important; box-sizing: border-box !important; }
           }
-        `}} />
+        `}} />}
         <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
           <h1 style={{ fontSize: '30px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تقرير التقفيل اليومي</h1>
           <div style={{ fontSize: '18px' }}>
@@ -346,21 +346,21 @@ const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, prin
   );
 };
 
-const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4', thermalMargins = { right: 24, left: 24 } }: any) => {
+const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4', thermalMargins = { right: 24, left: 24 }, isPreviewMode = false }: any) => {
   const net = pos.sales - pos.returns;
   const networksTotal = pos.networks.reduce((a: number, b: any) => a + (typeof b === 'number' ? b : b.amount || 0), 0);
   const diff = (pos.physicalCash !== undefined ? pos.physicalCash : 0) - (net - networksTotal);
   
   if (printFormat === 'thermal') {
     return (
-      <div className="hidden print:flex print:flex-col rtl print:bg-white text-black font-sans box-border" style={{ width: '100%', margin: 0, padding: `0px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
-        <style dangerouslySetInnerHTML={{__html: `
+      <div className={`${isPreviewMode ? 'flex flex-col bg-white' : 'hidden print:flex print:flex-col print:bg-white'} rtl text-black font-sans box-border ${isPreviewMode && 'rounded-xl shadow-sm border border-slate-200'}`} style={{ width: '100%', margin: 0, padding: `0px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
+        {!isPreviewMode && <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page { margin: 0; padding: 0; }
             body { margin: 0; padding: 0; background: white; width: 100%; box-sizing: border-box; }
             * { box-shadow: none !important; box-sizing: border-box !important; }
           }
-        `}} />
+        `}} />}
         <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تسوية نقطة بيع</h1>
           <h2 style={{ fontSize: '32px', fontWeight: 'bold', margin: '0 0 8px 0' }}>{pos.name || 'بدون اسم'}</h2>
@@ -488,6 +488,128 @@ const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4', therm
   );
 };
 
+const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
+  return (
+    <div className="hidden print:block rtl w-[210mm] min-h-[297mm] mx-auto bg-white text-black font-sans p-8 box-border">
+      <div className="text-center mb-6 pb-4 border-b-4 border-double border-gray-400">
+        <h1 className="text-3xl font-black mb-2 text-gray-900">ملخص الخزينة اليومي للمبيعات والمصروفات</h1>
+        <div className="flex justify-between items-center px-4">
+          <p className="text-lg font-semibold text-gray-600">التاريخ: <span dir="ltr">{state.date}</span></p>
+          <p className="text-lg font-semibold text-gray-600">تاريخ الطباعة: <span dir="ltr">{new Date().toLocaleDateString('en-GB')}</span></p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="border-2 border-gray-300 rounded-xl p-4">
+          <h2 className="text-xl font-bold bg-gray-100 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">بيانات الأرصدة</h2>
+          <table className="w-full text-right font-medium">
+            <tbody>
+              <tr className="border-b border-gray-200"><td className="py-2">رصيد أول المدة</td><td dir="ltr" className="py-2 text-left">{formatNum(state.previousBalance)}</td></tr>
+              <tr className="border-b border-gray-200"><td className="py-2">إجمالي الإيرادات (+)</td><td dir="ltr" className="py-2 text-left text-green-700">{formatNum(summary.totalCashIn)}</td></tr>
+              <tr className="border-b border-gray-200"><td className="py-2">إجمالي المصروفات (-)</td><td dir="ltr" className="py-2 text-left text-red-700">{formatNum(summary.totalCashOut)}</td></tr>
+              <tr className="bg-gray-50 font-bold text-lg"><td className="py-3">الرصيد الدفتري المتوقع</td><td dir="ltr" className="py-3 text-left">{formatNum(summary.expectedCash)}</td></tr>
+              <tr className="bg-gray-200 font-bold text-lg"><td className="py-3">الرصيد الفعلي (الخزينة)</td><td dir="ltr" className="py-3 text-left">{formatNum(summary.actualCash)}</td></tr>
+              <tr className={`font-black text-xl ${summary.difference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <td className="py-3 pt-4 border-t-2 border-gray-400">العجز أو الزيادة</td>
+                <td dir="ltr" className="py-3 pt-4 border-t-2 border-gray-400 text-left">{summary.difference > 0 ? '+' : ''}{formatNum(summary.difference)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="border-2 border-gray-300 rounded-xl p-4">
+          <h2 className="text-xl font-bold bg-gray-100 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملخص الإيرادات والنقاط</h2>
+          <table className="w-full text-right font-medium text-sm">
+            <thead>
+              <tr className="border-b border-gray-300 text-gray-600">
+                <th className="py-1">نقطة البيع</th><th className="py-1 text-center">الصافي</th><th className="py-1 text-left">شبكات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {state.posData.map((pos: any, i: number) => {
+                const net = pos.sales - pos.returns;
+                const networksTotal = pos.networks.reduce((a: number, b: any) => a + (typeof b === 'number' ? b : b.amount || 0), 0);
+                return (
+                  <tr key={i} className="border-b border-gray-200 last:border-0 relative">
+                     <td className="py-2 font-bold w-1/3">{pos.name || 'بدون اسم'}</td>
+                     <td className="py-2 text-center" dir="ltr">{formatNum(net)}</td>
+                     <td className="py-2 text-left" dir="ltr">{formatNum(networksTotal)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {state.expenseRefunds.length > 0 && (
+             <div className="mt-4 pt-4 border-t border-gray-300">
+               <p className="font-bold mb-2">إيرادات أخرى (إضافات للخزينة):</p>
+               {state.expenseRefunds.map((e: any, i: number) => (
+                  <div key={i} className="flex justify-between text-sm py-1">
+                    <span>{e.name}</span><span dir="ltr" className="font-medium">{formatNum(e.amount)}</span>
+                  </div>
+               ))}
+             </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        <div className="border-2 border-gray-300 rounded-xl p-4">
+          <h2 className="text-xl font-bold bg-gray-100 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">المصروفات والمدفوعات</h2>
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-bold underline decoration-gray-400 mb-1">مصروفات متنوعة</h3>
+              {state.expenses.length > 0 ? state.expenses.map((e: any, i: number) => (
+                  <div key={i} className="flex justify-between text-sm py-1 border-b border-gray-100 last:border-0">
+                    <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
+                  </div>
+              )) : <p className="text-gray-500 text-sm">لا يوجد</p>}
+            </div>
+            <div>
+              <h3 className="font-bold underline decoration-gray-400 mb-1">سداد شركات / موردين</h3>
+              {state.companyPayments.length > 0 ? state.companyPayments.map((e: any, i: number) => (
+                  <div key={i} className="flex justify-between text-sm py-1 border-b border-gray-100 last:border-0">
+                    <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
+                  </div>
+              )) : <p className="text-gray-500 text-sm">لا يوجد</p>}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-2 border-gray-300 rounded-xl p-4">
+          <h2 className="text-xl font-bold bg-gray-100 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملاحظات وعهدة</h2>
+           <div>
+              <h3 className="font-bold underline decoration-gray-400 mb-1">إيداعات بنكية (خوارج)</h3>
+              {state.cashDeposits.length > 0 ? state.cashDeposits.map((e: any, i: number) => (
+                  <div key={i} className="flex justify-between text-sm py-1 border-b border-gray-100 last:border-0">
+                    <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
+                  </div>
+              )) : <p className="text-gray-500 text-sm">لا يوجد</p>}
+            </div>
+            <div className="mt-4">
+              <h3 className="font-bold underline decoration-gray-400 mb-1">أموال معلقة (آجل)</h3>
+              <div className="flex justify-between text-sm py-1">
+                 <span>لنا (تضاف للعهدة):</span><span dir="ltr" className="font-bold">{formatNum(summary.totalPendingOwedToUs)}</span>
+              </div>
+              <div className="flex justify-between text-sm py-1">
+                 <span>علينا (تخصم من العهدة):</span><span dir="ltr" className="font-bold">{formatNum(summary.totalPendingOwedByUs)}</span>
+              </div>
+            </div>
+        </div>
+      </div>
+      
+      <div className="mt-8 pt-8 border-t-2 border-black flex justify-between px-16 text-xl font-bold">
+        <div className="text-center">
+          <p className="mb-8">توقيع المستلم</p>
+          <p>.......................</p>
+        </div>
+        <div className="text-center">
+          <p className="mb-8">توقيع المُسلِّم</p>
+          <p>.......................</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 const PendingPrintView = ({ pendingOwedToUs, pendingOwedByUs, formatNum, isPdfMode = false, id }: any) => {
   const sumOwedToUs = pendingOwedToUs.reduce((a: number, b: any) => a + b.amount, 0);
   const sumOwedByUs = pendingOwedByUs.reduce((a: number, b: any) => a + b.amount, 0);
@@ -1260,8 +1382,8 @@ ${summaryText}
                                          </tr>
                                        </thead>
                                        <tbody>
-                                          {dailyMetrics.filter((d: any) => d.monthYear === m.monthYear).map((day: any) => (
-                                            <tr key={day.dateStr} className={`border-b border-slate-100 hover:bg-blue-50/50 ${day.isCurrent ? 'bg-blue-50/30' : ''}`}>
+                                          {dailyMetrics.filter((d: any) => d.monthYear === m.monthYear).map((day: any, idx: number) => (
+                                            <tr key={`${day.dateStr}-${day.isCurrent ? 'cur' : 'hist'}-${idx}`} className={`border-b border-slate-100 hover:bg-blue-50/50 ${day.isCurrent ? 'bg-blue-50/30' : ''}`}>
                                                <td className="py-2 px-3 font-mono text-slate-700">{day.dateName}</td>
                                                <td className="py-2 px-3 font-mono font-bold text-blue-700 border-r border-slate-100 text-center" dir="ltr">{formatNum(day.pureNetSales)}</td>
                                                <td className="py-1 px-1 border-r border-slate-100 text-center">
@@ -1340,8 +1462,8 @@ ${summaryText}
               </tr>
             </thead>
             <tbody>
-              {dailyMetrics.map((day: any) => (
-                <tr key={day.dateStr} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${day.isCurrent ? 'bg-blue-50/40 hover:bg-blue-50/60' : ''}`}>
+              {dailyMetrics.map((day: any, idx: number) => (
+                <tr key={`${day.dateStr}-${day.isCurrent ? 'cur' : 'hist'}-${idx}`} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${day.isCurrent ? 'bg-blue-50/40 hover:bg-blue-50/60' : ''}`}>
                   <td className="py-4 px-6 font-bold text-slate-700 flex items-center gap-3 border-l border-slate-100">
                     <span className="font-mono text-sm">{day.dateStr}</span>
                     {day.isCurrent && <span className="bg-blue-600 text-white px-2 py-0.5 rounded-md text-xs">اليوم (جاري)</span>}
@@ -2163,7 +2285,7 @@ export default function App() {
   // Export State
   const [showExportModal, setShowExportModal] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [exportMode, setExportMode] = useState<'summary' | 'detailed'>('summary');
+  const [exportMode, setExportMode] = useState<'summary' | 'comprehensive' | 'detailed'>('summary');
   const [exportFormat, setExportFormat] = useState<'pdf' | 'image'>('pdf');
   
   // Ledger Filter State
@@ -2442,10 +2564,11 @@ export default function App() {
     }
   };
 
-  const [printView, setPrintView] = useState<'none' | 'daily' | 'daily_thermal' | 'pending' | 'pos' | 'pos_thermal' | 'history' | 'history_thermal'>('none');
+  const [printView, setPrintView] = useState<'none' | 'comprehensive_a4' | 'daily' | 'daily_thermal' | 'pending' | 'pos' | 'pos_thermal' | 'history' | 'history_thermal'>('none');
   const [activePrintPosId, setActivePrintPosId] = useState<string | null>(null);
   const [printSnapshot, setPrintSnapshot] = useState<{state: AppState, summary: ReturnType<typeof getSummary>} | null>(null);
   const [showCalculator, setShowCalculator] = useState(false);
+  const [thermalPreviewData, setThermalPreviewData] = useState<{ type: 'daily' | 'pos' | 'history', id?: string, snap?: any } | null>(null);
 
   useEffect(() => {
     const handleAfterPrint = () => {
@@ -2457,11 +2580,18 @@ export default function App() {
   }, []);
 
   const handleExport = (format: 'a4' | 'thermal' = 'a4') => {
-    setIsExporting(true);
     setShowExportModal(false);
     
+    if (format === 'thermal') {
+      setThermalPreviewData({ type: 'daily' });
+      return;
+    }
+
+    setIsExporting(true);
     if (exportMode === 'summary') {
-      setPrintView(format === 'thermal' ? 'daily_thermal' : 'daily');
+      setPrintView('daily');
+    } else if (exportMode === 'comprehensive') {
+      setPrintView('comprehensive_a4');
     } else {
       setPrintView('none');
     }
@@ -2473,7 +2603,11 @@ export default function App() {
 
   const handlePrintPos = (posId: string, format: 'a4' | 'thermal' = 'a4') => {
     setActivePrintPosId(posId);
-    setPrintView(format === 'thermal' ? 'pos_thermal' : 'pos');
+    if (format === 'thermal') {
+      setThermalPreviewData({ type: 'pos', id: posId });
+      return;
+    }
+    setPrintView('pos');
     setIsExporting(true);
     setTimeout(() => {
       window.print();
@@ -2491,7 +2625,11 @@ export default function App() {
 
   const handlePrintHistory = (snap: DailySnapshot, format: 'a4' | 'thermal' = 'a4') => {
     setPrintSnapshot({ state: snap.state, summary: snap.summary });
-    setPrintView(format === 'thermal' ? 'history_thermal' : 'history');
+    if (format === 'thermal') {
+      setThermalPreviewData({ type: 'history', snap });
+      return;
+    }
+    setPrintView('history');
     setIsExporting(true);
     setTimeout(() => {
       window.print();
@@ -3804,14 +3942,22 @@ export default function App() {
             <div className="p-6">
               <div className="mb-6">
                 <label className="block text-sm font-bold text-slate-700 mb-3">نوع التقرير (التفاصيل)</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <button 
                     onClick={() => setExportMode('summary')}
                     className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'summary' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
                   >
                     <FileText size={24} />
-                    <span className="font-bold">ملخص</span>
-                    <span className="text-xs text-center opacity-80">التقفيل النهائي فقط</span>
+                    <span className="font-bold">مبسط</span>
+                    <span className="text-xs text-center opacity-80">التقفيل النهائي</span>
+                  </button>
+                  <button 
+                    onClick={() => setExportMode('comprehensive')}
+                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'comprehensive' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                  >
+                    <BarChart3 size={24} />
+                    <span className="font-bold">شامل</span>
+                    <span className="text-xs text-center opacity-80">صفحة A4</span>
                   </button>
                   <button 
                     onClick={() => setExportMode('detailed')}
@@ -3819,7 +3965,7 @@ export default function App() {
                   >
                     <BookOpen size={24} />
                     <span className="font-bold">مفصل</span>
-                    <span className="text-xs text-center opacity-80">كل الجداول والبنود</span>
+                    <span className="text-xs text-center opacity-80">كل الجداول</span>
                   </button>
                 </div>
               </div>
@@ -4409,6 +4555,7 @@ export default function App() {
       </AnimatePresence>
       </div>
 
+      {printView === 'comprehensive_a4' && <ComprehensivePrintView state={state} summary={currentSummary} formatNum={formatNum} />}
       {printView === 'daily' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} />}
       {printView === 'daily_thermal' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} />}
       {printView === 'history' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} />}
@@ -4423,6 +4570,73 @@ export default function App() {
       
       {showCalculator && <CalculatorWidget onClose={() => setShowCalculator(false)} />}
       
+      {thermalPreviewData && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden">
+          <div className="bg-slate-100 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-slate-200 bg-white flex justify-between items-center">
+              <h2 className="font-bold text-lg">معاينة وتخصيص الإيصال الحراري</h2>
+              <button onClick={() => setThermalPreviewData(null)} className="text-slate-400 hover:text-slate-600 p-1 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
+            </div>
+            
+            <div className="p-4 bg-white border-b border-slate-200 flex flex-col gap-3">
+              <p className="text-sm text-slate-500 text-center font-bold">هوامش الطباعة (اضبطها لتوسيط الإيصال)</p>
+              <div className="flex items-center justify-center gap-6">
+                 <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-200">
+                   <span className="text-sm font-semibold px-2 text-slate-500">اليمين:</span>
+                   <button onClick={() => setThermalMargins(p => ({...p, right: p.right + 2}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm font-bold text-gray-700 w-8 h-8 flex items-center justify-center">+</button>
+                   <span className="font-bold w-8 text-center text-blue-700">{thermalMargins.right}</span>
+                   <button onClick={() => setThermalMargins(p => ({...p, right: Math.max(0, p.right - 2)}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm font-bold text-gray-700 w-8 h-8 flex items-center justify-center">-</button>
+                 </div>
+                 <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-200">
+                   <span className="text-sm font-semibold px-2 text-slate-500">اليسار:</span>
+                   <button onClick={() => setThermalMargins(p => ({...p, left: p.left + 2}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm font-bold text-gray-700 w-8 h-8 flex items-center justify-center">+</button>
+                   <span className="font-bold w-8 text-center text-blue-700">{thermalMargins.left}</span>
+                   <button onClick={() => setThermalMargins(p => ({...p, left: Math.max(0, p.left - 2)}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm font-bold text-gray-700 w-8 h-8 flex items-center justify-center">-</button>
+                 </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 flex justify-center bg-slate-200 shadow-inner">
+              <div style={{ width: '80mm', minHeight: '100mm' }} className="bg-white shadow border border-slate-300 mx-auto origin-top transition-transform shrink-0">
+                {thermalPreviewData.type === 'daily' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
+                {thermalPreviewData.type === 'history' && <DailyPrintView state={thermalPreviewData.snap.state} summary={thermalPreviewData.snap.summary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
+                {thermalPreviewData.type === 'pos' && <PosPrintView pos={state.posData.find(p => p.id === thermalPreviewData.id)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
+              </div>
+            </div>
+            
+            <div className="p-4 bg-white border-t border-slate-200">
+              <button 
+                onClick={() => {
+                  let v = '';
+                  if (thermalPreviewData.type === 'daily') {
+                    setPrintView('daily_thermal');
+                    v = 'daily_thermal';
+                  } else if (thermalPreviewData.type === 'history') {
+                    setPrintSnapshot({ state: thermalPreviewData.snap.state, summary: thermalPreviewData.snap.summary });
+                    setPrintView('history_thermal');
+                    v = 'history_thermal';
+                  } else if (thermalPreviewData.type === 'pos') {
+                    setActivePrintPosId(thermalPreviewData.id!);
+                    setPrintView('pos_thermal');
+                    v = 'pos_thermal';
+                  }
+                  setThermalPreviewData(null);
+                  setIsExporting(true);
+                  if (v !== '') {
+                    setTimeout(() => {
+                      window.print();
+                    }, 500);
+                  }
+                }}
+                className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors flex justify-center items-center gap-2"
+              >
+                <Printer size={20} /> طباعة حراري الآن
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hidden containers for PDF export calculation */}
       <div className="absolute top-0 left-0 -z-50 opacity-0 pointer-events-none">
         <DailyPrintView id="daily-print-container" isPdfMode={true} state={state} summary={currentSummary} formatNum={formatNum} />
