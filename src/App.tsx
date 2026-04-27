@@ -565,6 +565,14 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
               )) : <p className="text-gray-500 text-sm">لا يوجد</p>}
             </div>
             <div>
+              <h3 className="font-bold underline decoration-gray-400 mb-1">تحويلات عملاء (يخصم من الخزينة)</h3>
+              {state.customerTransfers.length > 0 ? state.customerTransfers.map((e: any, i: number) => (
+                  <div key={i} className="flex justify-between text-sm py-1 border-b border-gray-100 last:border-0">
+                    <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
+                  </div>
+              )) : <p className="text-gray-500 text-sm">لا يوجد</p>}
+            </div>
+            <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">سداد شركات / موردين</h3>
               {state.companyPayments.length > 0 ? state.companyPayments.map((e: any, i: number) => (
                   <div key={i} className="flex justify-between text-sm py-1 border-b border-gray-100 last:border-0">
