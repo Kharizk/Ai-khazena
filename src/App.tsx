@@ -169,18 +169,19 @@ type DailySnapshot = {
 
 const formatNum = (num: number) => num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4', thermalMargins = { right: 24, left: 24, top: 0 }, isPreviewMode = false }: any) => {
+const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4', thermalMargins = { right: 24, left: 24, top: 0 }, isPreviewMode = false }: any) => {
   if (printFormat === 'thermal') {
     return (
       <div id={id} className={`${isPreviewMode ? 'flex flex-col bg-white' : 'hidden print:flex print:flex-col print:bg-white'} rtl text-black font-sans box-border ${isPreviewMode && 'rounded-xl shadow-sm border border-slate-200'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
         {!isPreviewMode && <style dangerouslySetInnerHTML={{__html: `
           @media print {
-            @page { margin: 0; padding: 0; }
+            @page { margin: 0; padding: 0; size: 79mm auto; }
             body { margin: 0; padding: 0; background: white; width: 100%; box-sizing: border-box; }
             * { box-shadow: none !important; box-sizing: border-box !important; }
           }
         `}} />}
         <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{companyName}</h2>
           <h1 style={{ fontSize: '30px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تقرير التقفيل اليومي</h1>
           <div style={{ fontSize: '18px' }}>
             <div style={{ marginBottom: '4px' }}>التاريخ: <span dir="ltr" style={{ fontWeight: 'bold' }}>{state.date}</span></div>
@@ -269,7 +270,8 @@ const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, prin
   return (
     <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white text-black font-sans"}>
     <div className="text-center mb-6 pb-4 border-b-2 border-gray-300">
-      <h1 className="text-3xl font-bold mb-2">الخزينة الذكية - تقرير التقفيل اليومي</h1>
+      <h2 className="text-2xl font-bold mb-1">{companyName}</h2>
+      <h1 className="text-3xl font-bold mb-2">تقرير التقفيل اليومي</h1>
       <p className="text-lg">تاريخ: <span dir="ltr" className="font-bold">{state.date}</span></p>
     </div>
     
@@ -346,7 +348,7 @@ const DailyPrintView = ({ state, summary, formatNum, isPdfMode = false, id, prin
   );
 };
 
-const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4', thermalMargins = { right: 24, left: 24, top: 0 }, isPreviewMode = false }: any) => {
+const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat = 'a4', thermalMargins = { right: 24, left: 24, top: 0 }, isPreviewMode = false }: any) => {
   const net = pos.sales - pos.returns;
   const networksTotal = pos.networks.reduce((a: number, b: any) => a + (typeof b === 'number' ? b : b.amount || 0), 0);
   const diff = (pos.physicalCash !== undefined ? pos.physicalCash : 0) - (net - networksTotal);
@@ -356,12 +358,13 @@ const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4', therm
       <div className={`${isPreviewMode ? 'flex flex-col bg-white' : 'hidden print:flex print:flex-col print:bg-white'} rtl text-black font-sans box-border ${isPreviewMode && 'rounded-xl shadow-sm border border-slate-200'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
         {!isPreviewMode && <style dangerouslySetInnerHTML={{__html: `
           @media print {
-            @page { margin: 0; padding: 0; }
+            @page { margin: 0; padding: 0; size: 79mm auto; }
             body { margin: 0; padding: 0; background: white; width: 100%; box-sizing: border-box; }
             * { box-shadow: none !important; box-sizing: border-box !important; }
           }
         `}} />}
         <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{companyName}</h2>
           <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تسوية نقطة بيع</h1>
           <h2 style={{ fontSize: '32px', fontWeight: 'bold', margin: '0 0 8px 0' }}>{pos.name || 'بدون اسم'}</h2>
           <div style={{ fontSize: '18px' }}>
@@ -421,6 +424,7 @@ const PosPrintView = ({ pos, summary, formatNum, date, printFormat = 'a4', therm
   return (
     <div className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white text-black font-sans mx-auto">
       <div className="text-center mb-8 pb-6 border-b-2 border-gray-400">
+        <h2 className="text-2xl font-bold mb-2">{companyName}</h2>
         <h1 className="text-4xl font-black mb-3 text-gray-900 border-2 border-gray-900 inline-block px-8 py-3 rounded-2xl shadow-[4px_4px_0_0_rgba(17,24,39,1)]">
           تسوية نقطة بيع: {pos.name || 'بدون اسم'}
         </h1>
@@ -618,18 +622,19 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
     </div>
   );
 };
-const PendingPrintView = ({ pendingOwedToUs, pendingOwedByUs, formatNum, isPdfMode = false, id }: any) => {
+const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, formatNum, isPdfMode = false, id }: any) => {
   const sumOwedToUs = pendingOwedToUs.reduce((a: number, b: any) => a + b.amount, 0);
   const sumOwedByUs = pendingOwedByUs.reduce((a: number, b: any) => a + b.amount, 0);
 
   return (
     <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white text-black font-sans"}>
       <div className="text-center mb-8 pb-4 border-b-2 border-gray-300">
+        <h2 className="text-2xl font-bold mb-1">{companyName}</h2>
         <h1 className="text-3xl font-bold mb-2">تقرير الأموال المعلقة</h1>
         <p className="text-gray-700 text-lg">تاريخ الطباعة: <span dir="ltr" className="font-bold font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
       </div>
 
-      <div className="grid grid-cols-2 gap-8">
+      <div className="grid grid-cols-2 gap-8 break-inside-avoid">
         <div>
           <h2 className="text-xl font-bold p-3 mb-4 bg-amber-50 text-amber-900 border border-amber-200 flex justify-between rounded-lg">
             <span>أموال لنا (سلف/عهد)</span>
@@ -2319,6 +2324,19 @@ export default function App() {
     return Number(localStorage.getItem('smart_safe_ui_scale') || 1);
   });
   
+  const [companyName, setCompanyName] = useState<string>(() => {
+    return localStorage.getItem('smart_safe_company_name') || 'اسم شركتك هنا';
+  });
+
+  const [ledgerPrintCols, setLedgerPrintCols] = useState(() => {
+    try {
+      const stored = localStorage.getItem('smart_safe_ledger_cols');
+      return stored ? JSON.parse(stored) : { date: true, desc: true, category: true, in: true, out: true, bal: true };
+    } catch {
+      return { date: true, desc: true, category: true, in: true, out: true, bal: true };
+    }
+  });
+  
   const [thermalMargins, setThermalMargins] = useState<{ right: number, left: number, top: number }>(() => {
     try {
       const stored = localStorage.getItem('smart_safe_thermal_margins');
@@ -2331,6 +2349,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('smart_safe_ui_scale', uiScale.toString());
   }, [uiScale]);
+
+  useEffect(() => {
+    localStorage.setItem('smart_safe_company_name', companyName);
+  }, [companyName]);
+
+  useEffect(() => {
+    localStorage.setItem('smart_safe_ledger_cols', JSON.stringify(ledgerPrintCols));
+  }, [ledgerPrintCols]);
 
   useEffect(() => {
     localStorage.setItem('smart_safe_thermal_margins', JSON.stringify(thermalMargins));
@@ -3687,12 +3713,14 @@ export default function App() {
                               @media print {
                                 body { padding: 0; }
                                 .no-print { display: none; }
+                                .summary-grid { display: none !important; }
                               }
                             </style>
                           </head>
                           <body>
                             <div class="report-header">
                               <div>
+                                <h2 style="font-size: 24px; margin-bottom: 5px;">${companyName}</h2>
                                 <h2>تقرير دفتر الأستاذ</h2>
                                 <div class="filters-info">
                                   ${ledgerFilter.startDate || ledgerFilter.endDate ? `<div><strong>الفترة:</strong> ${ledgerFilter.startDate || 'البداية'} إلى ${ledgerFilter.endDate || 'النهاية'}</div>` : ''}
@@ -3703,7 +3731,7 @@ export default function App() {
                               </div>
                             </div>
                             
-                            <div class="summary-grid">
+                            <div class="summary-grid no-print">
                               <div class="summary-card">
                                 <strong>إجمالي الوارد (مدين)</strong>
                                 <span class="val-in" dir="ltr">${formatNum(filteredIn)}</span>
@@ -3725,27 +3753,37 @@ export default function App() {
                             <table>
                               <thead>
                                 <tr>
-                                  <th>التاريخ</th>
-                                  <th style="width: 35%">البيان</th>
-                                  <th>التصنيف</th>
-                                  <th>مدين (وارد)</th>
-                                  <th>دائن (منصرف)</th>
-                                  <th>الرصيد التراكمي</th>
+                                  ${ledgerPrintCols.date ? `<th>التاريخ</th>` : ''}
+                                  ${ledgerPrintCols.desc ? `<th style="width: 35%">البيان</th>` : ''}
+                                  ${ledgerPrintCols.category ? `<th>التصنيف</th>` : ''}
+                                  ${ledgerPrintCols.in ? `<th>مدين (وارد)</th>` : ''}
+                                  ${ledgerPrintCols.out ? `<th>دائن (منصرف)</th>` : ''}
+                                  ${ledgerPrintCols.bal ? `<th>الرصيد التراكمي</th>` : ''}
                                 </tr>
                               </thead>
                               <tbody>
                                 ${filteredLedger.map((e: any) => `
                                   <tr>
-                                    <td>${e.date}</td>
-                                    <td><strong>${e.description}</strong></td>
-                                    <td style="color: #64748b; font-size: 12px;">${e.category}</td>
-                                    <td class="text-left val-in" dir="ltr">${e.type === 'in' ? formatNum(e.amount) : '-'}</td>
-                                    <td class="text-left val-out" dir="ltr">${e.type === 'out' ? formatNum(e.amount) : '-'}</td>
-                                    <td class="text-left val-net font-bold" dir="ltr" style="background:#f8fafc;">${formatNum(e.balance)}</td>
+                                    ${ledgerPrintCols.date ? `<td>${e.date}</td>` : ''}
+                                    ${ledgerPrintCols.desc ? `<td><strong>${e.description}</strong></td>` : ''}
+                                    ${ledgerPrintCols.category ? `<td style="color: #64748b; font-size: 12px;">${e.category}</td>` : ''}
+                                    ${ledgerPrintCols.in ? `<td class="text-left val-in" dir="ltr">${e.type === 'in' ? formatNum(e.amount) : '-'}</td>` : ''}
+                                    ${ledgerPrintCols.out ? `<td class="text-left val-out" dir="ltr">${e.type === 'out' ? formatNum(e.amount) : '-'}</td>` : ''}
+                                    ${ledgerPrintCols.bal ? `<td class="text-left val-net font-bold" dir="ltr" style="background:#f8fafc;">${formatNum(e.balance)}</td>` : ''}
                                   </tr>
                                 `).join('')}
-                                ${filteredLedger.length === 0 ? '<tr><td colspan="6" style="text-align:center; padding: 30px; color: #94a3b8;">لا توجد حركات مسجلة تطابق البحث</td></tr>' : ''}
+                                ${filteredLedger.length === 0 ? `<tr><td colspan="6" style="text-align:center; padding: 30px; color: #94a3b8;">لا توجد حركات مسجلة تطابق البحث</td></tr>` : ''}
                               </tbody>
+                              ${filteredLedger.length > 0 ? `
+                              <tfoot style="background: #f1f5f9; font-weight: bold;">
+                                <tr>
+                                  <td colspan="${(ledgerPrintCols.date?1:0)+(ledgerPrintCols.desc?1:0)+(ledgerPrintCols.category?1:0)}" style="text-align: center;">الإجمالي النهائي</td>
+                                  ${ledgerPrintCols.in ? `<td class="text-left val-in" dir="ltr">${formatNum(filteredIn)}</td>` : ''}
+                                  ${ledgerPrintCols.out ? `<td class="text-left val-out" dir="ltr">${formatNum(filteredOut)}</td>` : ''}
+                                  ${ledgerPrintCols.bal ? `<td class="text-left val-net" dir="ltr">${formatNum(filteredIn - filteredOut)}</td>` : ''}
+                                </tr>
+                              </tfoot>
+                              ` : ''}
                             </table>
                             <script>
                               window.onload = () => {
@@ -3789,13 +3827,24 @@ export default function App() {
                       </div>
 
                       <div className="bg-white rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
-                        <div className="bg-slate-800 text-white p-4 flex justify-between items-center border-b border-slate-700">
+                        <div className="bg-slate-800 text-white p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700">
                           <div className="flex items-center gap-2 font-bold">
                             <BookOpen size={20} className="text-slate-300" /> كشف حساب (النتائج: {filteredLedger.length})
                           </div>
-                          <button onClick={handlePrintFilteredLedger} className="flex items-center gap-2 bg-slate-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold border border-slate-600 hover:bg-slate-600 transition-colors">
-                            <Printer size={16} /> طباعة التقرير
-                          </button>
+                          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full sm:w-auto">
+                            <div className="flex flex-wrap items-center gap-2 bg-slate-700/50 p-2 rounded-lg border border-slate-600/50 text-xs">
+                              <span className="text-slate-400 ml-1">أعمدة الطباعة:</span>
+                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.date} onChange={e => setLedgerPrintCols({...ledgerPrintCols, date: e.target.checked})} className="accent-blue-500" /> التاريخ</label>
+                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.desc} onChange={e => setLedgerPrintCols({...ledgerPrintCols, desc: e.target.checked})} className="accent-blue-500" /> البيان</label>
+                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.category} onChange={e => setLedgerPrintCols({...ledgerPrintCols, category: e.target.checked})} className="accent-blue-500" /> التصنيف</label>
+                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.in} onChange={e => setLedgerPrintCols({...ledgerPrintCols, in: e.target.checked})} className="accent-emerald-500" /> وارد</label>
+                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.out} onChange={e => setLedgerPrintCols({...ledgerPrintCols, out: e.target.checked})} className="accent-rose-500" /> منصرف</label>
+                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.bal} onChange={e => setLedgerPrintCols({...ledgerPrintCols, bal: e.target.checked})} className="accent-blue-500" /> الرصيد</label>
+                            </div>
+                            <button onClick={handlePrintFilteredLedger} className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold border border-blue-500 hover:bg-blue-500 transition-colors shrink-0 shadow-sm w-full sm:w-auto">
+                              <Printer size={16} /> طباعة التقرير
+                            </button>
+                          </div>
                         </div>
                         <div className="p-0 overflow-x-auto">
                           <table className="w-full text-sm text-right border-collapse">
@@ -4067,6 +4116,23 @@ export default function App() {
           </div>
           
           <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-8 pb-12">
+
+            {/* App Preferences */}
+            <section>
+              <div className="px-4 mb-2 flex items-center gap-2">
+                <Settings size={18} className="text-blue-600" />
+                <h3 className="font-bold text-gray-600 text-sm tracking-wide">بيانات التطبيق</h3>
+              </div>
+              <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-gray-900 text-base">اسم الشركة</h4>
+                  <p className="text-gray-500 text-sm mt-1">يظهر في تقارير الطباعة والتقفيل اليومي.</p>
+                </div>
+                <div className="mt-4 sm:mt-0 w-full sm:w-64">
+                  <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="اسم التطبيق/الشركة" />
+                </div>
+              </div>
+            </section>
 
             {/* UI Preferences */}
             <section>
@@ -4564,16 +4630,16 @@ export default function App() {
       </div>
 
       {printView === 'comprehensive_a4' && <ComprehensivePrintView state={state} summary={currentSummary} formatNum={formatNum} />}
-      {printView === 'daily' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} />}
-      {printView === 'daily_thermal' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} />}
-      {printView === 'history' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} />}
-      {printView === 'history_thermal' && printSnapshot && <DailyPrintView state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} />}
-      {printView === 'pending' && <PendingPrintView pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />}
+      {printView === 'daily' && <DailyPrintView companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} />}
+      {printView === 'daily_thermal' && <DailyPrintView companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} />}
+      {printView === 'history' && printSnapshot && <DailyPrintView companyName={companyName} state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} />}
+      {printView === 'history_thermal' && printSnapshot && <DailyPrintView companyName={companyName} state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} />}
+      {printView === 'pending' && <PendingPrintView companyName={companyName} pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />}
       {printView === 'pos' && activePrintPosId && state.posData.find(p => p.id === activePrintPosId) && (
-        <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="a4" />
+        <PosPrintView companyName={companyName} pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="a4" />
       )}
       {printView === 'pos_thermal' && activePrintPosId && state.posData.find(p => p.id === activePrintPosId) && (
-        <PosPrintView pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" thermalMargins={thermalMargins} />
+        <PosPrintView companyName={companyName} pos={state.posData.find(p => p.id === activePrintPosId)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" thermalMargins={thermalMargins} />
       )}
       
       {showCalculator && <CalculatorWidget onClose={() => setShowCalculator(false)} />}
@@ -4621,26 +4687,27 @@ export default function App() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 flex justify-center bg-slate-200 shadow-inner">
-              <div id="thermal-receipt-preview" style={{ width: '80mm', minHeight: '100mm' }} className="bg-white shadow border border-slate-300 mx-auto origin-top transition-transform shrink-0">
-                {thermalPreviewData.type === 'daily' && <DailyPrintView state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
-                {thermalPreviewData.type === 'history' && <DailyPrintView state={thermalPreviewData.snap.state} summary={thermalPreviewData.snap.summary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
-                {thermalPreviewData.type === 'pos' && <PosPrintView pos={state.posData.find(p => p.id === thermalPreviewData.id)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
+              <div className="relative mx-auto shrink-0 bg-white shadow border border-slate-300" style={{ width: '80mm', minHeight: '100mm' }}>
+                <div id="thermal-receipt-preview-export">
+                  {thermalPreviewData.type === 'daily' && <DailyPrintView companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
+                  {thermalPreviewData.type === 'history' && <DailyPrintView companyName={companyName} state={thermalPreviewData.snap.state} summary={thermalPreviewData.snap.summary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
+                  {thermalPreviewData.type === 'pos' && <PosPrintView companyName={companyName} pos={state.posData.find(p => p.id === thermalPreviewData.id)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
+                </div>
+                {/* Margin overlays */}
+                <div className="absolute inset-y-0 right-0 border-l-2 border-dashed border-blue-400/60 bg-blue-500/5 pointer-events-none flex items-center justify-center transition-all" style={{ width: thermalMargins.right }}><span className="-rotate-90 text-[10px] text-blue-500 font-bold mix-blend-multiply opacity-50 whitespace-nowrap">{thermalMargins.right}px</span></div>
+                <div className="absolute inset-y-0 left-0 border-r-2 border-dashed border-blue-400/60 bg-blue-500/5 pointer-events-none flex items-center justify-center transition-all" style={{ width: thermalMargins.left }}><span className="rotate-90 text-[10px] text-blue-500 font-bold mix-blend-multiply opacity-50 whitespace-nowrap">{thermalMargins.left}px</span></div>
+                <div className="absolute inset-x-0 top-0 border-b-2 border-dashed border-blue-400/60 bg-blue-500/5 pointer-events-none flex justify-center items-center transition-all" style={{ height: thermalMargins.top }}><span className="text-[10px] text-blue-500 font-bold mix-blend-multiply opacity-50">{thermalMargins.top}px</span></div>
               </div>
             </div>
             
             <div className="p-4 bg-white border-t border-slate-200 flex flex-col gap-3">
               <button 
                 onClick={async () => {
-                  const element = document.getElementById('thermal-receipt-preview');
+                  const element = document.getElementById('thermal-receipt-preview-export');
                   if (!element) return;
-                  const originalShadow = element.style.boxShadow;
-                  const originalBorder = element.style.border;
-                  element.style.boxShadow = 'none';
-                  element.style.border = 'none';
                   try {
-                    const html2canvas = (await import('html2canvas')).default;
-                    const canvas = await html2canvas(element, { scale: 2 });
-                    const dataUrl = canvas.toDataURL('image/png');
+                    const htmlToImage = await import('html-to-image');
+                    const dataUrl = await htmlToImage.toPng(element, { quality: 1, backgroundColor: '#ffffff', pixelRatio: 2 });
                     const link = document.createElement('a');
                     link.download = `receipt-${state.date.split('/').join('-')}.png`;
                     link.href = dataUrl;
@@ -4690,8 +4757,8 @@ export default function App() {
 
       {/* Hidden containers for PDF export calculation */}
       <div className="absolute top-0 left-0 -z-50 opacity-0 pointer-events-none">
-        <DailyPrintView id="daily-print-container" isPdfMode={true} state={state} summary={currentSummary} formatNum={formatNum} />
-        <PendingPrintView id="pending-print-container" isPdfMode={true} pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />
+        <DailyPrintView id="daily-print-container" isPdfMode={true} companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} />
+        <PendingPrintView id="pending-print-container" isPdfMode={true} companyName={companyName} pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />
       </div>
     </div>
   );
