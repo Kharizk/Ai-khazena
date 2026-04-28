@@ -634,7 +634,7 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
         <p className="text-gray-700 text-lg">تاريخ الطباعة: <span dir="ltr" className="font-bold font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
       </div>
 
-      <div className="grid grid-cols-2 gap-8 break-inside-avoid">
+      <div className="grid grid-cols-2 gap-8">
         <div>
           <h2 className="text-xl font-bold p-3 mb-4 bg-amber-50 text-amber-900 border border-amber-200 flex justify-between rounded-lg">
             <span>أموال لنا (سلف/عهد)</span>
@@ -4714,9 +4714,6 @@ export default function App() {
                     link.click();
                   } catch (err) {
                     console.error("Failed to export image", err);
-                  } finally {
-                    element.style.boxShadow = originalShadow;
-                    element.style.border = originalBorder;
                   }
                 }}
                 className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2"
