@@ -1739,7 +1739,7 @@ const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "
       placeholder={placeholder}
       dir={dir}
       list={list}
-      className={`w-full bg-slate-50 hover:bg-slate-100/50 border text-slate-800 border-slate-200/80 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-sm placeholder-slate-400 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
+      className={`w-full bg-slate-50 hover:bg-slate-100/50 border text-slate-800 border-slate-200/80 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-sm placeholder-slate-400 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
       {...props}
     />
   );
@@ -1789,21 +1789,21 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
   );
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-6 transition-all duration-300 hover:shadow-md">
+    <div className="bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-6 transition-all duration-300 hover:shadow-md">
       <datalist id={listId}>
         {savedNames?.map((name: string) => <option key={name} value={name} />)}
       </datalist>
       
-      <div className={`flex justify-between items-center px-5 py-4 border-b border-slate-100 ${colorClass}`}>
-        <div className="flex items-center gap-2 font-bold text-lg">
+      <div className={`flex justify-between items-center px-4 md:px-5 py-3 md:py-4 border-b border-slate-100 ${colorClass}`}>
+        <div className="flex items-center gap-2 font-bold text-base md:text-lg">
           <Icon size={22} className="opacity-80" />
           {title}
         </div>
-        <div className="font-bold bg-white/60 px-4 py-1.5 rounded-xl shadow-sm" dir="ltr">{formatNum(total)}</div>
+        <div className="font-bold bg-white/60 px-3 md:px-4 py-1 md:py-1.5 rounded-xl shadow-sm text-sm md:text-base cursor-default" dir="ltr">{formatNum(total)}</div>
       </div>
       
       {data.length > 0 && (
-        <div className="px-5 pt-5 pb-3">
+        <div className="px-4 md:px-5 pt-4 md:pt-5 pb-2 md:pb-3">
           <div className="relative group">
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none transition-opacity opacity-50 group-hover:opacity-100">
               <Search size={16} className="text-slate-500" />
@@ -3209,7 +3209,7 @@ export default function App() {
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
         <div className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-white/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] print:hidden transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-[4.5rem]">
+          <div className="flex justify-between items-center h-16 sm:h-[4.5rem]">
             <div className="flex items-center gap-3">
               <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2.5 rounded-[14px] shadow-lg shadow-blue-600/30 ring-1 ring-white/20"><Calculator size={22} className="drop-shadow-sm" /></div>
               <h1 className="font-extrabold text-xl sm:text-2xl text-slate-800 tracking-tight">الخزينة الذكية</h1>
@@ -3274,7 +3274,7 @@ export default function App() {
         </div>
       </div>
 
-      <div id="export-container" className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${isExporting ? 'bg-white' : ''}`}>
+      <div id="export-container" className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${isExporting ? 'bg-white' : ''}`}>
         {isExporting && (
           <div className="text-center mb-8 pb-4 border-b border-slate-200/80">
             <h1 className="text-2xl font-bold text-slate-900">الخزينة الذكية - تقرير التسوية</h1>
@@ -3284,7 +3284,7 @@ export default function App() {
         )}
 
         {(!isExporting || exportMode === 'detailed') && (
-          <div className="bg-white/90 backdrop-blur-md p-5 rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 mb-8 flex flex-wrap gap-8 items-center print:hidden">
+          <div className="bg-white/90 backdrop-blur-md px-4 sm:px-5 py-5 rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 mb-8 flex flex-wrap gap-8 items-center print:hidden">
             <div className="flex items-center gap-3">
               <label className="font-semibold text-slate-600">تاريخ اليوم:</label>
               <Input value={state.date} onChange={(e: any) => updateField('date', e.target.value)} className="w-44 text-center font-bold text-lg" />
@@ -3301,7 +3301,7 @@ export default function App() {
           {(!isExporting || exportMode === 'detailed') && (
             <div className="flex-1 min-w-0 print:w-full">
               {!isExporting && (
-                <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-2 print:hidden scrollbar-hide md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-3 md:gap-3 overscroll-x-contain shadow-[0_-10px_40px_rgba(0,0,0,0.04)] md:shadow-none">
+                <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-2xl border-t border-slate-200 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-2 print:hidden md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-3 md:gap-3 overscroll-x-contain shadow-[0_-10px_30px_rgba(0,0,0,0.05)] md:shadow-none items-center">
                   {[
                     { id: 'sales', label: 'المبيعات', icon: Receipt },
                     { id: 'payments', label: 'المدفوعات', icon: ArrowUpRight },
@@ -3315,7 +3315,7 @@ export default function App() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-3 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all whitespace-nowrap transform hover:scale-[1.02] active:scale-95 border min-w-[76px] md:min-w-0 ${
+                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-2 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all whitespace-nowrap transform hover:scale-[1.02] active:scale-95 border min-w-[72px] sm:min-w-[80px] md:min-w-0 flex-shrink-0 ${
                         activeTab === tab.id ? 'text-blue-600 md:text-white border-transparent' : 'bg-transparent md:bg-white text-slate-500 md:text-slate-600 border-transparent md:border-slate-200/80 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'
                       }`}
                     >
@@ -3328,8 +3328,8 @@ export default function App() {
                         />
                       )}
                       <span className="relative z-10 flex flex-col md:flex-row items-center gap-1 md:gap-2">
-                        <tab.icon size={22} className={`md:!w-[18px] md:!h-[18px] ${activeTab === tab.id ? 'animate-pulse' : ''}`} /> 
-                        <span className="text-[11px] md:text-base mt-0.5 md:mt-0">{tab.label}</span>
+                        <tab.icon size={24} strokeWidth={activeTab === tab.id ? 2.5 : 2} className={`md:!w-[18px] md:!h-[18px] ${activeTab === tab.id ? 'animate-pulse' : ''}`} /> 
+                        <span className="text-[10px] sm:text-[11px] md:text-base tracking-tight mt-0.5 md:mt-0">{tab.label}</span>
                       </span>
                     </button>
                   ))}
@@ -3339,7 +3339,7 @@ export default function App() {
               <div className="print:block">
                 {/* Sales Tab */}
                 <div className={`${activeTab === 'sales' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
-                <div className="bg-white/95 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
+                <div className="bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                   <div className="bg-emerald-50 text-emerald-800 p-4 border-b border-emerald-100 flex items-center gap-2 font-bold">
                     <Receipt size={20} /> مبيعات نقاط البيع
                   </div>
@@ -3487,7 +3487,7 @@ export default function App() {
 
               {/* Cash Count Tab */}
               <div className={`${activeTab === 'cash' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
-                <div className="bg-white/95 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
+                <div className="bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                   <div className="bg-indigo-50 text-indigo-800 p-4 border-b border-indigo-100 flex items-center justify-between font-bold">
                     <div className="flex items-center gap-2"><Wallet size={20} /> جرد الخزينة (الفئات النقدية)</div>
                     <div className="bg-white/60 px-3 py-1 rounded-lg" dir="ltr">{formatNum(currentSummary.physicalDenominations)}</div>
@@ -3511,7 +3511,7 @@ export default function App() {
 
               {/* History Tab */}
               <div className={`${activeTab === 'history' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
-                <div className="bg-white/95 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
+                <div className="bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                   <div className="bg-blue-50 text-blue-800 p-4 flex items-center gap-2 font-bold border-b border-blue-100">
                     <CalendarDays size={20} /> سجل الأيام السابقة
                   </div>
@@ -3829,7 +3829,7 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="bg-white rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
+                      <div className="bg-white rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                         <div className="bg-slate-800 text-white p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700">
                           <div className="flex items-center gap-2 font-bold">
                             <BookOpen size={20} className="text-slate-300" /> كشف حساب (النتائج: {filteredLedger.length})
@@ -3910,7 +3910,7 @@ export default function App() {
 
               {/* Archive Tab */}
               <div className={`${activeTab === 'archive' && !isExporting ? 'block' : 'hidden'} print:block`}>
-                <div className="bg-white/95 backdrop-blur-2xl rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
+                <div className="bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                   <div className="bg-slate-800 text-white p-4 flex items-center gap-2 font-bold">
                     <History size={20} /> أرشيف الأموال المعلقة (المسددة)
                   </div>
@@ -4407,7 +4407,7 @@ export default function App() {
       {/* Toast Notification */}
       <AnimatePresence>
       {toast && (
-        <motion.div initial={{ opacity: 0, y: 50, x: '-50%' }} animate={{ opacity: 1, y: 0, x: '-50%' }} exit={{ opacity: 0, y: 20, x: '-50%' }} className={`fixed bottom-4 left-1/2 z-[200] px-6 py-3 rounded-full shadow-lg font-bold text-white flex items-center gap-2 ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
+        <motion.div initial={{ opacity: 0, y: 50, x: '-50%' }} animate={{ opacity: 1, y: 0, x: '-50%' }} exit={{ opacity: 0, y: 20, x: '-50%' }} className={`fixed bottom-24 md:bottom-8 left-1/2 z-[200] px-6 py-3 rounded-full shadow-lg font-bold text-white flex items-center gap-2 whitespace-nowrap ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
           {toast.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
           {toast.message}
         </motion.div>
