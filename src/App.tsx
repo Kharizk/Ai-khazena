@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp, ChevronUp, ChevronDown, ArrowRight, ChevronLeft, Database, Sparkles } from 'lucide-react';
@@ -3203,19 +3204,20 @@ export default function App() {
   const activePos = state.posData.find(p => p.id === activeNetworkPosId);
 
   return (
-    <div className={`min-h-screen bg-[#f4f7fa] text-slate-800 font-sans selection:bg-blue-200 selection:text-blue-900 ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl" style={{ zoom: uiScale }}>
+    <div className={`min-h-screen pb-24 md:pb-0 bg-[#f4f7fa] text-slate-800 font-sans selection:bg-blue-200 selection:text-blue-900 ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl">
+      <div style={{ zoom: uiScale }}>
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
         <div className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-white/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] print:hidden transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-[4.5rem]">
             <div className="flex items-center gap-3">
               <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2.5 rounded-[14px] shadow-lg shadow-blue-600/30 ring-1 ring-white/20"><Calculator size={22} className="drop-shadow-sm" /></div>
-              <h1 className="font-extrabold text-2xl text-slate-800 tracking-tight">الخزينة الذكية</h1>
+              <h1 className="font-extrabold text-xl sm:text-2xl text-slate-800 tracking-tight">الخزينة الذكية</h1>
             </div>
             <div className="flex items-center gap-2 md:gap-3">
               {!user ? (
-                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2.5 rounded-xl hover:from-blue-500 hover:to-indigo-500 transition-all font-bold shadow-lg shadow-blue-500/20 active:scale-95">
-                  <LogIn size={18} /> <span className="hidden sm:inline">تسجيل الدخول</span>
+                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl hover:from-blue-500 hover:to-indigo-500 transition-all font-bold shadow-lg shadow-blue-500/20 active:scale-95">
+                  <LogIn size={18} /> <span className="text-sm sm:text-base hidden sm:inline">تسجيل الدخول</span>
                 </button>
               ) : (
                 <>
@@ -3299,34 +3301,35 @@ export default function App() {
           {(!isExporting || exportMode === 'detailed') && (
             <div className="flex-1 min-w-0 print:w-full">
               {!isExporting && (
-                <div className="flex overflow-x-auto gap-3 mb-8 pb-3 print:hidden scrollbar-hide">
+                <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-slate-200/80 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-2 print:hidden scrollbar-hide md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-3 md:gap-3 overscroll-x-contain shadow-[0_-10px_40px_rgba(0,0,0,0.04)] md:shadow-none">
                   {[
-                    { id: 'sales', label: 'الإيرادات والمبيعات', icon: Receipt },
-                    { id: 'payments', label: 'المخصومات والمدفوعات', icon: ArrowUpRight },
-                    { id: 'pending', label: 'الأموال المعلقة', icon: AlertCircle },
-                    { id: 'cash', label: 'جرد الخزينة', icon: Wallet },
-                    { id: 'history', label: 'سجل الأيام السابقة', icon: CalendarDays },
-                    { id: 'ledger', label: 'دفتر الأستاذ (التقارير)', icon: BookOpen },
-                    { id: 'archive', label: 'أرشيف المعلقات', icon: History },
-                    { id: 'analytics', label: 'تحليلات المبيعات', icon: BarChart3 }
+                    { id: 'sales', label: 'المبيعات', icon: Receipt },
+                    { id: 'payments', label: 'المدفوعات', icon: ArrowUpRight },
+                    { id: 'pending', label: 'معلقة', icon: AlertCircle },
+                    { id: 'cash', label: 'جرد', icon: Wallet },
+                    { id: 'history', label: 'السجل', icon: CalendarDays },
+                    { id: 'ledger', label: 'الأستاذ', icon: BookOpen },
+                    { id: 'archive', label: 'أرشيف', icon: History },
+                    { id: 'analytics', label: 'تحليلات', icon: BarChart3 }
                   ].map(tab => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`relative flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all whitespace-nowrap transform hover:scale-[1.02] active:scale-95 border ${
-                        activeTab === tab.id ? 'text-white border-transparent shadow-[0_8px_16px_-6px_rgba(37,99,235,0.4)]' : 'bg-white text-slate-600 border-slate-200/80 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'
+                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-3 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all whitespace-nowrap transform hover:scale-[1.02] active:scale-95 border min-w-[76px] md:min-w-0 ${
+                        activeTab === tab.id ? 'text-blue-600 md:text-white border-transparent' : 'bg-transparent md:bg-white text-slate-500 md:text-slate-600 border-transparent md:border-slate-200/80 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'
                       }`}
                     >
                       {activeTab === tab.id && (
                         <motion.div
                           layoutId="activeTabIndicator"
-                          className="absolute inset-0 bg-blue-600 rounded-2xl"
+                          className="absolute inset-0 bg-blue-50 md:bg-blue-600 rounded-xl md:rounded-2xl"
                           style={{ zIndex: 0 }}
                           transition={{ type: "spring", stiffness: 350, damping: 25 }}
                         />
                       )}
-                      <span className="relative z-10 flex items-center gap-2">
-                        <tab.icon size={18} className={activeTab === tab.id ? 'animate-pulse' : ''} /> {tab.label}
+                      <span className="relative z-10 flex flex-col md:flex-row items-center gap-1 md:gap-2">
+                        <tab.icon size={22} className={`md:!w-[18px] md:!h-[18px] ${activeTab === tab.id ? 'animate-pulse' : ''}`} /> 
+                        <span className="text-[11px] md:text-base mt-0.5 md:mt-0">{tab.label}</span>
                       </span>
                     </button>
                   ))}
@@ -3981,6 +3984,7 @@ export default function App() {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Export Modal */}
       <AnimatePresence>
@@ -4542,7 +4546,7 @@ export default function App() {
       </AnimatePresence>
 
       <AnimatePresence>
-      {showAuthModal && (
+      {showAuthModal && createPortal(
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
@@ -4624,7 +4628,8 @@ export default function App() {
               </div>
             </div>
           </motion.div>
-        </motion.div>
+        </motion.div>,
+        document.body
       )}
       </AnimatePresence>
       </div>
