@@ -2320,7 +2320,8 @@ export default function App() {
   // Modals State
   const [activeNetworkPosId, setActiveNetworkPosId] = useState<string | null>(null);
 
-  // UI Scale State
+  const [currentAppView, setCurrentAppView] = useState<'launcher' | 'treasury'>('launcher');
+
   const [uiScale, setUiScale] = useState<number>(() => {
     return Number(localStorage.getItem('smart_safe_ui_scale') || 1);
   });
@@ -3203,20 +3204,138 @@ export default function App() {
 
   const activePos = state.posData.find(p => p.id === activeNetworkPosId);
 
+  if (currentAppView === 'launcher') {
+    return (
+      <div className="fixed inset-0 bg-[#0B2D2E] text-white overflow-hidden flex flex-col" dir="rtl">
+        {/* Abstract Background pattern */}
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: 'radial-gradient(circle at 50% 50%, #13655B 0%, transparent 60%), linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent)',
+          backgroundSize: '100% 100%, 50px 50px, 50px 50px'
+        }}></div>
+
+        {/* Status Bar */}
+        <div className="relative z-10 shrink-0 flex justify-between items-center px-6 py-3 text-sm font-medium drop-shadow-md opacity-80 mt-2">
+          <span>{new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-0.5">
+              <div className="w-1 h-3 bg-white rounded-full"></div>
+              <div className="w-1 h-3.5 bg-white rounded-full"></div>
+              <div className="w-1 h-4 bg-white rounded-full"></div>
+              <div className="w-1 h-2.5 bg-white/50 rounded-full"></div>
+            </div>
+            <div className="text-xs font-bold font-mono">100%</div>
+          </div>
+        </div>
+
+        <div className="relative z-10 flex-1 flex flex-col pb-6">
+          {/* Apps Grid (TOP) */}
+          <div className="pt-6 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-8 px-6 max-w-4xl mx-auto w-full">
+            {/* Treasury App */}
+            <button 
+              onClick={() => setCurrentAppView('treasury')}
+              className="flex flex-col items-center gap-2 group active:scale-95 transition-all"
+            >
+              <div className="w-[72px] h-[72px] bg-[#13655B] rounded-[1.5rem] shadow-xl ring-1 ring-white/10 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:shadow-2xl group-hover:-translate-y-1 group-hover:bg-[#1a7a6e]">
+                {/* Simplified Logo icon for app */}
+                <svg viewBox="0 0 100 100" className="w-10 h-10 drop-shadow-md mb-0.5">
+                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#22C55E" strokeWidth="18" strokeLinecap="round" />
+                  <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
+                </svg>
+              </div>
+              <span className="text-xs font-bold drop-shadow-md tracking-wide text-white/90">الخزينة</span>
+            </button>
+
+            {/* Dummy Apps */}
+            {[
+              { name: 'المبيعات', icon: Receipt, color: '#13655B' },
+              { name: 'المخازن', icon: BookOpen, color: '#13655B' },
+              { name: 'الموظفين', icon: LogIn, color: '#13655B' },
+              { name: 'التحليلات', icon: BarChart3, color: '#13655B' },
+              { name: 'المشتريات', icon: Wallet, color: '#13655B' },
+              { name: 'الإعدادات', icon: Settings, color: '#13655B' }
+            ].map((app, idx) => (
+              <button 
+                key={idx}
+                className="flex flex-col items-center gap-2 group opacity-60 hover:opacity-100 transition-all cursor-not-allowed"
+              >
+                <div className="w-[72px] h-[72px] bg-[#13655B]/80 rounded-[1.5rem] shadow-xl ring-1 ring-white/10 flex items-center justify-center">
+                  <app.icon size={28} className="text-[#7BE3A1] drop-shadow-md" />
+                </div>
+                <span className="text-xs font-bold drop-shadow-md tracking-wide text-white/80">{app.name}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Dashboard Name & Logo Area (CENTERED) */}
+          <div className="text-center drop-shadow-lg flex-1 flex flex-col items-center justify-center pb-20">
+            <div className="flex justify-center mb-6">
+              <div className="w-32 h-32 relative">
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
+                  {/* S Shape stylized */}
+                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="url(#logoGrad)" strokeWidth="18" strokeLinecap="round" />
+                  {/* Bird head approximation */}
+                  <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
+                  <circle cx="80" cy="28" r="2" fill="#0B2D2E" />
+                  <defs>
+                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#7BE3A1" />
+                      <stop offset="50%" stopColor="#22C55E" />
+                      <stop offset="100%" stopColor="#13655B" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+            </div>
+            <h1 className="text-5xl font-extrabold tracking-tight mb-2">ســـرب</h1>
+            <div className="flex items-center gap-4 justify-center mb-4">
+              <div className="h-[1px] w-12 bg-srb-primary"></div>
+              <p className="text-srb-light font-bold text-xl tracking-[0.3em] font-poppins">ERP</p>
+              <div className="h-[1px] w-12 bg-srb-primary"></div>
+            </div>
+            <p className="text-white/80 font-medium text-lg mt-2 font-cairo">نظام واحد .. إدارة متكاملة</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`min-h-screen pb-24 md:pb-0 bg-[#f4f7fa] text-slate-800 font-sans selection:bg-blue-200 selection:text-blue-900 ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl">
+    <div className={`min-h-screen pb-24 md:pb-0 bg-[#f4f7fa] text-slate-800 font-sans selection:bg-[#015941]/20 selection:text-[#015941] ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl">
       <div style={{ zoom: uiScale }}>
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
-        <div className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-white/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] print:hidden transition-all">
+        <div className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-slate-200/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] print:hidden transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 sm:h-[4.5rem]">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2.5 rounded-[14px] shadow-lg shadow-blue-600/30 ring-1 ring-white/20"><Calculator size={22} className="drop-shadow-sm" /></div>
-              <h1 className="font-extrabold text-xl sm:text-2xl text-slate-800 tracking-tight">الخزينة الذكية</h1>
+          <div className="flex justify-between items-center h-16 sm:h-[4.5rem] relative">
+            <div className="flex items-center gap-3 w-1/3">
+              <button 
+                onClick={() => setCurrentAppView('launcher')}
+                className="w-10 h-10 flex items-center justify-center bg-slate-100/50 text-slate-600 rounded-xl hover:bg-srb-main hover:text-white transition-all active:scale-95 border border-slate-200/50 md:border-transparent"
+                title="الرئيسية (سرب ERP)"
+              >
+                <ArrowRight size={20} />
+              </button>
             </div>
-            <div className="flex items-center gap-2 md:gap-3">
+            
+            {/* Centered Logo/Name */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2.5">
+              <div className="w-9 h-9 md:w-11 md:h-11 bg-srb-main rounded-[12px] shadow-md flex items-center justify-center ring-1 ring-black/5 overflow-hidden">
+                <svg viewBox="0 0 100 100" className="w-6 h-6 md:w-7 md:h-7 mt-0.5 drop-shadow-sm">
+                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#22C55E" strokeWidth="18" strokeLinecap="round" />
+                  <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
+                </svg>
+              </div>
+              <div className="flex flex-col items-start translate-y-0.5">
+                <div className="flex items-center gap-1.5 leading-none">
+                  <h1 className="font-extrabold text-[#0B2D2E] text-base md:text-xl tracking-tight leading-none">سرب</h1>
+                  <span className="text-srb-main font-bold text-xs md:text-sm tracking-[0.1em] font-poppins leading-none">ERP</span>
+                </div>
+                <span className="text-[9px] md:text-[10px] text-slate-500 font-medium">نظام الخزينة الذكية</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-3 w-1/3 justify-end">
               {!user ? (
-                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl hover:from-blue-500 hover:to-indigo-500 transition-all font-bold shadow-lg shadow-blue-500/20 active:scale-95">
+                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-gradient-to-r from-[#015941] to-[#128a63] text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl hover:from-[#014a36] hover:to-[#0f7554] transition-all font-bold shadow-lg shadow-[#015941]/20 active:scale-95">
                   <LogIn size={18} /> <span className="text-sm sm:text-base hidden sm:inline">تسجيل الدخول</span>
                 </button>
               ) : (

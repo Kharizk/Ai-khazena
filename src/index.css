@@ -1,14 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Cairo", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Cairo", "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-srb-dark: #0B2D2E;
+  --color-srb-main: #13655B;
+  --color-srb-primary: #22C55E;
+  --color-srb-light: #7BE3A1;
+  --color-srb-bg: #F2F4F7;
 }
 
 @layer base {
   body {
-    @apply font-sans text-slate-800 bg-slate-50 antialiased;
+    @apply font-sans text-srb-dark bg-srb-bg antialiased;
   }
   
   @media print {
