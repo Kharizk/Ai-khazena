@@ -1,36 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Cairo", "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Cairo", "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  --color-srb-dark: #0B2D2E;
-  --color-srb-main: #13655B;
-  --color-srb-primary: #22C55E;
-  --color-srb-light: #7BE3A1;
-  --color-srb-bg: #F2F4F7;
+  --color-srb-dark: #0f172a;
+  --color-srb-main: #334155;
+  --color-srb-primary: #1d4ed8;
+  --color-srb-light: #60a5fa;
+  --color-srb-bg: #f8fafc;
+  
+  --app-bg: #8096f9;
 }
 
 @layer base {
   body {
-    @apply font-sans text-srb-dark bg-srb-bg antialiased;
+    @apply font-sans antialiased;
+    background-color: #f8fafc;
+    color: #0f172a;
   }
   
-  @media print {
-    body {
-      background-color: white !important;
-      -webkit-print-color-adjust: exact;
-      color-adjust: exact;
-      width: auto;
-      height: auto;
-      overflow: visible;
-    }
-    
-    @page {
-      margin: 10mm;
-      size: A4;
-    }
+  .min-h-screen {
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(210, 100%, 95%, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(220, 100%, 97%, 0.4) 0px, transparent 50%),
+      radial-gradient(at 50% 50%, hsla(280, 100%, 95%, 0.6) 0px, transparent 50%);
+    background-attachment: fixed;
+    background-color: #f4f7fb;
+  }
+  
+  /* Apply a glassmorphic or extremely clean look dynamically via an overlay if needed */
+  #root:before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>') opacity(0.03);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-semibold text-slate-900;
+  }
+
+  /* Core UI/UX Pro Max Global Styles for basic tags */
+  input[type="text"], input[type="password"], input[type="number"], input[type="email"], select, textarea {
+    @apply border border-slate-200/80 rounded-xl bg-white/70 backdrop-blur-md shadow-[0_2px_10px_rgb(0,0,0,0.01)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 focus:bg-white;
   }
 
   /* Remove arrows/spinners from number inputs */
@@ -45,15 +61,15 @@
 
   /* Custom Scrollbar for a polished look */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #f1f5f9; 
+    background: transparent; 
   }
   ::-webkit-scrollbar-thumb {
     background: #cbd5e1; 
-    border-radius: 4px;
+    border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8; 
@@ -75,34 +91,69 @@
 }
 
 @layer components {
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translate(-50%, 1rem); }
-    to { opacity: 1; transform: translate(-50%, 0); }
+  /* UI/UX Pro Max Custom Classes */
+  .btn-primary {
+    @apply inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-[0_8px_20px_rgb(15,23,42,0.15)] hover:shadow-[0_12px_25px_rgb(15,23,42,0.25)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] px-4 py-2 font-medium border border-slate-700;
   }
-  .animate-fade-in-up {
-    animation: fadeInUp 0.3s ease-out forwards;
+  
+  .btn-success {
+    @apply inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-[0_8px_20px_rgb(16,185,129,0.15)] hover:shadow-[0_12px_25px_rgb(16,185,129,0.25)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] px-4 py-2 font-medium border border-emerald-400/50;
   }
 
-  /* Add subtle hover to table rows that aren't headers/totals */
-  tbody tr:not(.font-bold):not(.bg-slate-50):not(.bg-slate-100) {
-    @apply hover:bg-slate-50/80 transition-colors duration-150;
+  .pro-card {
+    @apply bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 overflow-hidden transition-all duration-300 hover:shadow-[0_8px_40px_rgb(0,0,0,0.06)];
+  }
+
+  .pro-table-container {
+    @apply bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-200/50 overflow-hidden;
+  }
+
+  /* Table visual upgrades */
+  table {
+    @apply border-separate border-spacing-0 w-full;
+  }
+  
+  thead th {
+    @apply bg-slate-50/80 text-slate-500 text-xs uppercase tracking-wider font-semibold py-4 px-4 border-b border-slate-200/80;
+  }
+  
+  tbody td {
+    @apply py-3 px-4 border-b border-slate-100/80 align-middle;
+  }
+
+  tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  /* Add subtle hover to table rows */
+  tbody tr:not(.font-bold):not(.bg-slate-50):not(.bg-slate-100):hover {
+    @apply bg-blue-50/30 transition-colors duration-200;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translate(-50%, 1rem) scale(0.98); }
+    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  }
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 }
 
 @media print {
   body {
-    background-color: white !important;
+    background: white !important;
     -webkit-print-color-adjust: exact;
+    color-adjust: exact;
     print-color-adjust: exact;
   }
   .min-h-screen {
     background-color: white !important;
     padding: 0 !important;
   }
-  .shadow-sm {
+  .shadow-sm, .shadow-md, .shadow-lg, [class*="shadow-"] {
     box-shadow: none !important;
   }
-  .rounded-2xl {
+  .rounded-2xl, .rounded-xl {
     border-radius: 4px !important;
   }
   tr {

@@ -277,11 +277,11 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
     </div>
     
     <div className="mb-6">
-      <h2 className="text-2xl font-bold bg-gray-100 p-2 mb-4 border-r-4 border-blue-600">ملخص الوارد والمنصرف</h2>
+      <h2 className="text-2xl font-bold bg-slate-50 p-2 mb-4 border-r-4 border-blue-600">ملخص الوارد والمنصرف</h2>
       <table className="w-full text-right border-collapse text-lg border border-gray-300">
         <tbody>
           <tr className="border-b border-gray-300">
-            <td className="py-3 px-4 font-bold bg-gray-50/50 w-2/3">رصيد أول المدة</td>
+            <td className="py-3 px-4 font-bold bg-slate-50/50/50 w-2/3">رصيد أول المدة</td>
             <td className="py-3 px-4 font-bold" dir="ltr">{formatNum(state.previousBalance)}</td>
           </tr>
           <tr className="border-b border-gray-300">
@@ -310,7 +310,7 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
               ))}
             </td>
           </tr>
-          <tr className="border-t-2 border-gray-800 bg-gray-100">
+          <tr className="border-t-2 border-gray-800 bg-slate-50">
             <td className="py-4 px-4 font-black w-2/3">الرصيد الدفتري (المتوقع)</td>
             <td className="py-4 px-4 font-black font-mono" dir="ltr">{formatNum(summary.expectedCash)}</td>
           </tr>
@@ -319,11 +319,11 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
     </div>
 
     <div className="mb-6 break-inside-avoid">
-      <h2 className="text-2xl font-bold bg-gray-100 p-2 mb-4 border-r-4 border-indigo-600">الجرد الفعلي</h2>
+      <h2 className="text-2xl font-bold bg-slate-50 p-2 mb-4 border-r-4 border-indigo-600">الجرد الفعلي</h2>
       <table className="w-full text-right border-collapse text-lg border border-gray-300">
         <tbody>
           <tr className="border-b border-gray-300">
-            <td className="py-3 px-4 font-bold bg-gray-50/50 w-2/3">النقدية الفعلية (الجرد)</td>
+            <td className="py-3 px-4 font-bold bg-slate-50/50/50 w-2/3">النقدية الفعلية (الجرد)</td>
             <td className="py-3 px-4 font-bold" dir="ltr">{formatNum(summary.physicalCash)}</td>
           </tr>
           <tr className="border-b border-gray-300">
@@ -334,7 +334,7 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
             <td className="py-3 px-4 font-bold text-slate-700 w-2/3">- أموال معلقة علينا</td>
             <td className="py-3 px-4 font-bold text-slate-700" dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td>
           </tr>
-          <tr className="border-t-2 border-gray-800 bg-gray-100">
+          <tr className="border-t-2 border-gray-800 bg-slate-50">
             <td className="py-4 px-4 font-black w-2/3">الرصيد الفعلي (الصافي)</td>
             <td className="py-4 px-4 font-black font-mono text-indigo-700" dir="ltr">{formatNum(summary.actualCash)}</td>
           </tr>
@@ -426,23 +426,23 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
     <div className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white text-black font-sans mx-auto">
       <div className="text-center mb-8 pb-6 border-b-2 border-gray-400">
         <h2 className="text-2xl font-bold mb-2">{companyName}</h2>
-        <h1 className="text-4xl font-black mb-3 text-gray-900 border-2 border-gray-900 inline-block px-8 py-3 rounded-2xl shadow-[4px_4px_0_0_rgba(17,24,39,1)]">
+        <h1 className="text-4xl font-black mb-3 text-gray-900 border-2 border-slate-800 inline-block px-8 py-3 rounded-2xl shadow-[4px_4px_0_0_rgba(17,24,39,1)]">
           تسوية نقطة بيع: {pos.name || 'بدون اسم'}
         </h1>
         <div className="flex justify-center gap-6 mt-6">
-          <p className="text-lg font-bold bg-gray-100 px-4 py-2 rounded-lg border border-gray-300">
+          <p className="text-lg font-bold bg-slate-50 px-4 py-2 rounded-xl border border-gray-300">
             تاريخ الإعداد: <span dir="ltr" className="font-mono text-blue-700">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span>
           </p>
-          <p className="text-lg font-bold bg-gray-100 px-4 py-2 rounded-lg border border-gray-300">
+          <p className="text-lg font-bold bg-slate-50 px-4 py-2 rounded-xl border border-gray-300">
             تاريخ الطباعة: <span dir="ltr" className="font-mono text-gray-700">{new Date().toLocaleDateString('en-GB')}</span>
           </p>
         </div>
       </div>
       
-      <table className="w-full text-right border-collapse text-xl border-2 border-gray-400 mb-8 rounded-lg overflow-hidden shadow-sm">
+      <table className="w-full text-right border-collapse text-xl border-2 border-gray-400 mb-8 rounded-xl overflow-hidden shadow-sm">
         <tbody>
           <tr className="border-b-2 border-gray-300">
-            <td className="py-4 px-6 font-bold bg-gray-50 align-middle w-2/3">إجمالي المبيعات</td>
+            <td className="py-4 px-6 font-bold bg-slate-50/50 align-middle w-2/3">إجمالي المبيعات</td>
             <td className="py-4 px-6 font-black font-mono text-2xl border-r-2 border-gray-300 bg-white" dir="ltr">{formatNum(pos.sales)}</td>
           </tr>
           <tr className="border-b-2 border-gray-300">
@@ -457,16 +457,16 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
             <td className="py-4 px-6 font-bold text-blue-800 bg-blue-50 align-middle w-2/3 break-words relative">
               <span className="block mb-1">إجمالي الشبكات (تخصم)</span>
               {pos.networks?.length > 0 && (
-                <span className="text-sm font-normal text-blue-600 block bg-blue-100/50 px-2 py-1 rounded inline-block mt-1">
+                <span className="text-[15px] font-normal text-blue-600 block bg-blue-100/50 px-2 py-1 rounded inline-block mt-1">
                   ( {pos.networks.map((n: number) => formatNum(n)).join(' + ')} )
                 </span>
               )}
             </td>
             <td className="py-4 px-6 font-black font-mono text-2xl text-blue-700 border-r-2 border-gray-300 bg-white align-middle" dir="ltr">{formatNum(networksTotal)}</td>
           </tr>
-          <tr className="border-b-[3px] border-gray-900 bg-amber-50">
+          <tr className="border-b-[3px] border-slate-800 bg-amber-50">
             <td className="py-5 px-6 font-black text-amber-900 align-middle w-2/3 text-2xl">المطلوب كاش في الدرج</td>
-            <td className="py-5 px-6 font-black font-mono text-3xl text-indigo-800 border-r-2 border-gray-900 bg-amber-50/50" dir="ltr">{formatNum(net - networksTotal)}</td>
+            <td className="py-5 px-6 font-black font-mono text-3xl text-indigo-800 border-r-2 border-slate-800 bg-amber-50/50" dir="ltr">{formatNum(net - networksTotal)}</td>
           </tr>
           {pos.physicalCash !== undefined && (
             <tr className="border-b-0 border-gray-300">
@@ -506,14 +506,14 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
 
       <div className="grid grid-cols-2 gap-6 mb-6">
         <div className="border-2 border-gray-300 rounded-xl p-4">
-          <h2 className="text-xl font-bold bg-gray-100 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">بيانات الأرصدة</h2>
+          <h2 className="text-xl font-bold bg-slate-50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">بيانات الأرصدة</h2>
           <table className="w-full text-right font-medium">
             <tbody>
-              <tr className="border-b border-gray-200"><td className="py-2">رصيد أول المدة</td><td dir="ltr" className="py-2 text-left">{formatNum(state.previousBalance)}</td></tr>
-              <tr className="border-b border-gray-200"><td className="py-2">إجمالي الإيرادات (+)</td><td dir="ltr" className="py-2 text-left text-green-700">{formatNum(summary.totalCashIn)}</td></tr>
-              <tr className="border-b border-gray-200"><td className="py-2">إجمالي المصروفات (-)</td><td dir="ltr" className="py-2 text-left text-red-700">{formatNum(summary.totalCashOut)}</td></tr>
-              <tr className="bg-gray-50 font-bold text-lg"><td className="py-3">الرصيد الدفتري المتوقع</td><td dir="ltr" className="py-3 text-left">{formatNum(summary.expectedCash)}</td></tr>
-              <tr className="bg-gray-200 font-bold text-lg"><td className="py-3">الرصيد الفعلي (الخزينة)</td><td dir="ltr" className="py-3 text-left">{formatNum(summary.actualCash)}</td></tr>
+              <tr className="border-b border-gray-200"><td className="py-4">رصيد أول المدة</td><td dir="ltr" className="py-2 text-left">{formatNum(state.previousBalance)}</td></tr>
+              <tr className="border-b border-gray-200"><td className="py-4">إجمالي الإيرادات (+)</td><td dir="ltr" className="py-2 text-left text-green-700">{formatNum(summary.totalCashIn)}</td></tr>
+              <tr className="border-b border-gray-200"><td className="py-4">إجمالي المصروفات (-)</td><td dir="ltr" className="py-2 text-left text-red-700">{formatNum(summary.totalCashOut)}</td></tr>
+              <tr className="bg-slate-50/50 font-bold text-lg"><td className="py-3">الرصيد الدفتري المتوقع</td><td dir="ltr" className="py-3 text-left">{formatNum(summary.expectedCash)}</td></tr>
+              <tr className="bg-slate-100 font-bold text-lg"><td className="py-3">الرصيد الفعلي (الخزينة)</td><td dir="ltr" className="py-3 text-left">{formatNum(summary.actualCash)}</td></tr>
               <tr className={`font-black text-xl ${summary.difference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 <td className="py-3 pt-4 border-t-2 border-gray-400">العجز أو الزيادة</td>
                 <td dir="ltr" className="py-3 pt-4 border-t-2 border-gray-400 text-left">{summary.difference > 0 ? '+' : ''}{formatNum(summary.difference)}</td>
@@ -523,8 +523,8 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
         </div>
 
         <div className="border-2 border-gray-300 rounded-xl p-4">
-          <h2 className="text-xl font-bold bg-gray-100 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملخص الإيرادات والنقاط</h2>
-          <table className="w-full text-right font-medium text-sm">
+          <h2 className="text-xl font-bold bg-slate-50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملخص الإيرادات والنقاط</h2>
+          <table className="w-full text-right font-medium text-[15px]">
             <thead>
               <tr className="border-b border-gray-300 text-gray-600">
                 <th className="py-1">نقطة البيع</th><th className="py-1 text-center">الصافي</th><th className="py-1 text-left">شبكات</th>
@@ -536,9 +536,9 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
                 const networksTotal = pos.networks.reduce((a: number, b: any) => a + (typeof b === 'number' ? b : b.amount || 0), 0);
                 return (
                   <tr key={i} className="border-b border-gray-200 last:border-0 relative">
-                     <td className="py-2 font-bold w-1/3">{pos.name || 'بدون اسم'}</td>
-                     <td className="py-2 text-center" dir="ltr">{formatNum(net)}</td>
-                     <td className="py-2 text-left" dir="ltr">{formatNum(networksTotal)}</td>
+                     <td className="py-4 font-bold w-1/3">{pos.name || 'بدون اسم'}</td>
+                     <td className="py-4 text-center" dir="ltr">{formatNum(net)}</td>
+                     <td className="py-4 text-left" dir="ltr">{formatNum(networksTotal)}</td>
                   </tr>
                 );
               })}
@@ -548,7 +548,7 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
              <div className="mt-4 pt-4 border-t border-gray-300">
                <p className="font-bold mb-2">إيرادات أخرى (إضافات للخزينة):</p>
                {state.expenseRefunds.map((e: any, i: number) => (
-                  <div key={i} className="flex justify-between text-sm py-1">
+                  <div key={i} className="flex justify-between text-[15px] py-1">
                     <span>{e.name}</span><span dir="ltr" className="font-medium">{formatNum(e.amount)}</span>
                   </div>
                ))}
@@ -559,51 +559,51 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
 
       <div className="grid grid-cols-2 gap-6 mb-6">
         <div className="border-2 border-gray-300 rounded-xl p-4">
-          <h2 className="text-xl font-bold bg-gray-100 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">المصروفات والمدفوعات</h2>
+          <h2 className="text-xl font-bold bg-slate-50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">المصروفات والمدفوعات</h2>
           <div className="space-y-4">
             <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">مصروفات متنوعة</h3>
               {state.expenses.length > 0 ? state.expenses.map((e: any, i: number) => (
-                  <div key={i} className="flex justify-between text-sm py-1 border-b border-gray-100 last:border-0">
+                  <div key={i} className="flex justify-between text-[15px] py-1 border-b border-gray-100 last:border-0">
                     <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
                   </div>
-              )) : <p className="text-gray-500 text-sm">لا يوجد</p>}
+              )) : <p className="text-gray-500 text-[15px]">لا يوجد</p>}
             </div>
             <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">تحويلات عملاء (يخصم من الخزينة)</h3>
               {state.customerTransfers.length > 0 ? state.customerTransfers.map((e: any, i: number) => (
-                  <div key={i} className="flex justify-between text-sm py-1 border-b border-gray-100 last:border-0">
+                  <div key={i} className="flex justify-between text-[15px] py-1 border-b border-gray-100 last:border-0">
                     <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
                   </div>
-              )) : <p className="text-gray-500 text-sm">لا يوجد</p>}
+              )) : <p className="text-gray-500 text-[15px]">لا يوجد</p>}
             </div>
             <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">سداد شركات / موردين</h3>
               {state.companyPayments.length > 0 ? state.companyPayments.map((e: any, i: number) => (
-                  <div key={i} className="flex justify-between text-sm py-1 border-b border-gray-100 last:border-0">
+                  <div key={i} className="flex justify-between text-[15px] py-1 border-b border-gray-100 last:border-0">
                     <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
                   </div>
-              )) : <p className="text-gray-500 text-sm">لا يوجد</p>}
+              )) : <p className="text-gray-500 text-[15px]">لا يوجد</p>}
             </div>
           </div>
         </div>
 
         <div className="border-2 border-gray-300 rounded-xl p-4">
-          <h2 className="text-xl font-bold bg-gray-100 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملاحظات وعهدة</h2>
+          <h2 className="text-xl font-bold bg-slate-50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملاحظات وعهدة</h2>
            <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">إيداعات بنكية (خوارج)</h3>
               {state.cashDeposits.length > 0 ? state.cashDeposits.map((e: any, i: number) => (
-                  <div key={i} className="flex justify-between text-sm py-1 border-b border-gray-100 last:border-0">
+                  <div key={i} className="flex justify-between text-[15px] py-1 border-b border-gray-100 last:border-0">
                     <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
                   </div>
-              )) : <p className="text-gray-500 text-sm">لا يوجد</p>}
+              )) : <p className="text-gray-500 text-[15px]">لا يوجد</p>}
             </div>
             <div className="mt-4">
               <h3 className="font-bold underline decoration-gray-400 mb-1">أموال معلقة (آجل)</h3>
-              <div className="flex justify-between text-sm py-1">
+              <div className="flex justify-between text-[15px] py-1">
                  <span>لنا (تضاف للعهدة):</span><span dir="ltr" className="font-bold">{formatNum(summary.totalPendingOwedToUs)}</span>
               </div>
-              <div className="flex justify-between text-sm py-1">
+              <div className="flex justify-between text-[15px] py-1">
                  <span>علينا (تخصم من العهدة):</span><span dir="ltr" className="font-bold">{formatNum(summary.totalPendingOwedByUs)}</span>
               </div>
             </div>
@@ -637,24 +637,24 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
 
       <div className="grid grid-cols-2 gap-8">
         <div>
-          <h2 className="text-xl font-bold p-3 mb-4 bg-amber-50 text-amber-900 border border-amber-200 flex justify-between rounded-lg">
+          <h2 className="text-xl font-bold p-3 mb-4 bg-amber-50 text-amber-900 border border-amber-200 flex justify-between rounded-xl">
             <span>أموال لنا (سلف/عهد)</span>
             <span dir="ltr" className="font-mono">{formatNum(sumOwedToUs)}</span>
           </h2>
           <table className="w-full text-right border-collapse text-[15px] border border-gray-300">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="py-2 px-2 border border-gray-300 w-10 text-center">م</th>
-                <th className="py-2 px-2 border border-gray-300">الاسم</th>
-                <th className="py-2 px-2 border border-gray-300 w-28 text-left">المبلغ</th>
+              <tr className="bg-slate-50">
+                <th className="py-5 px-2 border border-gray-300 w-10 text-center">م</th>
+                <th className="py-5 px-2 border border-gray-300">الاسم</th>
+                <th className="py-5 px-2 border border-gray-300 w-28 text-left">المبلغ</th>
               </tr>
             </thead>
             <tbody>
               {pendingOwedToUs.length > 0 ? pendingOwedToUs.map((item: any, idx: number) => (
                 <tr key={item.id} className="border-b border-gray-200">
-                  <td className="py-2 px-2 border border-gray-300 text-center">{idx + 1}</td>
-                  <td className="py-2 px-2 border border-gray-300">{item.name}</td>
-                  <td className="py-2 px-2 border border-gray-300 text-left font-bold font-mono" dir="ltr">{formatNum(item.amount)}</td>
+                  <td className="py-4 px-2 border border-gray-300 text-center">{idx + 1}</td>
+                  <td className="py-4 px-2 border border-gray-300">{item.name}</td>
+                  <td className="py-4 px-2 border border-gray-300 text-left font-bold font-mono" dir="ltr">{formatNum(item.amount)}</td>
                 </tr>
               )) : <tr><td colSpan={3} className="text-center py-4 text-gray-500 border border-gray-300">لا توجد أموال معلقة لنا</td></tr>}
             </tbody>
@@ -662,24 +662,24 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
         </div>
 
         <div>
-          <h2 className="text-xl font-bold p-3 mb-4 bg-slate-100 text-slate-800 border border-slate-200 flex justify-between rounded-lg">
+          <h2 className="text-xl font-bold p-3 mb-4 bg-slate-100 text-slate-800 border border-slate-200 flex justify-between rounded-xl">
             <span>أموال علينا (أمانات/مستحقات)</span>
             <span dir="ltr" className="font-mono">{formatNum(sumOwedByUs)}</span>
           </h2>
           <table className="w-full text-right border-collapse text-[15px] border border-gray-300">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="py-2 px-2 border border-gray-300 w-10 text-center">م</th>
-                <th className="py-2 px-2 border border-gray-300">الاسم</th>
-                <th className="py-2 px-2 border border-gray-300 w-28 text-left">المبلغ</th>
+              <tr className="bg-slate-50">
+                <th className="py-5 px-2 border border-gray-300 w-10 text-center">م</th>
+                <th className="py-5 px-2 border border-gray-300">الاسم</th>
+                <th className="py-5 px-2 border border-gray-300 w-28 text-left">المبلغ</th>
               </tr>
             </thead>
             <tbody>
               {pendingOwedByUs.length > 0 ? pendingOwedByUs.map((item: any, idx: number) => (
                 <tr key={item.id} className="border-b border-gray-200">
-                  <td className="py-2 px-2 border border-gray-300 text-center">{idx + 1}</td>
-                  <td className="py-2 px-2 border border-gray-300">{item.name}</td>
-                  <td className="py-2 px-2 border border-gray-300 text-left font-bold font-mono" dir="ltr">{formatNum(item.amount)}</td>
+                  <td className="py-4 px-2 border border-gray-300 text-center">{idx + 1}</td>
+                  <td className="py-4 px-2 border border-gray-300">{item.name}</td>
+                  <td className="py-4 px-2 border border-gray-300 text-left font-bold font-mono" dir="ltr">{formatNum(item.amount)}</td>
                 </tr>
               )) : <tr><td colSpan={3} className="text-center py-4 text-gray-500 border border-gray-300">لا توجد أموال معلقة علينا</td></tr>}
             </tbody>
@@ -713,6 +713,8 @@ const AnalyticsView = ({ history, currentState, formatNum, onUpdate }: any) => {
     }
     
     return {
+      isHistoricalDay: false,
+      historicalId: '',
       dateStr: state.date,
       dateObj: dObj,
       monthYear: parts.length === 3 ? `${month}/${year}` : 'غير محدد',
@@ -1110,10 +1112,10 @@ ${summaryText}
       
       {/* Overall Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:hidden">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+        <div className="bg-white/90 backdrop-blur-2xl p-6  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <p className="text-slate-500 font-bold text-sm mb-1">إجمالي صافي المبيعات المسجلة</p>
+              <p className="text-slate-500 font-bold text-[15px] mb-1">إجمالي صافي المبيعات المسجلة</p>
               <h3 className="text-4xl font-black text-blue-600 font-mono" dir="ltr">
                 {formatNum(dailyMetrics.reduce((sum, d) => sum + d.pureNetSales, 0) + (currentState.historicalMonths?.reduce((acc: number, h: any)=>acc+h.netSales,0) || 0))}
               </h3>
@@ -1125,10 +1127,10 @@ ${summaryText}
           <p className="text-xs text-slate-400">إجمالي المبيعات الصافية عبر جميع الأيام والشهور التراكمية</p>
         </div>
         
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+        <div className="bg-white/90 backdrop-blur-2xl p-6  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <p className="text-slate-500 font-bold text-sm mb-1">أعلى شهر بالمبيعات</p>
+              <p className="text-slate-500 font-bold text-[15px] mb-1">أعلى شهر بالمبيعات</p>
               <h3 className="text-3xl font-black text-emerald-600 font-mono" dir="ltr">
                 {(() => {
                   const flattened = yearlyList.flatMap((y: any) => Object.values(y.months)) as any[];
@@ -1154,7 +1156,7 @@ ${summaryText}
       </div>
 
       {/* Add Reports Generator Section */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 print:hidden">
+      <div className="bg-white/90 backdrop-blur-2xl p-6  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 print:hidden">
         <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-slate-800">
           <FileText className="text-purple-600" size={28} /> تقارير نصية (قابلة للنسخ)
         </h2>
@@ -1162,13 +1164,13 @@ ${summaryText}
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="w-full lg:w-1/3 flex flex-col gap-4">
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">نوع التقرير</label>
+              <label className="block text-[15px] font-bold text-slate-700 mb-2">نوع التقرير</label>
               <div className="flex bg-slate-100 p-1 rounded-xl">
                 {[{id: 'daily', label: 'يومي'}, {id: 'monthly', label: 'شهري'}, {id: 'yearly', label: 'سنوي'}].map(rt => (
                   <button 
                     key={rt.id}
                     onClick={() => setReportType(rt.id as any)}
-                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${reportType === rt.id ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'}`}
+                    className={`flex-1 py-2 text-[15px] font-bold rounded-xl transition-all ${reportType === rt.id ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'}`}
                   >
                     {rt.label}
                   </button>
@@ -1177,14 +1179,14 @@ ${summaryText}
             </div>
             
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">
+              <label className="block text-[15px] font-bold text-slate-700 mb-2">
                 {reportType === 'daily' ? 'اختر اليوم' : reportType === 'monthly' ? 'اختر أي يوم في الشهر' : 'اختر أي يوم في السنة'}
               </label>
               <input 
                 type="date" 
                 value={reportDateInput}
                 onChange={(e) => setReportDateInput(e.target.value)}
-                className="w-full bg-slate-50 hover:bg-white border text-slate-700 border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-[3px] focus:ring-purple-500/20 focus:border-purple-500 focus:bg-white transition-all text-sm"
+                className="w-full bg-slate-50 hover:bg-white border text-slate-700 border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-[3px] focus:ring-purple-500/20 focus:border-purple-500 focus:bg-white transition-all text-[15px]"
               />
             </div>
             
@@ -1206,13 +1208,13 @@ ${summaryText}
             </div>
           </div>
           
-          <div className="w-full lg:w-2/3 bg-slate-800 text-slate-300 rounded-2xl p-4 md:p-6 relative overflow-hidden font-mono text-sm leading-relaxed whitespace-pre-wrap flex items-center justify-center min-h-[250px]" dir="rtl">
+          <div className="w-full lg:w-2/3 bg-slate-800 text-slate-300 rounded-2xl p-4 md:p-6 relative overflow-hidden font-mono text-[15px] leading-relaxed whitespace-pre-wrap flex items-center justify-center min-h-[250px]" dir="rtl">
              <div className="relative z-10 w-full text-right">{reportText}</div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+      <div className="bg-white/90 backdrop-blur-2xl p-6  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5">
         <h2 className="text-2xl font-bold flex flex-col md:flex-row md:items-center justify-between mb-6 text-slate-800 border-b border-slate-100 pb-4 gap-4">
           <div className="flex flex-col md:flex-row items-center gap-3">
             <BarChart3 className="text-blue-600" size={28} /> ملخص الأداء الشهري والسنوي
@@ -1241,7 +1243,7 @@ ${summaryText}
               {aiLoading ? (
                 <div className="flex items-center gap-2 animate-pulse">جاري تحليل البيانات...</div>
               ) : (
-                <>تحليل بواسطة الذكاء الاصطناعي <span className="bg-white/20 px-2 py-0.5 rounded-lg text-xs leading-none">AI</span></>
+                <>تحليل بواسطة الذكاء الاصطناعي <span className="bg-white/20 px-2 py-0.5 rounded-xl text-xs leading-none">AI</span></>
               )}
             </button>
           </div>
@@ -1265,7 +1267,7 @@ ${summaryText}
               <Markdown remarkPlugins={[remarkGfm]}>{aiAnalysis}</Markdown>
             </div>
             <div className="mt-6 flex justify-end border-t border-indigo-100 pt-4">
-               <button onClick={() => setAiAnalysis(null)} className="text-indigo-500 hover:text-indigo-700 font-bold transition-colors text-sm flex items-center gap-2">
+               <button onClick={() => setAiAnalysis(null)} className="text-indigo-500 hover:text-indigo-700 font-bold transition-colors text-[15px] flex items-center gap-2">
                  <X size={16} /> إغلاق التحليل
                </button>
             </div>
@@ -1286,7 +1288,7 @@ ${summaryText}
                     </div>
                     <div>
                       <h3 className="text-2xl font-black text-slate-800 text-right">سنة {yData.year}</h3>
-                      <p className="text-slate-500 text-sm text-right mt-1">{Object.keys(yData.months).length} أشهر مسجلة</p>
+                      <p className="text-slate-500 text-[15px] text-right mt-1">{Object.keys(yData.months).length} أشهر مسجلة</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-6 self-start md:self-auto">
@@ -1351,7 +1353,7 @@ ${summaryText}
                                <p className="text-xs text-slate-500 mb-4">{m.isHistorical ? 'تم إدخاله يدوياً' : `${m.daysCount} أيام عمل مسجلة`}</p>
                                
                                <div className="flex flex-col gap-1 items-center mb-3">
-                                 <span className="text-sm text-slate-500 font-bold">صافي المبيعات</span>
+                                 <span className="text-[15px] text-slate-500 font-bold">صافي المبيعات</span>
                                  <span className="text-2xl font-black text-blue-700 font-mono" dir="ltr">{formatNum(m.totalPureNetSales)}</span>
                                </div>
                              </div>
@@ -1390,16 +1392,16 @@ ${summaryText}
                                      <table className="w-full border-collapse">
                                        <thead className="bg-slate-50 sticky top-0 border-b border-slate-200">
                                          <tr>
-                                           <th className="py-2 px-3 font-bold text-slate-600">التاريخ</th>
-                                           <th className="py-2 px-3 font-bold text-slate-600 border-r border-slate-200 text-center">المبيعات</th>
-                                           <th className="py-2 px-3 w-10 text-center border-r border-slate-200"></th>
+                                           <th className="py-5 px-3 font-bold text-slate-600">التاريخ</th>
+                                           <th className="py-5 px-3 font-bold text-slate-600 border-r border-slate-200 text-center">المبيعات</th>
+                                           <th className="py-5 px-3 w-10 text-center border-r border-slate-200"></th>
                                          </tr>
                                        </thead>
                                        <tbody>
                                           {dailyMetrics.filter((d: any) => d.monthYear === m.monthYear).map((day: any, idx: number) => (
                                             <tr key={`${day.dateStr}-${day.isCurrent ? 'cur' : 'hist'}-${idx}`} className={`border-b border-slate-100 hover:bg-blue-50/50 ${day.isCurrent ? 'bg-blue-50/30' : ''}`}>
-                                               <td className="py-2 px-3 font-mono text-slate-700">{day.dateName}</td>
-                                               <td className="py-2 px-3 font-mono font-bold text-blue-700 border-r border-slate-100 text-center" dir="ltr">{formatNum(day.pureNetSales)}</td>
+                                               <td className="py-4 px-3 font-mono text-slate-700">{day.dateName}</td>
+                                               <td className="py-4 px-3 font-mono font-bold text-blue-700 border-r border-slate-100 text-center" dir="ltr">{formatNum(day.pureNetSales)}</td>
                                                <td className="py-1 px-1 border-r border-slate-100 text-center">
                                                  {day.isHistoricalDay ? (
                                                    <button
@@ -1441,12 +1443,12 @@ ${summaryText}
         )}
       </div>
 
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 print:break-inside-avoid">
+      <div className="bg-white/90 backdrop-blur-2xl p-6  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 print:break-inside-avoid">
         <h2 className="text-2xl font-bold flex items-center gap-3 mb-8 text-slate-800">
           <TrendingUp className="text-blue-600" size={28} /> حركة المبيعات الصافية اليومية
         </h2>
         
-        {dailyMetrics.length >= 2 ? (
+        {dailyMetrics.length >= 1 ? (
           <div className="h-[400px] w-full mb-8" dir="ltr">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dailyMetrics} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -1464,7 +1466,7 @@ ${summaryText}
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="text-slate-500 text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300 font-medium">نحتاج إلى تسجيل يومين على الأقل لرسم مخطط المقارنة البياني للمبيعات.</p>
+          <p className="text-slate-500 text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300 font-medium">لا توجد مبيعات مسجلة حتى الآن.</p>
         )}
 
         <div className="overflow-x-auto print:mt-8">
@@ -1479,7 +1481,7 @@ ${summaryText}
               {dailyMetrics.map((day: any, idx: number) => (
                 <tr key={`${day.dateStr}-${day.isCurrent ? 'cur' : 'hist'}-${idx}`} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${day.isCurrent ? 'bg-blue-50/40 hover:bg-blue-50/60' : ''}`}>
                   <td className="py-4 px-6 font-bold text-slate-700 flex items-center gap-3 border-l border-slate-100">
-                    <span className="font-mono text-sm">{day.dateStr}</span>
+                    <span className="font-mono text-[15px]">{day.dateStr}</span>
                     {day.isCurrent && <span className="bg-blue-600 text-white px-2 py-0.5 rounded-md text-xs">اليوم (جاري)</span>}
                   </td>
                   <td className="py-4 px-6 font-black text-center text-blue-800 font-mono text-lg bg-blue-50/20" dir="ltr">{formatNum(day.pureNetSales)}</td>
@@ -1512,7 +1514,7 @@ ${summaryText}
               
               <div className="p-6 space-y-4">
                 <div>
-                   <label className="block text-sm font-bold text-slate-700 mb-2">نوع الإدخال</label>
+                   <label className="block text-[15px] font-bold text-slate-700 mb-2">نوع الإدخال</label>
                    <select 
                       value={histType} onChange={(e) => setHistType(e.target.value)} 
                       className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-bold" 
@@ -1525,7 +1527,7 @@ ${summaryText}
                 
                 {histType === 'year' && (
                   <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">السنة</label>
+                      <label className="block text-[15px] font-bold text-slate-700 mb-2">السنة</label>
                       <input 
                         type="number" min="2000" max="2100" placeholder="مثال: 2025" 
                         value={histYear} onChange={(e) => setHistYear(e.target.value)} 
@@ -1537,7 +1539,7 @@ ${summaryText}
                 {histType === 'month' && (
                   <div className="grid grid-cols-2 gap-4">
                      <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">الشهر رقم</label>
+                        <label className="block text-[15px] font-bold text-slate-700 mb-2">الشهر رقم</label>
                         <input 
                           type="number" min="1" max="12" placeholder="مثال: 1" 
                           value={histMonth} onChange={(e) => setHistMonth(e.target.value)} 
@@ -1545,7 +1547,7 @@ ${summaryText}
                         />
                      </div>
                      <div>
-                        <label className="block text-sm font-bold text-slate-700 mb-2">السنة</label>
+                        <label className="block text-[15px] font-bold text-slate-700 mb-2">السنة</label>
                         <input 
                           type="number" min="2000" max="2100" placeholder="مثال: 2025" 
                           value={histYear} onChange={(e) => setHistYear(e.target.value)} 
@@ -1557,7 +1559,7 @@ ${summaryText}
                 
                 {histType === 'day' && (
                   <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">التاريخ</label>
+                      <label className="block text-[15px] font-bold text-slate-700 mb-2">التاريخ</label>
                       <input 
                         type="date"
                         value={histDayDate} onChange={(e) => setHistDayDate(e.target.value)} 
@@ -1567,7 +1569,7 @@ ${summaryText}
                 )}
 
                 <div>
-                   <label className="block text-sm font-bold text-slate-700 mb-2">المبيعات الصافية</label>
+                   <label className="block text-[15px] font-bold text-slate-700 mb-2">المبيعات الصافية</label>
                    <input 
                       type="number" placeholder="مثال: 120000" 
                       value={histSales} onChange={(e) => setHistSales(e.target.value)} 
@@ -1596,9 +1598,9 @@ ${summaryText}
 const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppState, summary: ReturnType<typeof getSummary>, isExport?: boolean }) => {
   if (isExport) {
     return (
-      <div className="bg-white text-black p-6 border border-slate-300 rounded-lg print:border-none print:p-0">
+      <div className="bg-white text-black p-6 border border-slate-300 rounded-xl print:border-none print:p-0">
         <h2 className="text-xl font-bold text-center mb-6 border-b-2 border-black pb-2">ملخص التقفيل اليومي</h2>
-        <table className="w-full text-right border-collapse mb-8 text-sm">
+        <table className="w-full text-right border-collapse mb-8 text-[15px]">
           <tbody>
             <tr className="border-b border-slate-200"><td className="py-3 font-bold">رصيد أول المدة</td><td className="py-3 font-bold" dir="ltr">{formatNum(state.previousBalance)}</td></tr>
             <tr className="border-b border-slate-200"><td className="py-3 font-bold">+ إجمالي الإيرادات (الوارد)</td><td className="py-3 font-bold" dir="ltr">{formatNum(summary.totalCashIn)}</td></tr>
@@ -1626,7 +1628,7 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
         </table>
 
         <h3 className="text-lg font-bold mb-3 border-b border-black pb-1">تفاصيل الجرد الفعلي</h3>
-        <table className="w-full text-right border-collapse mb-6 text-sm">
+        <table className="w-full text-right border-collapse mb-6 text-[15px]">
           <tbody>
             <tr className="border-b border-slate-200"><td className="py-3 font-bold">النقدية الفعلية (الجرد)</td><td className="py-3 font-bold" dir="ltr">{formatNum(summary.physicalCash)}</td></tr>
             <tr className="border-b border-slate-200"><td className="py-3 font-bold">+ أموال معلقة لنا</td><td className="py-3 font-bold" dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td></tr>
@@ -1647,7 +1649,7 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
       <div className="bg-slate-900 text-white rounded-3xl shadow-xl overflow-hidden print:bg-white print:text-black print:border print:border-slate-300">
         <div className="p-4 md:p-5 border-b border-slate-800 print:border-slate-200">
           <h2 className="text-base font-bold text-slate-300 print:text-slate-800 mb-3">ملخص التقفيل اليومي تفصيلي</h2>
-          <div className="space-y-2 text-xs md:text-sm">
+          <div className="space-y-2 text-xs md:text-[15px]">
             <div className="flex justify-between items-center gap-2">
               <span className="text-slate-400 print:text-slate-600 truncate">رصيد أول المدة</span>
               <span className="font-medium shrink-0" dir="ltr">{formatNum(state.previousBalance)}</span>
@@ -1695,7 +1697,7 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
           </div>
         </div>
         <div className="p-4 md:p-5 bg-slate-800/50 print:bg-slate-50">
-          <div className="space-y-2 text-xs md:text-sm mb-3">
+          <div className="space-y-2 text-xs md:text-[15px] mb-3">
             <div className="flex justify-between items-center gap-2">
               <span className="text-slate-400 print:text-slate-600 truncate">النقدية الفعلية (الجرد)</span>
               <span className="font-medium shrink-0" dir="ltr">{formatNum(summary.physicalCash)}</span>
@@ -1716,7 +1718,7 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
           <div className={`p-3 rounded-2xl flex items-center justify-between ${
             summary.difference === 0 ? 'bg-emerald-500/20 text-emerald-400 print:bg-emerald-100 print:text-emerald-800 border border-emerald-500/30' : summary.difference > 0 ? 'bg-blue-500/20 text-blue-400 print:bg-blue-100 print:text-blue-800 border border-blue-500/30' : 'bg-rose-500/20 text-rose-400 print:bg-rose-100 print:text-rose-800 border border-rose-500/30'
           }`}>
-            <div className="flex items-center gap-2 font-bold text-sm md:text-base">
+            <div className="flex items-center gap-2 font-bold text-[15px] md:text-base">
               {summary.difference === 0 ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
               <span>{summary.difference === 0 ? 'الخزينة مطابقة' : summary.difference > 0 ? 'يوجد زيادة' : 'يوجد عجز'}</span>
             </div>
@@ -1739,7 +1741,7 @@ const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "
       placeholder={placeholder}
       dir={dir}
       list={list}
-      className={`w-full bg-slate-50 hover:bg-slate-100/50 border text-slate-800 border-slate-200/80 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-sm placeholder-slate-400 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
+      className={`w-full bg-slate-50 hover:bg-slate-100/50 border text-slate-800 border-slate-200/80 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-[15px] placeholder-slate-400 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
       {...props}
     />
   );
@@ -1799,7 +1801,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
           <Icon size={22} className="opacity-80" />
           {title}
         </div>
-        <div className="font-bold bg-white/60 px-3 md:px-4 py-1 md:py-1.5 rounded-xl shadow-sm text-sm md:text-base cursor-default" dir="ltr">{formatNum(total)}</div>
+        <div className="font-bold bg-white/60 px-3 md:px-4 py-1 md:py-1.5 rounded-xl shadow-sm text-[15px] md:text-base cursor-default" dir="ltr">{formatNum(total)}</div>
       </div>
       
       {data.length > 0 && (
@@ -1813,7 +1815,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالاسم أو المبلغ..."
-              className="w-full pl-3 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all placeholder-slate-400"
+              className="w-full pl-3 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all placeholder-slate-400"
             />
           </div>
         </div>
@@ -1897,16 +1899,16 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
             </div>
             <div className="space-y-1">
               <p className="font-bold text-slate-600">لا يوجد بيانات حالياً</p>
-              <p className="text-sm text-slate-400">لم تقم بإضافة أي بنود في هذا القسم بعد.</p>
+              <p className="text-[15px] text-slate-400">لم تقم بإضافة أي بنود في هذا القسم بعد.</p>
             </div>
-            <button onClick={onAdd} className="mt-2 text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-2">
+            <button onClick={onAdd} className="mt-2 text-[15px] font-bold text-blue-600 bg-blue-50 px-4 py-2 hover:bg-blue-100 rounded-xl transition-colors flex items-center gap-2">
               <Plus size={16} /> أضف أول بند
             </button>
           </motion.div>
         )}
         {data.length > 0 && (
           <div className="px-5 pb-5">
-            <button onClick={onAdd} className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-800 text-sm font-bold px-4 py-3 rounded-xl border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all active:scale-95 group/btn">
+            <button onClick={onAdd} className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-800 text-[15px] font-bold px-4 py-3 rounded-xl border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all active:scale-95 group/btn">
               <Plus size={18} className="group-hover/btn:rotate-90 transition-transform" /> إضافة بند جديد
             </button>
           </div>
@@ -2067,7 +2069,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <h3 className="font-bold text-slate-800 flex items-center gap-2">
             <Calculator size={20} className="text-blue-600" /> 
@@ -2086,7 +2088,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
 
           <div className="flex flex-col sm:flex-row gap-4 mb-8 items-end">
             <div className="flex-1 w-full">
-              <label className="block text-sm font-bold text-slate-700 mb-2">المبلغ (إضافة أو خصم)</label>
+              <label className="block text-[15px] font-bold text-slate-700 mb-2">المبلغ (إضافة أو خصم)</label>
               <Input 
                 type="number" 
                 value={amount} 
@@ -2097,10 +2099,10 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
               />
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
-              <button onClick={handleAdd} disabled={!amount} className="flex-1 sm:flex-none bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+              <button onClick={handleAdd} disabled={!amount} className="flex-1 sm:flex-none bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                 <Plus size={18} /> إضافة
               </button>
-              <button onClick={handleSubtract} disabled={!amount} className="flex-1 sm:flex-none bg-rose-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-rose-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+              <button onClick={handleSubtract} disabled={!amount} className="flex-1 sm:flex-none bg-rose-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-rose-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                 <Trash2 size={18} /> خصم / تسديد
               </button>
             </div>
@@ -2110,10 +2112,10 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
             <div className="flex justify-between items-center mb-4">
               <h4 className="font-bold text-slate-800">كشف الحساب (من دفتر الأستاذ)</h4>
               <div className="flex gap-2">
-                <button onClick={handleCopy} className="text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1">
+                <button onClick={handleCopy} className="text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl text-[15px] font-medium transition-colors flex items-center gap-1">
                   <Copy size={16} /> نسخ
                 </button>
-                <button onClick={handlePrint} className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1">
+                <button onClick={handlePrint} className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl text-[15px] font-medium transition-colors flex items-center gap-1">
                   <Printer size={16} /> طباعة
                 </button>
               </div>
@@ -2121,7 +2123,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
             
             <div className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden mb-6">
               <div className="bg-slate-100 p-3 font-bold text-slate-700 border-b border-slate-200">سجل الحركات التفصيلية (الجديدة)</div>
-              <table className="w-full text-sm text-right">
+              <table className="w-full text-[15px] text-right">
                 <thead>
                   <tr className="text-slate-500 border-b border-slate-200 bg-slate-100/50">
                     <th className="p-3 font-medium">التاريخ والوقت</th>
@@ -2140,7 +2142,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                           <select 
                             value={editType} 
                             onChange={(e: any) => setEditType(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-2 py-1 text-[15px] focus:ring-2 focus:ring-blue-500 outline-none"
                           >
                             <option value="add">إضافة</option>
                             <option value="sub">خصم</option>
@@ -2158,7 +2160,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                               type="number" 
                               value={editAmount} 
                               onChange={(e: any) => setEditAmount(e.target.value)}
-                              className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-left"
+                              className="w-24 bg-white border border-slate-200 rounded-xl px-2 py-1 text-[15px] focus:ring-2 focus:ring-blue-500 outline-none text-left"
                               dir="ltr"
                             />
                             <button 
@@ -2169,13 +2171,13 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                                   showToast('تم تعديل الحركة بنجاح', 'success');
                                 }
                               }}
-                              className="text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-lg"
+                              className="text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-xl"
                             >
                               <Check size={16} />
                             </button>
                             <button 
                               onClick={() => setEditingEntry(null)}
-                              className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg"
+                              className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-xl"
                             >
                               <X size={16} />
                             </button>
@@ -2232,7 +2234,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                 <span>ملخص الأيام السابقة (من دفتر الأستاذ)</span>
                 <span className="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded-md font-medium">سجل قديم مجمع</span>
               </div>
-              <table className="w-full text-sm text-right">
+              <table className="w-full text-[15px] text-right">
                 <thead>
                   <tr className="text-slate-500 border-b border-slate-200 bg-slate-100/50">
                     <th className="p-3 font-semibold pb-4">التاريخ</th>
@@ -2271,6 +2273,24 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
         </div>
       </motion.div>
     </motion.div>
+  );
+};
+
+const LiveClock = () => {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <div className="flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur border border-slate-200/60 px-3 md:px-4 py-1.5 md:py-2 rounded-2xl shadow-sm text-center min-w-[90px]">
+      <span className="text-xs md:text-sm font-bold text-slate-800 tabular-nums tracking-tight font-mono" dir="ltr">
+        {time.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+      </span>
+      <span className="text-[9px] md:text-[10px] font-bold text-blue-600 mt-0.5">
+        {time.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })}
+      </span>
+    </div>
   );
 };
 
@@ -3174,7 +3194,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen bg-transparent text-[#1a1c29] p-4 sm:p-6 lg:p-8 selection:bg-blue-200">
         <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
           <div className="relative">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200"></div>
@@ -3189,8 +3209,8 @@ export default function App() {
 
   if (user && userProfile && userProfile.status === 'pending') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50" dir="rtl">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-md w-full text-center">
+      <div className="min-h-screen bg-transparent text-[#1a1c29] p-4 sm:p-6 lg:p-8 selection:bg-blue-200" dir="rtl">
+        <div className="bg-white/90 backdrop-blur-2xl p-8  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle size={32} />
           </div>
@@ -3214,7 +3234,7 @@ export default function App() {
         }}></div>
 
         {/* Status Bar */}
-        <div className="relative z-10 shrink-0 flex justify-between items-center px-6 py-3 text-sm font-medium drop-shadow-md opacity-80 mt-2">
+        <div className="relative z-10 shrink-0 flex justify-between items-center px-6 py-3 text-[15px] font-medium drop-shadow-md opacity-80 mt-2">
           <span>{new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
           <div className="flex items-center gap-2">
             <div className="flex gap-0.5">
@@ -3300,50 +3320,51 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen pb-24 md:pb-0 bg-[#f4f7fa] text-slate-800 font-sans selection:bg-[#015941]/20 selection:text-[#015941] ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl">
+    <div className={`min-h-screen pb-24 md:pb-0 bg-transparent text-slate-800 font-sans selection:bg-blue-200 selection:text-blue-900 ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl">
       <div style={{ zoom: uiScale }}>
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
         <div className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-slate-200/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] print:hidden transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 sm:h-[4.5rem] relative">
-            <div className="flex items-center gap-3 w-1/3">
+          <div className="flex justify-between items-center h-16 sm:h-[4.5rem]">
+            {/* Logo/Name on the right side (RTL start) */}
+            <div className="flex items-center gap-4">
               <button 
                 onClick={() => setCurrentAppView('launcher')}
-                className="w-10 h-10 flex items-center justify-center bg-slate-100/50 text-slate-600 rounded-xl hover:bg-srb-main hover:text-white transition-all active:scale-95 border border-slate-200/50 md:border-transparent"
+                className="w-10 h-10 flex items-center justify-center bg-slate-100/50 text-slate-600 rounded-xl hover:bg-srb-main hover:text-white transition-all active:scale-95 border border-slate-200/50"
                 title="الرئيسية (سرب ERP)"
               >
                 <ArrowRight size={20} />
               </button>
+              
+              <div className="flex items-center gap-2.5 bg-slate-50/50 px-3 py-1.5 rounded-2xl border border-slate-100/50">
+                <div className="w-9 h-9 md:w-11 md:h-11 bg-srb-main rounded-[12px] shadow-md flex items-center justify-center ring-1 ring-black/5 overflow-hidden">
+                  <svg viewBox="0 0 100 100" className="w-6 h-6 md:w-7 md:h-7 mt-0.5 drop-shadow-sm">
+                    <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#22C55E" strokeWidth="18" strokeLinecap="round" />
+                    <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
+                  </svg>
+                </div>
+                <div className="flex flex-col items-start translate-y-0.5">
+                  <div className="flex items-center gap-1.5 leading-none">
+                    <h1 className="font-extrabold text-[#0B2D2E] text-base md:text-xl tracking-tight leading-none">سرب</h1>
+                    <span className="text-srb-main font-bold text-xs md:text-[15px] tracking-[0.1em] font-poppins leading-none">ERP</span>
+                  </div>
+                  <span className="text-[9px] md:text-[10px] text-slate-500 font-medium">نظام الخزينة الذكية</span>
+                </div>
+              </div>
             </div>
             
-            {/* Centered Logo/Name */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2.5">
-              <div className="w-9 h-9 md:w-11 md:h-11 bg-srb-main rounded-[12px] shadow-md flex items-center justify-center ring-1 ring-black/5 overflow-hidden">
-                <svg viewBox="0 0 100 100" className="w-6 h-6 md:w-7 md:h-7 mt-0.5 drop-shadow-sm">
-                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#22C55E" strokeWidth="18" strokeLinecap="round" />
-                  <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
-                </svg>
-              </div>
-              <div className="flex flex-col items-start translate-y-0.5">
-                <div className="flex items-center gap-1.5 leading-none">
-                  <h1 className="font-extrabold text-[#0B2D2E] text-base md:text-xl tracking-tight leading-none">سرب</h1>
-                  <span className="text-srb-main font-bold text-xs md:text-sm tracking-[0.1em] font-poppins leading-none">ERP</span>
-                </div>
-                <span className="text-[9px] md:text-[10px] text-slate-500 font-medium">نظام الخزينة الذكية</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 md:gap-3 w-1/3 justify-end">
+            {/* Action Buttons on the left side (RTL end) */}
+            <div className="flex items-center gap-2 md:gap-3 justify-end">
+              <div className="hidden sm:block"><LiveClock /></div>
               {!user ? (
                 <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-gradient-to-r from-[#015941] to-[#128a63] text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl hover:from-[#014a36] hover:to-[#0f7554] transition-all font-bold shadow-lg shadow-[#015941]/20 active:scale-95">
-                  <LogIn size={18} /> <span className="text-sm sm:text-base hidden sm:inline">تسجيل الدخول</span>
+                  <LogIn size={18} /> <span className="text-[15px] sm:text-base hidden sm:inline">تسجيل الدخول</span>
                 </button>
               ) : (
                 <>
                   {userProfile?.role === 'admin' && (
-                    <div className="hidden md:flex items-center gap-2">
-                      <select 
-                        value={currentBranchId || ''} 
+                    <div className="flex items-center gap-2 max-w-[130px] sm:max-w-xs">
+                      <select value={currentBranchId || ''} 
                         onChange={(e) => {
                           setCurrentBranchId(e.target.value || null);
                           if (e.target.value) {
@@ -3353,7 +3374,7 @@ export default function App() {
                             setHistory([]);
                           }
                         }}
-                        className="bg-white/50 border border-slate-200/60 text-slate-700 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white block w-full px-4 py-2.5 outline-none font-bold hover:bg-white transition-all cursor-pointer shadow-sm"
+                        className="bg-white/50 border border-slate-200/60 text-slate-700 text-[15px] rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white block w-full px-4 py-2.5 outline-none font-bold hover:bg-white transition-all cursor-pointer shadow-sm"
                       >
                         <option value="">-- اختر الفرع --</option>
                         {branches.map(b => (
@@ -3362,7 +3383,7 @@ export default function App() {
                       </select>
                     </div>
                   )}
-                  <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 bg-white/60 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-slate-200/60 font-medium shadow-sm">
+                  <div className="hidden md:flex items-center gap-2 text-[15px] text-slate-600 bg-white/60 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-slate-200/60 font-medium shadow-sm">
                     <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     <span className="font-mono">{user.email?.split('@')[0]}</span>
                   </div>
@@ -3466,7 +3487,7 @@ export default function App() {
                     {(state.savedNames.posData || []).map(name => <option key={name} value={name} />)}
                   </datalist>
                   <div className="p-4 overflow-x-auto">
-                    <table className="w-full text-sm text-right">
+                    <table className="w-full text-[15px] text-right">
                       <thead>
                         <tr className="text-slate-500 border-b border-slate-200">
                           <th className="pb-3 font-medium w-[22%]">نقطة البيع</th>
@@ -3484,7 +3505,7 @@ export default function App() {
                           const posNetworksTotal = sumNetworks(pos.networks);
                           return (
                             <tr key={pos.id} className="border-b border-slate-100 last:border-0 relative group">
-                              <td className="py-2 pr-2">
+                              <td className="py-4 pr-2">
                                 <Input 
                                   value={pos.name} 
                                   list="list-posData"
@@ -3497,37 +3518,37 @@ export default function App() {
                                   className="bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl"
                                 />
                               </td>
-                              <td className="py-2 px-1"><Input type="number" value={pos.sales !== undefined ? round2(pos.sales) : ''} onChange={(e: any) => {
+                              <td className="py-4 px-1"><Input type="number" value={pos.sales !== undefined ? round2(pos.sales) : ''} onChange={(e: any) => {
                                   const newData = [...state.posData];
                                   newData[index].sales = Number(e.target.value);
                                   updateField('posData', newData);
                                 }} dir="ltr" className="text-left bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl" /></td>
-                              <td className="py-2 px-1"><Input type="number" value={pos.returns !== undefined ? round2(pos.returns) : ''} onChange={(e: any) => {
+                              <td className="py-4 px-1"><Input type="number" value={pos.returns !== undefined ? round2(pos.returns) : ''} onChange={(e: any) => {
                                   const newData = [...state.posData];
                                   newData[index].returns = Number(e.target.value);
                                   updateField('posData', newData);
                                 }} dir="ltr" className="text-left text-rose-600 bg-transparent border-transparent shadow-none hover:bg-rose-50 focus:bg-white focus:border-rose-200 transition-colors rounded-xl" /></td>
-                              <td className="py-2 px-2 text-left font-bold text-emerald-600" dir="ltr">{formatNum(net)}</td>
-                              <td className="py-2 px-1">
+                              <td className="py-4 px-2 text-left font-bold text-emerald-600" dir="ltr">{formatNum(net)}</td>
+                              <td className="py-4 px-1">
                                 <button 
                                   onClick={() => setActiveNetworkPosId(pos.id)}
                                   className="w-full bg-slate-50/70 border border-slate-200/60 rounded-xl px-3 py-2 text-left hover:bg-amber-50 hover:border-amber-300 transition-colors text-amber-700 font-medium flex justify-between items-center"
                                   dir="ltr"
                                 >
                                   <span>{formatNum(posNetworksTotal)}</span>
-                                  <span className="text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-lg">
+                                  <span className="text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-xl">
                                     {pos.networks.length} مبالغ
                                   </span>
                                 </button>
                               </td>
-                              <td className="py-2 px-1">
+                              <td className="py-4 px-1">
                                 <Input type="number" value={pos.physicalCash !== undefined ? round2(pos.physicalCash) : ''} placeholder="" onChange={(e: any) => {
                                   const newData = [...state.posData];
                                   newData[index].physicalCash = e.target.value === '' ? undefined : Number(e.target.value);
                                   updateField('posData', newData);
                                 }} dir="ltr" className="text-left font-bold text-blue-700 pointer-events-auto bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl font-mono text-lg tracking-tight" />
                               </td>
-                              <td className="py-2 pl-2 flex justify-center items-center gap-1.5 print:hidden h-full mt-2">
+                              <td className="py-4 pl-2 flex justify-center items-center gap-1.5 print:hidden h-full mt-2">
                                 <button 
                                   onClick={() => {
                                     const newData = [...state.posData];
@@ -3566,7 +3587,7 @@ export default function App() {
                         </tr>
                       </tfoot>
                     </table>
-                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 bg-blue-50 text-blue-700 hover:text-blue-800 hover:bg-blue-100 text-sm font-bold px-4 py-2.5 rounded-xl border border-blue-100 shadow-sm transition-all active:scale-95">
+                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 bg-blue-50 text-blue-700 hover:text-blue-800 hover:bg-blue-100 text-[15px] font-bold px-4 py-2.5 rounded-xl border border-blue-100 shadow-sm transition-all active:scale-95">
                       <Plus size={16} /> إضافة نقطة بيع جديدة
                     </button>
                   </div>
@@ -3587,7 +3608,7 @@ export default function App() {
               <div className={`${activeTab === 'pending' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
                 {!isExporting && (
                   <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4">
-                    <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-sm flex gap-3 items-start flex-1">
+                    <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-[15px] flex gap-3 items-start flex-1">
                       <AlertCircle className="shrink-0 mt-0.5" size={18} />
                       <p>
                         <strong>الأموال المعلقة:</strong> تُرحل بالكامل لليوم التالي حتى يتم تسويتها. <br/>
@@ -3609,12 +3630,12 @@ export default function App() {
                 <div className="bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
                   <div className="bg-indigo-50 text-indigo-800 p-4 border-b border-indigo-100 flex items-center justify-between font-bold">
                     <div className="flex items-center gap-2"><Wallet size={20} /> جرد الخزينة (الفئات النقدية)</div>
-                    <div className="bg-white/60 px-3 py-1 rounded-lg" dir="ltr">{formatNum(currentSummary.physicalDenominations)}</div>
+                    <div className="bg-white/60 px-3 py-1 rounded-xl" dir="ltr">{formatNum(currentSummary.physicalDenominations)}</div>
                   </div>
                   <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
                     {['500', '200', '100', '50', '20', '10', '5', '1'].map(denom => (
-                      <div key={denom} className="flex items-center gap-4 p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                        <div className="w-16 font-bold text-slate-700 bg-slate-100 text-center py-2 rounded-lg border border-slate-200">{denom}</div>
+                      <div key={denom} className="flex items-center gap-4 p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                        <div className="w-16 font-bold text-slate-700 bg-slate-100 text-center py-2 rounded-xl border border-slate-200">{denom}</div>
                         <div className="text-slate-400">×</div>
                         <div className="flex-1">
                           <Input type="number" value={state.cashDenominations[denom]} onChange={(e: any) => setState(prev => ({ ...prev, cashDenominations: { ...prev.cashDenominations, [denom]: Number(e.target.value) } }))} className="text-center" />
@@ -3635,7 +3656,7 @@ export default function App() {
                     <CalendarDays size={20} /> سجل الأيام السابقة
                   </div>
                   <div className="p-4 overflow-x-auto">
-                    <table className="w-full text-sm text-right">
+                    <table className="w-full text-[15px] text-right">
                       <thead>
                         <tr className="text-slate-500 border-b border-slate-200">
                           <th className="pb-3 font-medium">التاريخ</th>
@@ -3660,10 +3681,10 @@ export default function App() {
                             </td>
                             <td className="py-3">
                               <div className="flex items-center gap-2">
-                                <button onClick={() => setViewSnapshot(snap)} className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold flex items-center gap-1">
+                                <button onClick={() => setViewSnapshot(snap)} className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-colors text-xs font-bold flex items-center gap-1">
                                   <Eye size={14} /> التفاصيل
                                 </button>
-                                <button onClick={() => handlePrintHistory(snap)} className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold flex items-center gap-1">
+                                <button onClick={() => handlePrintHistory(snap)} className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors text-xs font-bold flex items-center gap-1">
                                   <Printer size={14} /> طباعة
                                 </button>
                               </div>
@@ -3676,7 +3697,7 @@ export default function App() {
                               <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50/50 rounded-xl my-4 border border-dashed border-slate-200">
                                 <CalendarDays size={48} className="opacity-20 mb-3" />
                                 <p className="font-bold text-lg text-slate-500">سجل الأيام السابقة فارغ</p>
-                                <p className="text-sm text-slate-400 mt-1">اضغط على "يوم جديد" للبدء بحفظ التقفيلات اليومية</p>
+                                <p className="text-[15px] text-slate-400 mt-1">اضغط على "يوم جديد" للبدء بحفظ التقفيلات اليومية</p>
                               </div>
                             </td>
                           </tr>
@@ -3691,22 +3712,22 @@ export default function App() {
               <div className={`${activeTab === 'ledger' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
                 
                 {/* Filters */}
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6">
+                <div className="bg-white/90 backdrop-blur-2xl p-4  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 mb-6">
                   <div className="flex flex-wrap gap-4 items-end">
                     <div className="flex-1 min-w-[200px]">
-                      <label className="block text-sm font-bold text-slate-700 mb-2">من تاريخ</label>
+                      <label className="block text-[15px] font-bold text-slate-700 mb-2">من تاريخ</label>
                       <Input type="date" value={ledgerFilter.startDate} onChange={(e: any) => setLedgerFilter(p => ({...p, startDate: e.target.value}))} dir="ltr" />
                     </div>
                     <div className="flex-1 min-w-[200px]">
-                      <label className="block text-sm font-bold text-slate-700 mb-2">إلى تاريخ</label>
+                      <label className="block text-[15px] font-bold text-slate-700 mb-2">إلى تاريخ</label>
                       <Input type="date" value={ledgerFilter.endDate} onChange={(e: any) => setLedgerFilter(p => ({...p, endDate: e.target.value}))} dir="ltr" />
                     </div>
                     <div className="flex-1 min-w-[200px]">
-                      <label className="block text-sm font-bold text-slate-700 mb-2">القسم / التصنيف</label>
+                      <label className="block text-[15px] font-bold text-slate-700 mb-2">القسم / التصنيف</label>
                       <select 
                         value={ledgerFilter.category} 
                         onChange={e => setLedgerFilter(p => ({...p, category: e.target.value}))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="all">جميع الأقسام</option>
                         {Array.from(new Set(generateLedgerEntries().map(e => e.category))).map(cat => (
@@ -3715,10 +3736,10 @@ export default function App() {
                       </select>
                     </div>
                     <div className="flex-1 min-w-[200px]">
-                      <label className="block text-sm font-bold text-slate-700 mb-2">بحث بالبند / الاسم</label>
+                      <label className="block text-[15px] font-bold text-slate-700 mb-2">بحث بالبند / الاسم</label>
                       <Input type="text" value={ledgerFilter.search} onChange={(e: any) => setLedgerFilter(p => ({...p, search: e.target.value}))} placeholder="اكتب للبحث..." />
                     </div>
-                    <button onClick={() => setLedgerFilter({startDate: '', endDate: '', category: 'all', search: ''})} className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-bold transition-colors shrink-0">
+                    <button onClick={() => setLedgerFilter({startDate: '', endDate: '', category: 'all', search: ''})} className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 font-bold transition-colors shrink-0">
                       إعادة ضبط
                     </button>
                   </div>
@@ -3924,25 +3945,25 @@ export default function App() {
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-emerald-600 text-sm font-bold mb-1">إجمالي الوارد (مدين)</p>
+                            <p className="text-emerald-600 text-[15px] font-bold mb-1">إجمالي الوارد (مدين)</p>
                             <p className="text-xl font-black text-emerald-800" dir="ltr">{formatNum(filteredIn)}</p>
                           </div>
                         </div>
                         <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-rose-600 text-sm font-bold mb-1">إجمالي المنصرف (دائن)</p>
+                            <p className="text-rose-600 text-[15px] font-bold mb-1">إجمالي المنصرف (دائن)</p>
                             <p className="text-xl font-black text-rose-800" dir="ltr">{formatNum(filteredOut)}</p>
                           </div>
                         </div>
                         <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-amber-600 text-sm font-bold mb-1">إجمالي المعلق</p>
+                            <p className="text-amber-600 text-[15px] font-bold mb-1">إجمالي المعلق</p>
                             <p className="text-xl font-black text-amber-800" dir="ltr">{formatNum(filteredNeutral)}</p>
                           </div>
                         </div>
                         <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-blue-600 text-sm font-bold mb-1">صافي الرصيد</p>
+                            <p className="text-blue-600 text-[15px] font-bold mb-1">صافي الرصيد</p>
                             <p className="text-xl font-black text-blue-800" dir="ltr">{formatNum(filteredIn - filteredOut)}</p>
                           </div>
                         </div>
@@ -3954,7 +3975,7 @@ export default function App() {
                             <BookOpen size={20} className="text-slate-300" /> كشف حساب (النتائج: {filteredLedger.length})
                           </div>
                           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full sm:w-auto">
-                            <div className="flex flex-wrap items-center gap-2 bg-slate-700/50 p-2 rounded-lg border border-slate-600/50 text-xs">
+                            <div className="flex flex-wrap items-center gap-2 bg-slate-700/50 p-2 rounded-xl border border-slate-600/50 text-xs">
                               <span className="text-slate-400 ml-1">أعمدة الطباعة:</span>
                               <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.date} onChange={e => setLedgerPrintCols({...ledgerPrintCols, date: e.target.checked})} className="accent-blue-500" /> التاريخ</label>
                               <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.desc} onChange={e => setLedgerPrintCols({...ledgerPrintCols, desc: e.target.checked})} className="accent-blue-500" /> البيان</label>
@@ -3963,13 +3984,13 @@ export default function App() {
                               <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.out} onChange={e => setLedgerPrintCols({...ledgerPrintCols, out: e.target.checked})} className="accent-rose-500" /> منصرف</label>
                               <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.bal} onChange={e => setLedgerPrintCols({...ledgerPrintCols, bal: e.target.checked})} className="accent-blue-500" /> الرصيد</label>
                             </div>
-                            <button onClick={handlePrintFilteredLedger} className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold border border-blue-500 hover:bg-blue-500 transition-colors shrink-0 shadow-sm w-full sm:w-auto">
+                            <button onClick={handlePrintFilteredLedger} className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-[15px] font-bold border border-blue-500 hover:bg-blue-500 transition-colors shrink-0 shadow-sm w-full sm:w-auto">
                               <Printer size={16} /> طباعة التقرير
                             </button>
                           </div>
                         </div>
                         <div className="p-0 overflow-x-auto">
-                          <table className="w-full text-sm text-right border-collapse">
+                          <table className="w-full text-[15px] text-right border-collapse">
                             <thead>
                               <tr className="bg-slate-100 text-slate-600 border-b border-slate-200">
                                 <th className="p-3 font-bold border-l border-slate-200">التاريخ</th>
@@ -4034,7 +4055,7 @@ export default function App() {
                     <History size={20} /> أرشيف الأموال المعلقة (المسددة)
                   </div>
                   <div className="p-4 overflow-x-auto">
-                    <table className="w-full text-sm text-right">
+                    <table className="w-full text-[15px] text-right">
                       <thead>
                         <tr className="text-slate-500 border-b border-slate-200">
                           <th className="pb-3 font-medium">تاريخ التسوية</th>
@@ -4064,7 +4085,7 @@ export default function App() {
                                     showToast('تم الحذف من الأرشيف', 'success');
                                   }
                                 });
-                              }} className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors">
+                              }} className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-xl transition-colors">
                                 <Trash2 size={16}/>
                               </button>
                             </td>
@@ -4076,7 +4097,7 @@ export default function App() {
                               <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50/50 rounded-xl my-4 border border-dashed border-slate-200">
                                 <History size={48} className="opacity-20 mb-3" />
                                 <p className="font-bold text-lg text-slate-500">الأرشيف فارغ حالياً</p>
-                                <p className="text-sm text-slate-400 mt-1">تظهر هنا الأموال المعلقة بعد تسويتها</p>
+                                <p className="text-[15px] text-slate-400 mt-1">تظهر هنا الأموال المعلقة بعد تسويتها</p>
                               </div>
                             </td>
                           </tr>
@@ -4098,6 +4119,7 @@ export default function App() {
           {/* Right Column: Sticky Summary Dashboard */}
           <div className="w-full lg:w-80 xl:w-96 shrink-0 print:w-full">
             <div className={`sticky top-20 flex flex-col gap-4 ${isExporting ? '' : 'max-h-[calc(100vh-6rem)] overflow-y-auto'} pb-4 scrollbar-hide`}>
+              <div className="sm:hidden mb-4 flex justify-center"><LiveClock /></div>
               <SummaryDashboard state={state} summary={currentSummary} isExport={isExporting} />
             </div>
           </div>
@@ -4109,7 +4131,7 @@ export default function App() {
       <AnimatePresence>
       {showExportModal && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <Download size={20} className="text-blue-600" /> 
@@ -4121,7 +4143,7 @@ export default function App() {
             </div>
             <div className="p-6">
               <div className="mb-6">
-                <label className="block text-sm font-bold text-slate-700 mb-3">نوع التقرير (التفاصيل)</label>
+                <label className="block text-[15px] font-bold text-slate-700 mb-3">نوع التقرير (التفاصيل)</label>
                 <div className="grid grid-cols-3 gap-3">
                   <button 
                     onClick={() => setExportMode('summary')}
@@ -4183,16 +4205,16 @@ export default function App() {
       <AnimatePresence>
       {viewSnapshot && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <CalendarDays size={20} className="text-blue-600" /> 
                 تفاصيل يوم: {viewSnapshot.state.date}
               </h3>
               <div className="flex items-center gap-2">
-                <div className="flex bg-blue-50 text-blue-600 rounded-lg overflow-hidden border border-blue-200">
-                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'a4'); }} className="hover:bg-blue-100 px-3 py-1.5 text-sm font-bold transition-colors border-l border-blue-200 flex items-center gap-1" title="طباعة A4"><Printer size={16} /> A4</button>
-                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'thermal'); }} className="hover:bg-blue-100 px-3 py-1.5 text-sm font-bold transition-colors" title="طباعة حراري">حراري</button>
+                <div className="flex bg-blue-50 text-blue-600 rounded-xl overflow-hidden border border-blue-200">
+                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'a4'); }} className="hover:bg-blue-100 px-3 py-1.5 text-[15px] font-bold transition-colors border-l border-blue-200 flex items-center gap-1" title="طباعة A4"><Printer size={16} /> A4</button>
+                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'thermal'); }} className="hover:bg-blue-100 px-3 py-1.5 text-[15px] font-bold transition-colors" title="طباعة حراري">حراري</button>
                 </div>
                 <button onClick={() => setViewSnapshot(null)} className="text-slate-400 hover:text-slate-600 p-1">
                   <X size={20} />
@@ -4244,12 +4266,12 @@ export default function App() {
             <section>
               <div className="px-4 mb-2 flex items-center gap-2">
                 <Settings size={18} className="text-blue-600" />
-                <h3 className="font-bold text-gray-600 text-sm tracking-wide">بيانات التطبيق</h3>
+                <h3 className="font-bold text-gray-600 text-[15px] tracking-wide">بيانات التطبيق</h3>
               </div>
               <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between">
                 <div>
                   <h4 className="font-bold text-gray-900 text-base">اسم الشركة</h4>
-                  <p className="text-gray-500 text-sm mt-1">يظهر في تقارير الطباعة والتقفيل اليومي.</p>
+                  <p className="text-gray-500 text-[15px] mt-1">يظهر في تقارير الطباعة والتقفيل اليومي.</p>
                 </div>
                 <div className="mt-4 sm:mt-0 w-full sm:w-64">
                   <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="اسم التطبيق/الشركة" />
@@ -4261,17 +4283,17 @@ export default function App() {
             <section>
               <div className="px-4 mb-2 flex items-center gap-2">
                 <Settings size={18} className="text-blue-600" />
-                <h3 className="font-bold text-gray-600 text-sm tracking-wide">تفضيلات الواجهة</h3>
+                <h3 className="font-bold text-gray-600 text-[15px] tracking-wide">تفضيلات الواجهة</h3>
               </div>
               <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center justify-between">
                 <div>
                   <h4 className="font-bold text-gray-900 text-base">حجم الخط (تكبير/تصغير)</h4>
-                  <p className="text-gray-500 text-sm mt-1">التحكم في حجم الخط والواجهة في جميع أنحاء التطبيق.</p>
+                  <p className="text-gray-500 text-[15px] mt-1">التحكم في حجم الخط والواجهة في جميع أنحاء التطبيق.</p>
                 </div>
-                <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-200">
-                  <button onClick={() => setUiScale(Math.min(uiScale + 0.1, 1.5))} className="p-2 hover:bg-white rounded-xl shadow-sm text-gray-700 transition" title="تكبير">+</button>
+                <div className="flex items-center gap-2 bg-slate-50/50 p-1.5 rounded-2xl border border-gray-200">
+                  <button onClick={() => setUiScale(Math.min(uiScale + 0.1, 1.5))} className="pro-card p-2 hover:bg-white rounded-xl shadow-sm text-gray-700 transition" title="تكبير">+</button>
                   <span className="font-bold w-12 text-center text-blue-700 dir-ltr">{Math.round(uiScale * 100)}%</span>
-                  <button onClick={() => setUiScale(Math.max(uiScale - 0.1, 0.7))} className="p-2 hover:bg-white rounded-xl shadow-sm text-gray-700 transition" title="تصغير">-</button>
+                  <button onClick={() => setUiScale(Math.max(uiScale - 0.1, 0.7))} className="pro-card p-2 hover:bg-white rounded-xl shadow-sm text-gray-700 transition" title="تصغير">-</button>
                   <button onClick={() => setUiScale(1)} className="p-2 hover:bg-zinc-200 bg-zinc-100 rounded-xl shadow-sm text-xs font-bold mr-1 transition" title="افتراضي">افتراضي</button>
                 </div>
               </div>
@@ -4279,20 +4301,20 @@ export default function App() {
               <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-4">
                 <div>
                   <h4 className="font-bold text-gray-900 text-base">هوامش الطباعة الحرارية (يمين/يسار)</h4>
-                  <p className="text-gray-500 text-sm mt-1">تحديد هوامش الإيصال الحراري لتصحيح العرض التلقائي.</p>
+                  <p className="text-gray-500 text-[15px] mt-1">تحديد هوامش الإيصال الحراري لتصحيح العرض التلقائي.</p>
                 </div>
                 <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-200">
-                    <span className="text-sm font-semibold px-2 text-slate-500">اليمين:</span>
-                    <button onClick={() => setThermalMargins(p => ({...p, right: p.right + 2}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-gray-700 transition">+</button>
+                  <div className="flex items-center gap-2 bg-slate-50/50 p-1.5 rounded-2xl border border-gray-200">
+                    <span className="text-[15px] font-semibold px-2 text-slate-500">اليمين:</span>
+                    <button onClick={() => setThermalMargins(p => ({...p, right: p.right + 2}))} className="p-1.5 hover:bg-white rounded-xl shadow-sm text-gray-700 transition">+</button>
                     <span className="font-bold w-8 text-center text-blue-700">{thermalMargins.right}</span>
-                    <button onClick={() => setThermalMargins(p => ({...p, right: Math.max(0, p.right - 2)}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-gray-700 transition">-</button>
+                    <button onClick={() => setThermalMargins(p => ({...p, right: Math.max(0, p.right - 2)}))} className="p-1.5 hover:bg-white rounded-xl shadow-sm text-gray-700 transition">-</button>
                   </div>
-                  <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl border border-gray-200">
-                    <span className="text-sm font-semibold px-2 text-slate-500">اليسار:</span>
-                    <button onClick={() => setThermalMargins(p => ({...p, left: p.left + 2}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-gray-700 transition">+</button>
+                  <div className="flex items-center gap-2 bg-slate-50/50 p-1.5 rounded-2xl border border-gray-200">
+                    <span className="text-[15px] font-semibold px-2 text-slate-500">اليسار:</span>
+                    <button onClick={() => setThermalMargins(p => ({...p, left: p.left + 2}))} className="p-1.5 hover:bg-white rounded-xl shadow-sm text-gray-700 transition">+</button>
                     <span className="font-bold w-8 text-center text-blue-700">{thermalMargins.left}</span>
-                    <button onClick={() => setThermalMargins(p => ({...p, left: Math.max(0, p.left - 2)}))} className="p-1.5 hover:bg-white rounded-lg shadow-sm text-gray-700 transition">-</button>
+                    <button onClick={() => setThermalMargins(p => ({...p, left: Math.max(0, p.left - 2)}))} className="p-1.5 hover:bg-white rounded-xl shadow-sm text-gray-700 transition">-</button>
                   </div>
                 </div>
               </div>
@@ -4302,7 +4324,7 @@ export default function App() {
             <section>
               <div className="px-4 mb-2 flex items-center gap-2">
                 <BookOpen size={18} className="text-blue-600" />
-                <h3 className="font-bold text-gray-600 text-sm tracking-wide">إدارة القوائم المنسدلة (الحفظ التلقائي)</h3>
+                <h3 className="font-bold text-gray-600 text-[15px] tracking-wide">إدارة القوائم المنسدلة (الحفظ التلقائي)</h3>
               </div>
               <div className="bg-white rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100">
                 <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-gray-100">
@@ -4317,14 +4339,14 @@ export default function App() {
                     customCashAmounts: 'المبالغ النقدية المجمعة',
                     posData: 'نقاط البيع',
                   }).map(([fieldKey, label], index) => (
-                    <div key={fieldKey} className={`p-5 ${index % 2 !== 0 ? '' : ''} hover:bg-gray-50/50 transition-colors`}>
+                    <div key={fieldKey} className={`p-5 ${index % 2 !== 0 ? '' : ''} hover:bg-slate-50/50/50 transition-colors`}>
                       <h3 className="font-bold text-gray-800 mb-3 text-base flex justify-between items-center">
                         {label}
-                        <span className="text-xs font-normal bg-gray-100 text-gray-500 px-2 py-1 rounded-full">{(state.savedNames[fieldKey as keyof typeof state.savedNames] || []).length}</span>
+                        <span className="text-xs font-normal bg-slate-50 text-gray-500 px-2 py-1 rounded-full">{(state.savedNames[fieldKey as keyof typeof state.savedNames] || []).length}</span>
                       </h3>
                       <div className="flex flex-wrap gap-2 mb-4">
                         {(state.savedNames[fieldKey as keyof typeof state.savedNames] || []).map(name => (
-                          <span key={name} className="bg-white group text-gray-700 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 border border-gray-200 shadow-sm">
+                          <span key={name} className="bg-white group text-gray-700 px-3 py-1.5 rounded-xl text-[15px] flex items-center gap-2 border border-gray-200 shadow-sm">
                             {name}
                             <button onClick={() => removeSavedName(fieldKey as any, name)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1 rounded-md transition-colors"><Trash2 size={14} /></button>
                           </span>
@@ -4341,12 +4363,12 @@ export default function App() {
             <section>
               <div className="px-4 mb-2 flex items-center gap-2">
                 <Database size={18} className="text-blue-600" />
-                <h3 className="font-bold text-gray-600 text-sm tracking-wide">النسخ الاحتياطي للأجهزة السحابية</h3>
+                <h3 className="font-bold text-gray-600 text-[15px] tracking-wide">النسخ الاحتياطي للأجهزة السحابية</h3>
               </div>
               <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <h4 className="font-bold text-gray-900 text-base">حفظ واستعادة البيانات</h4>
-                  <p className="text-gray-500 text-sm mt-1">يمكنك تصدير نسخة احتياطية من بيانات التطبيق أو استعادتها. مفيد عند مسح بيانات المتصفح.</p>
+                  <p className="text-gray-500 text-[15px] mt-1">يمكنك تصدير نسخة احتياطية من بيانات التطبيق أو استعادتها. مفيد عند مسح بيانات المتصفح.</p>
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button 
@@ -4418,23 +4440,23 @@ export default function App() {
               <section>
                 <div className="px-4 mb-2 flex items-center gap-2">
                   <Database size={18} className="text-amber-600" />
-                  <h3 className="font-bold text-gray-600 text-sm tracking-wide">إدارة النظام المركزية</h3>
+                  <h3 className="font-bold text-gray-600 text-[15px] tracking-wide">إدارة النظام المركزية</h3>
                 </div>
 
                 {/* Branches Settings */}
                 <div className="bg-white rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 mb-6">
-                  <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+                  <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-slate-50/50/30">
                     <div>
                       <h4 className="font-bold text-gray-900 text-lg">الفروع</h4>
-                      <p className="text-gray-500 text-sm mt-1">التحكم في منافذ وفروع المنشأة</p>
+                      <p className="text-gray-500 text-[15px] mt-1">التحكم في منافذ وفروع المنشأة</p>
                     </div>
-                    <button onClick={() => { setShowSettingsModal(false); setShowAddBranchModal(true); }} className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2.5 rounded-xl text-sm font-bold transition-transform active:scale-95 flex items-center gap-2 shadow-sm">
+                    <button onClick={() => { setShowSettingsModal(false); setShowAddBranchModal(true); }} className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2.5 rounded-xl text-[15px] font-bold transition-transform active:scale-95 flex items-center gap-2 shadow-sm">
                       <Plus size={18} /> إضافة فرع
                     </button>
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-right">
-                      <thead className="bg-gray-50 text-gray-600 border-b border-gray-100">
+                    <table className="w-full text-[15px] text-right">
+                      <thead className="bg-slate-50/50 text-gray-600 border-b border-gray-100">
                         <tr>
                           <th className="p-4 font-semibold">اسم الفرع</th>
                           <th className="p-4 w-40 text-center font-semibold">إجراء</th>
@@ -4442,7 +4464,7 @@ export default function App() {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {branches.map(b => (
-                          <tr key={b.id} className="hover:bg-gray-50/50 transition-colors">
+                          <tr key={b.id} className="hover:bg-slate-50/50/50 transition-colors">
                             <td className="p-4">
                               <Input value={b.name} onChange={(e: any) => {
                                 const newBranches = [...branches];
@@ -4465,13 +4487,13 @@ export default function App() {
 
                 {/* Users Settings */}
                 <div className="bg-white rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100">
-                  <div className="p-5 border-b border-gray-100 bg-gray-50/30">
+                  <div className="p-5 border-b border-gray-100 bg-slate-50/50/30">
                     <h4 className="font-bold text-gray-900 text-lg">المستخدمون النشطون</h4>
-                    <p className="text-gray-500 text-sm mt-1">صلاحيات التحكم والدخول للمنصة</p>
+                    <p className="text-gray-500 text-[15px] mt-1">صلاحيات التحكم والدخول للمنصة</p>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-right">
-                      <thead className="bg-gray-50 text-gray-600 border-b border-gray-100 text-sm">
+                      <thead className="bg-slate-50/50 text-gray-600 border-b border-gray-100 text-[15px]">
                         <tr>
                           <th className="p-4 font-semibold">البريد الإلكتروني</th>
                           <th className="p-4 font-semibold">تحديد الدور</th>
@@ -4480,9 +4502,9 @@ export default function App() {
                           <th className="p-4 font-semibold text-left">تاريخ الانضمام</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 text-sm">
+                      <tbody className="divide-y divide-gray-100 text-[15px]">
                         {adminUsers.map(u => (
-                          <tr key={u.uid} className="hover:bg-gray-50/50 transition-colors">
+                          <tr key={u.uid} className="hover:bg-slate-50/50/50 transition-colors">
                             <td className="p-4 font-bold text-gray-800">{u.email}</td>
                             <td className="p-4">
                               <select value={u.role} onChange={(e) => handleUpdateUser(u.uid, { role: e.target.value as UserRole })} className="cursor-pointer border border-gray-200 rounded-xl px-3 py-2 bg-white outline-none w-full max-w-[150px] shadow-sm hover:border-gray-300 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
@@ -4537,7 +4559,7 @@ export default function App() {
       <AnimatePresence>
       {confirmDialog && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
             <div className="p-6 text-center">
               <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
               <p className="text-lg font-bold text-slate-800 mb-2">تأكيد الإجراء</p>
@@ -4556,7 +4578,7 @@ export default function App() {
       <AnimatePresence>
       {activeNetworkPosId && activePos && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <CreditCard size={20} className="text-amber-600" /> 
@@ -4569,7 +4591,7 @@ export default function App() {
             <div className="p-4 max-h-[60vh] overflow-y-auto">
               {activePos.networks.map((amount, idx) => (
                 <div key={idx} className="flex gap-2 mb-3">
-                  <span className="text-slate-400 text-sm mt-2">{idx + 1}.</span>
+                  <span className="text-slate-400 text-[15px] mt-2">{idx + 1}.</span>
                   <Input 
                     type="number" 
                     value={amount !== undefined ? round2(amount) : ''} 
@@ -4592,7 +4614,7 @@ export default function App() {
                         posData: prev.posData.map(p => p.id === activePos.id ? { ...p, networks: newNetworks } : p)
                       }));
                     }}
-                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -4628,7 +4650,7 @@ export default function App() {
       <AnimatePresence>
       {showAddBranchModal && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                 <Plus className="text-blue-600" size={20} />
@@ -4640,7 +4662,7 @@ export default function App() {
             </div>
             <form onSubmit={handleAddBranchSubmit} className="p-6">
               <div className="mb-4">
-                <label className="block text-sm font-bold text-slate-700 mb-2">اسم الفرع</label>
+                <label className="block text-[15px] font-bold text-slate-700 mb-2">اسم الفرع</label>
                 <input
                   type="text"
                   required
@@ -4667,7 +4689,7 @@ export default function App() {
       <AnimatePresence>
       {showAuthModal && createPortal(
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                 <LogIn className="text-blue-600" size={24} />
@@ -4679,14 +4701,14 @@ export default function App() {
             </div>
             <div className="p-6">
               {authError && (
-                <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-xl text-sm font-bold border border-red-200 flex items-center gap-2">
+                <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-xl text-[15px] font-bold border border-red-200 flex items-center gap-2">
                   <AlertCircle size={18} className="shrink-0" />
                   {authError}
                 </div>
               )}
               <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5">البريد الإلكتروني</label>
+                  <label className="block text-[15px] font-bold text-slate-700 mb-1.5">البريد الإلكتروني</label>
                   <input
                     type="email"
                     required
@@ -4697,7 +4719,7 @@ export default function App() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1.5">كلمة المرور</label>
+                  <label className="block text-[15px] font-bold text-slate-700 mb-1.5">كلمة المرور</label>
                   <input
                     type="password"
                     required
@@ -4719,7 +4741,7 @@ export default function App() {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-slate-200"></div>
                 </div>
-                <div className="relative flex justify-center text-sm">
+                <div className="relative flex justify-center text-[15px]">
                   <span className="px-2 bg-white text-slate-500 font-medium">أو</span>
                 </div>
               </div>
@@ -4740,7 +4762,7 @@ export default function App() {
               <div className="mt-6 text-center">
                 <button
                   onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }}
-                  className="text-slate-500 hover:text-blue-600 font-bold transition-colors text-sm relative after:bg-blue-600 after:absolute after:h-[2px] after:w-0 hover:after:w-full after:bottom-0 after:-right-0 after:transition-all after:duration-300"
+                  className="text-slate-500 hover:text-blue-600 font-bold transition-colors text-[15px] relative after:bg-blue-600 after:absolute after:h-[2px] after:w-0 hover:after:w-full after:bottom-0 after:-right-0 after:transition-all after:duration-300"
                 >
                   {isSignUp ? 'لدي حساب بالفعل، تسجيل الدخول' : 'جديد؟ قم بإنشاء حساب'}
                 </button>
@@ -4777,35 +4799,35 @@ export default function App() {
             </div>
             
             <div className="p-4 bg-white border-b border-slate-200 flex flex-col gap-4">
-              <p className="text-sm text-slate-500 text-center font-bold">هوامش الطباعة (اسحب المسطرة لتوسيط الإيصال)</p>
+              <p className="text-[15px] text-slate-500 text-center font-bold">هوامش الطباعة (اسحب المسطرة لتوسيط الإيصال)</p>
               <div className="grid grid-cols-2 gap-4">
-                 <div className="flex flex-col gap-1 bg-gray-50 p-2.5 rounded-2xl border border-gray-200">
+                 <div className="flex flex-col gap-1 bg-slate-50/50 p-2.5 rounded-2xl border border-gray-200">
                    <div className="flex justify-between items-center px-1">
-                     <span className="text-sm font-semibold text-slate-600">أعلى (Top)</span>
-                     <span className="font-bold text-sm text-blue-700">{thermalMargins.top}px</span>
+                     <span className="text-[15px] font-semibold text-slate-600">أعلى (Top)</span>
+                     <span className="font-bold text-[15px] text-blue-700">{thermalMargins.top}px</span>
                    </div>
-                   <input type="range" min="0" max="100" value={thermalMargins.top} onChange={(e) => setThermalMargins(p => ({...p, top: parseInt(e.target.value)}))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+                   <input type="range" min="0" max="100" value={thermalMargins.top} onChange={(e) => setThermalMargins(p => ({...p, top: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 rounded-xl appearance-none cursor-pointer accent-blue-600" />
                  </div>
-                 <div className="flex flex-col gap-1 bg-gray-50 p-2.5 rounded-2xl border border-gray-200 hidden">
+                 <div className="flex flex-col gap-1 bg-slate-50/50 p-2.5 rounded-2xl border border-gray-200 hidden">
                    <div className="flex justify-between items-center px-1">
-                     <span className="text-sm font-semibold text-slate-600">أسفل</span>
-                     <span className="font-bold text-sm text-blue-700">0px</span>
+                     <span className="text-[15px] font-semibold text-slate-600">أسفل</span>
+                     <span className="font-bold text-[15px] text-blue-700">0px</span>
                    </div>
-                   <input type="range" min="0" max="100" value="0" disabled className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-not-allowed accent-gray-400" />
+                   <input type="range" min="0" max="100" value="0" disabled className="w-full h-2 bg-slate-100 rounded-xl appearance-none cursor-not-allowed accent-gray-400" />
                  </div>
-                 <div className="flex flex-col gap-1 bg-gray-50 p-2.5 rounded-2xl border border-gray-200">
+                 <div className="flex flex-col gap-1 bg-slate-50/50 p-2.5 rounded-2xl border border-gray-200">
                    <div className="flex justify-between items-center px-1">
-                     <span className="text-sm font-semibold text-slate-600">اليمين (Right)</span>
-                     <span className="font-bold text-sm text-blue-700">{thermalMargins.right}px</span>
+                     <span className="text-[15px] font-semibold text-slate-600">اليمين (Right)</span>
+                     <span className="font-bold text-[15px] text-blue-700">{thermalMargins.right}px</span>
                    </div>
-                   <input type="range" min="0" max="200" value={thermalMargins.right} onChange={(e) => setThermalMargins(p => ({...p, right: parseInt(e.target.value)}))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+                   <input type="range" min="0" max="200" value={thermalMargins.right} onChange={(e) => setThermalMargins(p => ({...p, right: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 rounded-xl appearance-none cursor-pointer accent-blue-600" />
                  </div>
-                 <div className="flex flex-col gap-1 bg-gray-50 p-2.5 rounded-2xl border border-gray-200">
+                 <div className="flex flex-col gap-1 bg-slate-50/50 p-2.5 rounded-2xl border border-gray-200">
                    <div className="flex justify-between items-center px-1">
-                     <span className="text-sm font-semibold text-slate-600">اليسار (Left)</span>
-                     <span className="font-bold text-sm text-blue-700">{thermalMargins.left}px</span>
+                     <span className="text-[15px] font-semibold text-slate-600">اليسار (Left)</span>
+                     <span className="font-bold text-[15px] text-blue-700">{thermalMargins.left}px</span>
                    </div>
-                   <input type="range" min="0" max="200" value={thermalMargins.left} onChange={(e) => setThermalMargins(p => ({...p, left: parseInt(e.target.value)}))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+                   <input type="range" min="0" max="200" value={thermalMargins.left} onChange={(e) => setThermalMargins(p => ({...p, left: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 rounded-xl appearance-none cursor-pointer accent-blue-600" />
                  </div>
               </div>
             </div>
@@ -4880,6 +4902,11 @@ export default function App() {
       <div className="absolute top-0 left-0 -z-50 opacity-0 pointer-events-none">
         <DailyPrintView id="daily-print-container" isPdfMode={true} companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} />
         <PendingPrintView id="pending-print-container" isPdfMode={true} companyName={companyName} pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />
+      </div>
+
+      {/* Signature */}
+      <div className="py-6 text-center text-slate-400 text-xs font-medium print:hidden">
+        تم التطوير بواسطة <span className="font-bold text-blue-600">Eng. Khaled Rizk</span> &copy; {new Date().getFullYear()}
       </div>
     </div>
   );
