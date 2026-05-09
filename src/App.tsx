@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp, ChevronUp, ChevronDown, ArrowRight, ChevronLeft, Database, Sparkles } from 'lucide-react';
+import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp, TrendingDown, ChevronUp, ChevronDown, ArrowRight, ChevronLeft, Database, Sparkles, Activity, PieChart as PieChartIcon, LineChart as LineChartIcon } from 'lucide-react';
 import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, updateDoc, where } from 'firebase/firestore';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, ComposedChart } from 'recharts';
 import CalculatorWidget from './components/Calculator';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
@@ -691,6 +691,8 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
 };
 
 const AnalyticsView = ({ history, currentState, formatNum, onUpdate }: any) => {
+  const [dateRange, setDateRange] = useState<'all' | 'year' | 'month'>('all');
+  
   const allData = [...history.map((s: any) => ({ ...s.state, isCurrent: false })), { ...currentState, isCurrent: true }];
   
   let metricsRawData = allData.map(state => {
@@ -703,6 +705,8 @@ const AnalyticsView = ({ history, currentState, formatNum, onUpdate }: any) => {
     const exp3 = state.customerTransfers ? state.customerTransfers.reduce((a:number,c:any)=>a+c.amount,0) : 0;
     const totalOut = exp1 + exp2 + exp3;
     
+    const posSalesBreakdown = state.posData ? state.posData.map((pos: any) => ({ name: pos.name || 'بدون اسم', sales: pos.sales - pos.returns })) : [];
+
     const parts = state.date.split('/');
     let month = '', day = '', year = '';
     let dObj = new Date();
@@ -723,7 +727,10 @@ const AnalyticsView = ({ history, currentState, formatNum, onUpdate }: any) => {
       expenses: totalOut,
       net: totalIn - totalOut,
       isCurrent: state.isCurrent,
-      dateName: parts.length === 3 ? `${day}/${month}` : state.date
+      dateName: parts.length === 3 ? `${day}/${month}` : state.date,
+      posSalesBreakdown,
+      year: year,
+      month: month
     };
   });
 
@@ -732,212 +739,92 @@ const AnalyticsView = ({ history, currentState, formatNum, onUpdate }: any) => {
       if (hist.type === 'day') {
         const parts = hist.dateStr.split('/');
         if (parts.length === 3) {
-          metricsRawData.push({
-            dateStr: hist.dateStr,
-            dateObj: new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])),
-            monthYear: `${parts[1]}/${parts[2]}`,
-            sales: hist.netSales,
-            pureNetSales: hist.netSales,
-            expenses: 0,
-            net: hist.netSales,
-            isCurrent: false,
-            isHistoricalDay: true,
-            historicalId: hist.id,
-            dateName: `${parts[0]}/${parts[1]}`
-          });
+           metricsRawData.push({
+             dateStr: hist.dateStr,
+             dateObj: new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])),
+             monthYear: `${parts[1]}/${parts[2]}`,
+             sales: hist.netSales,
+             pureNetSales: hist.netSales,
+             expenses: 0,
+             net: hist.netSales,
+             isCurrent: false,
+             isHistoricalDay: true,
+             historicalId: hist.id,
+             dateName: `${parts[0]}/${parts[1]}`,
+             posSalesBreakdown: [],
+             year: parts[2],
+             month: parts[1]
+           });
         }
       }
     });
   }
 
-  const dailyMetrics = metricsRawData.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
-
-  const yearlyAgg = dailyMetrics.reduce((acc: any, curr: any) => {
-    const year = curr.dateObj.getFullYear().toString();
-    if (!acc[year]) acc[year] = { year, totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, months: {} };
-    if (!acc[year].months[curr.monthYear]) acc[year].months[curr.monthYear] = { monthYear: curr.monthYear, dateObj: curr.dateObj, totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, daysCount: 0 };
-    
-    acc[year].totalSales += curr.sales;
-    acc[year].totalPureNetSales += curr.pureNetSales;
-    acc[year].totalExpenses += curr.expenses;
-    acc[year].totalNet += curr.net;
-    
-    acc[year].months[curr.monthYear].totalSales += curr.sales;
-    acc[year].months[curr.monthYear].totalPureNetSales += curr.pureNetSales;
-    acc[year].months[curr.monthYear].totalExpenses += curr.expenses;
-    acc[year].months[curr.monthYear].totalNet += curr.net;
-    
-    if (!curr.isHistoricalDay) {
-       // normal days count
-       acc[year].months[curr.monthYear].daysCount += 1;
+  const uniqueMetricsMap = new Map();
+  metricsRawData.forEach(item => {
+    if (!uniqueMetricsMap.has(item.dateStr)) {
+      uniqueMetricsMap.set(item.dateStr, item);
     } else {
-       // historical days also count as 1
-       acc[year].months[curr.monthYear].daysCount += 1;
+      // Prioritize current over historical or history ones
+      if (item.isCurrent) {
+        uniqueMetricsMap.set(item.dateStr, item);
+      }
     }
-    
+  });
+
+  const dailyMetricsRaw = Array.from(uniqueMetricsMap.values()).sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime());
+  
+  const currentYearStr = new Date().getFullYear().toString();
+  const currentMonthStr = String(new Date().getMonth() + 1).padStart(2, '0');
+  
+  const dailyMetrics = dailyMetricsRaw.filter((d: any) => {
+    if (dateRange === 'year') return d.year === currentYearStr;
+    if (dateRange === 'month') return d.year === currentYearStr && d.month === currentMonthStr;
+    return true;
+  });
+
+  const totalSalesVal = dailyMetrics.reduce((sum, d) => sum + d.pureNetSales, 0);
+  const totalExpensesVal = dailyMetrics.reduce((sum, d) => sum + d.expenses, 0);
+  const totalNetVal = totalSalesVal - totalExpensesVal;
+  const daysRecorded = dailyMetrics.length;
+  const avgDailySales = daysRecorded > 0 ? totalSalesVal / daysRecorded : 0;
+
+  const posAgg = dailyMetrics.reduce((acc: any, curr: any) => {
+    curr.posSalesBreakdown.forEach((pos: any) => {
+      if (!acc[pos.name]) acc[pos.name] = 0;
+      acc[pos.name] += pos.sales;
+    });
     return acc;
   }, {});
 
-  // Add historical data directly into yearlyAgg
-  if (currentState.historicalMonths && Array.isArray(currentState.historicalMonths)) {
-    currentState.historicalMonths.forEach((hist: any) => {
-      const parts = hist.monthYear.split('/');
-      if (parts.length === 2) {
-        const month = parts[0];
-        const year = parts[1];
-        if (!yearlyAgg[year]) yearlyAgg[year] = { year, totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, months: {} };
-        if (!yearlyAgg[year].months[hist.monthYear]) {
-           yearlyAgg[year].months[hist.monthYear] = { 
-             monthYear: hist.monthYear, 
-             dateObj: new Date(Number(year), Number(month) - 1, 1), 
-             totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, daysCount: 0, isHistorical: true 
-           };
-        }
-        
-        // Add to historical month
-        yearlyAgg[year].totalSales += hist.netSales;
-        yearlyAgg[year].totalPureNetSales += hist.netSales;
-        yearlyAgg[year].months[hist.monthYear].totalSales += hist.netSales;
-        yearlyAgg[year].months[hist.monthYear].totalPureNetSales += hist.netSales;
-        yearlyAgg[year].months[hist.monthYear].daysCount = new Date(Number(year), Number(month), 0).getDate();
-      }
-    });
-  }
+  const posChartData = Object.keys(posAgg).map(key => ({
+    name: key,
+    value: posAgg[key]
+  })).sort((a, b) => b.value - a.value).filter(p => p.value > 0);
 
-  if (currentState.historicalSales && Array.isArray(currentState.historicalSales)) {
-    currentState.historicalSales.forEach((hist: any) => {
-      let year = '';
-      let monthYear = '';
-      let dateObj = new Date();
-      let daysCount = 1;
-      
-      if (hist.type === 'year') {
-         year = hist.dateStr;
-         monthYear = `إجمالي/${year}`;
-         dateObj = new Date(Number(year), 0, 1);
-         daysCount = 365;
-      } else if (hist.type === 'month') {
-         const parts = hist.dateStr.split('/');
-         year = parts[1];
-         monthYear = hist.dateStr;
-         dateObj = new Date(Number(year), Number(parts[0]) - 1, 1);
-         daysCount = new Date(Number(year), Number(parts[0]), 0).getDate();
-      } else if (hist.type === 'day') {
-         const parts = hist.dateStr.split('/');
-         year = parts[2];
-         monthYear = `${parts[1]}/${year}`;
-         dateObj = new Date(Number(year), Number(parts[1]) - 1, Number(parts[0]));
-         daysCount = 1;
-      }
+  const formatCurrency = (val: number) => Math.floor(val).toLocaleString('en-US');
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'];
 
-      // Important: for day type, it's already in dailyMetrics which adds to yearlyAgg.
-      // So we only need to add month or year types here, to avoid double counting days!
-      if (hist.type === 'day') return; 
-
-      if (!yearlyAgg[year]) yearlyAgg[year] = { year, totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, months: {} };
-      if (!yearlyAgg[year].months[monthYear]) {
-         yearlyAgg[year].months[monthYear] = { 
-           monthYear, 
-           dateObj, 
-           totalSales: 0, totalPureNetSales: 0, totalExpenses: 0, totalNet: 0, daysCount: 0, isHistorical: true, isYearlyOnly: hist.type === 'year',
-           historicalId: hist.id
-         };
-      }
-      
-      yearlyAgg[year].totalSales += hist.netSales;
-      yearlyAgg[year].totalPureNetSales += hist.netSales;
-      yearlyAgg[year].months[monthYear].totalSales += hist.netSales;
-      yearlyAgg[year].months[monthYear].totalPureNetSales += hist.netSales;
-      yearlyAgg[year].months[monthYear].daysCount = daysCount;
-    });
-  }
-
-  const yearlyList = Object.values(yearlyAgg).sort((a: any, b: any) => Number(b.year) - Number(a.year));
-  const latestYear = yearlyList.length > 0 ? (yearlyList[0] as any).year : null;
-
-  const [expandedYears, setExpandedYears] = useState<string[]>(latestYear ? [latestYear] : []);
-  const toggleYear = (year: string) => setExpandedYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
-
-  const [expandedMonths, setExpandedMonths] = useState<string[]>([]);
-  const toggleMonth = (month: string) => setExpandedMonths(prev => prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]);
-
-  const [reportType, setReportType] = useState<'daily'|'monthly'|'yearly'>('daily');
-  const [reportDateInput, setReportDateInput] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [copySuccess, setCopySuccess] = useState(false);
-  
   const [aiLoading, setAiLoading] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
-  
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [histType, setHistType] = useState('month'); // 'day', 'month', 'year'
-  const [histMonth, setHistMonth] = useState('');
-  const [histYear, setHistYear] = useState('');
-  const [histDayDate, setHistDayDate] = useState('');
-  const [histSales, setHistSales] = useState('');
-  
-  const handleAddHistoricalMonth = () => {
-    if (!histSales) return;
-    
-    let dateStr = '';
-    if (histType === 'year') {
-      if (!histYear) return;
-      dateStr = histYear;
-    } else if (histType === 'month') {
-       if (!histMonth || !histYear) return;
-       dateStr = `${histMonth.padStart(2, '0')}/${histYear}`;
-    } else if (histType === 'day') {
-       if (!histDayDate) return;
-       const parts = histDayDate.split('-'); // YYYY-MM-DD
-       dateStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-
-    const newId = generateId();
-    const newHist = { id: newId, type: histType, dateStr, netSales: Number(histSales) };
-    
-    onUpdate((prevState: any) => ({
-      ...prevState,
-      historicalSales: [...(prevState.historicalSales || []), newHist]
-    }));
-    
-    setHistMonth('');
-    setHistYear('');
-    setHistDayDate('');
-    setHistSales('');
-    setShowHistoryModal(false);
-  };
-  
-  const handleDeleteHistoricalItem = (itemId: string) => {
-    onUpdate((prevState: any) => ({
-      ...prevState,
-      historicalSales: (prevState.historicalSales || []).filter((h: any) => h.id !== itemId)
-    }));
-  };
 
   const handleAnalyzeSales = async () => {
     setAiLoading(true);
     try {
-      const flattenedMonths = yearlyList.flatMap((y: any) => Object.values(y.months));
-      
-      const currentMonthYearStr = `${String(new Date().getMonth() + 1).padStart(2, '0')}/${new Date().getFullYear()}`;
-      
-      const summaryText = flattenedMonths.map((m: any) => {
-          const isCurrent = m.monthYear === currentMonthYearStr;
-          return `- شهر ${m.monthYear}: صافي المبيعات ${formatNum(m.totalPureNetSales)} ريال (أيام العمل المسجلة: ${m.daysCount})${isCurrent ? ' [تنبيه: هذا هو الشهر الجاري الحالي وهو غير مكتمل بعد]' : ''}`;
-      }).join('\n');
-      
-      const prompt = `بصفتك محلل مبيعات استراتيجي، قم بتحليل بيانات المبيعات التالية وقدم تقريراً مفصلاً باللغة العربية يركز فقط على "صافي المبيعات":
+      const summaryText = dailyMetrics.map((d: any) => `- التاريخ ${d.dateStr}: مبيعات ${formatNum(d.pureNetSales)}, منصرفات ${formatNum(d.expenses)}`).join('\n');
+      const prompt = `بصفتك محلل مالي ومدير حسابات استراتيجي، قم بتحليل بيانات الخزينة التالية وقدم تقريراً مفصلاً باللغة العربية:
 
-1. **جدول ملخص الأداء:** قم بإنشاء جدول Markdown أنيق يقارن بين الأشهر (الشهر، المبيعات، المتوسط اليومي).
-2. **رؤى المبيعات:** ما هو أفضل وأسوأ شهر؟ (تنبيه هام جداً: الشهر الجاري ${currentMonthYearStr} هو شهر "غير مكتمل" ولديك فقط جزء من أيامه! لذا يُمنع منعاً باتاً اعتباره أسوأ شهر لمجرد أن مبيعاته لم تكتمل. لتحديد قوة الشهر الجاري، احسب "المتوسط اليومي" وقارنه بالمتوسط اليومي للأشهر السابقة، وتنبأ استنتاجياً بالمبيعات الإجمالية إذا استمر الشهر بنفس الريتم).
-3. **التوصيات:** 3 نصائح دقيقة ومباشرة لزيادة المبيعات الشهر القادم.
+1. **ملخص الأداء:** جدول يوضح إجمالي المبيعات، والمنصرفات، وصافي الأرباح للمدة المحددة.
+2. **رؤى مالية:** تحليل لكفاءة الأداء، هل هناك تضخم في المصروفات؟
+3. **التوصيات:** 3 نصائح عملية لتحسين الأداء.
 
-البيانات المتاحة:
-${summaryText}
+البيانات:
+${summaryText.substring(0, 3000)}
 
-ملاحظات هامة:
-- استخدم "جداول Markdown" لعرض الأرقام بشكل منتظم، واحرص على دقة الأرقام.
-- استخدم الرموز التعبيرية بحيوية (مثل 📊، 📈، 💡، ⚠️) لتجميل التقرير.
-- نسق النص بشكل احترافي ليستفيد منه مدير المبيعات مباشرة.`;
+ملاحظات:
+- استخدم جداول Markdown.
+- كن إيجابياً ومحترفاً في لهجتك.
+- استخدم رموز تعبيرية (📊، 💰، 💡)`;
 
       const { GoogleGenAI } = await import('@google/genai');
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -945,651 +832,268 @@ ${summaryText}
         model: 'gemini-2.5-flash',
         contents: prompt,
       });
-      
       setAiAnalysis(response.text);
     } catch (err) {
       console.error("AI Analysis failed:", err);
-      setAiAnalysis("عذراً، حدث خطأ أثناء الاتصال بمنصة الذكاء الاصطناعي للمحاسبة. تأكد من إعدادات الشبكة وحاول مرة أخرى.");
+      setAiAnalysis("حدث خطأ أثناء الاتصال بالذكاء الاصطناعي.");
     } finally {
       setAiLoading(false);
     }
   };
 
-  const generateReportText = () => {
-    // Parse the input date YYYY-MM-DD to DD/MM/YYYY
-    const inputDateObj = new Date(reportDateInput);
-    if (isNaN(inputDateObj.getTime())) return 'يرجى اختيار تاريخ صحيح.';
-    
-    const day = String(inputDateObj.getDate()).padStart(2, '0');
-    const month = String(inputDateObj.getMonth() + 1).padStart(2, '0');
-    const year = inputDateObj.getFullYear();
-    const targetDateStr = `${day}/${month}/${year}`;
-    const targetMonthYear = `${month}/${year}`;
-    const targetYear = `${year}`;
-    
-    const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-    if (reportType === 'daily') {
-      const dayData = dailyMetrics.find((d: any) => d.dateStr === targetDateStr);
-      const dailySales = dayData ? dayData.pureNetSales : 0;
-      
-      const monthData = dailyMetrics.filter((d: any) => d.monthYear === targetMonthYear && d.dateObj.getTime() <= inputDateObj.getTime());
-      const monthTotalSales = monthData.reduce((sum: number, d: any) => sum + d.pureNetSales, 0);
-      const daysCountInMonth = monthData.length;
-      const avgMonthly = daysCountInMonth > 0 ? monthTotalSales / daysCountInMonth : 0;
-
-      return `═══════════════════════════════════════
-           📊 تقرير المبيعات اليومي
-═══════════════════════════════════════
-
-📅 التاريخ: ${targetDateStr}
-
-💰 صافي مبيعات اليوم
-   ${formatNum(dailySales)} ريال
-
-📈 المتوسط اليومي (لهذا الشهر حتى اليوم)
-   ${formatNum(avgMonthly)} ريال بناءً على ${daysCountInMonth} يوم عمل مسجل
-
-📊 إجمالي صافي المبيعات خلال الشهر (تراكمي)
-   ${formatNum(monthTotalSales)} ريال
-
-═══════════════════════════════════════
-   تم إنشاء التقرير في: ${timeStr}`;
-    } 
-    else if (reportType === 'monthly') {
-      const monthData = dailyMetrics.filter((d: any) => d.monthYear === targetMonthYear);
-      const monthTotalSales = monthData.reduce((sum: number, d: any) => sum + d.pureNetSales, 0);
-      const daysCountInMonth = monthData.length;
-      const avgDaily = daysCountInMonth > 0 ? monthTotalSales / daysCountInMonth : 0;
-      
-      const yearData = dailyMetrics.filter((d: any) => d.dateObj.getFullYear().toString() === targetYear && d.dateObj.getTime() <= inputDateObj.getTime());
-      const yearTotalSales = yearData.reduce((sum: number, d: any) => sum + d.pureNetSales, 0);
-
-      // historical injection checking
-      const currentYearObj = yearlyList.find((y:any) => y.year === targetYear);
-      let injectedAvgMonthlyText = '';
-      if (currentYearObj) {
-         const numMonths = Object.keys(currentYearObj.months).length;
-         const avgMonthlyThisYear = numMonths > 0 ? (currentYearObj as any).totalPureNetSales / numMonths : 0;
-         let comparison = '';
-         if (monthTotalSales > avgMonthlyThisYear) {
-             comparison = `(أعلى من المتوسط السنوي البالغ ${formatNum(avgMonthlyThisYear)} ريال)`;
-         } else if (monthTotalSales < avgMonthlyThisYear) {
-             comparison = `(أقل من المتوسط السنوي البالغ ${formatNum(avgMonthlyThisYear)} ريال)`;
-         } else {
-             comparison = '(يساوي المتوسط السنوي)';
-         }
-         injectedAvgMonthlyText = `\n🔄 مقارنة بالمتوسط: \n   ${comparison}`;
-      }
-
-      return `═══════════════════════════════════════
-           📊 تقرير المبيعات الشهري
-═══════════════════════════════════════
-
-📅 الشهر: ${targetMonthYear}
-
-💰 إجمالي صافي مبيعات الشهر
-   ${formatNum(monthTotalSales)} ريال
-
-📈 المتوسط اليومي للمبيعات
-   ${formatNum(avgDaily)} ريال بناءً على ${daysCountInMonth} يوم عمل مسجل${injectedAvgMonthlyText}
-
-📊 إجمالي مبيعات السنة حتى الآن (تراكمي)
-   ${formatNum(yearTotalSales)} ريال
-
-═══════════════════════════════════════
-   تم إنشاء التقرير في: ${timeStr}`;
-    }
-    else {
-      // Yearly
-      const yearData = yearlyList.find((y:any) => y.year === targetYear) as any;
-      const yearTotalSales = yearData ? yearData.totalPureNetSales : 0;
-      
-      const uniqueMonths = yearData ? Object.keys(yearData.months).length : 0;
-      const avgMonthly = uniqueMonths > 0 ? yearTotalSales / uniqueMonths : 0;
-
-      return `═══════════════════════════════════════
-           📊 تقرير المبيعات السنوي
-═══════════════════════════════════════
-
-📅 السنة: ${targetYear}
-
-💰 إجمالي صافي مبيعات السنة
-   ${formatNum(yearTotalSales)} ريال
-
-📈 المتوسط الشهري للمبيعات
-   ${formatNum(avgMonthly)} ريال بناءً على ${uniqueMonths} أشهر مسجلة
-
-═══════════════════════════════════════
-   تم إنشاء التقرير في: ${timeStr}`;
-    }
-  };
-
-  const reportText = generateReportText();
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(reportText).then(() => {
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    });
-  };
-
-  const handlePrintSales = () => {
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html dir="rtl">
-          <head>
-            <title>تقرير المبيعات</title>
-            <style>
-              body { font-family: 'Cairo', system-ui, -apple-system, sans-serif; padding: 40px; margin: 0; line-height: 1.8; color: #1e293b; background: white; }
-              .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
-              .header h2 { margin: 0; color: #0f172a; font-size: 24px; }
-              .content { white-space: pre-wrap; font-size: 16px; font-weight: 500; font-family: 'Courier New', Courier, monospace; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
-              @media print {
-                 body { padding: 0; }
-                 .content { border: none; background: transparent; padding: 0; font-size: 14px; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h2>تقرير المبيعات - الخزينة الذكية</h2>
-            </div>
-            <div class="content">${reportText}</div>
-            <script>
-              window.onload = () => { window.print(); window.close(); }
-            </script>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-    }
+  const calculateGrowthPercentage = () => {
+     // A simple fallback if we don't have previous period exactly, just return a random positive looking string or empty.
+     // Better not to fake data, we can just return an empty string if we can't reliably compute it.
+     return ''; 
   };
 
   return (
-    <div className="print:block print:w-full space-y-6">
+    <div className="space-y-6 print:block print:w-full animate-in fade-in zoom-in-95 duration-300 pb-10">
       
-      {/* Overall Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:hidden">
-        <div className="bg-white/90 backdrop-blur-2xl p-6  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <p className="text-slate-500 font-bold text-[15px] mb-1">إجمالي صافي المبيعات المسجلة</p>
-              <h3 className="text-4xl font-black text-blue-600 font-mono" dir="ltr">
-                {formatNum(dailyMetrics.reduce((sum, d) => sum + d.pureNetSales, 0) + (currentState.historicalMonths?.reduce((acc: number, h: any)=>acc+h.netSales,0) || 0))}
-              </h3>
-            </div>
-            <div className="bg-blue-50 p-4 rounded-2xl text-blue-600">
-              <TrendingUp size={28} />
-            </div>
-          </div>
-          <p className="text-xs text-slate-400">إجمالي المبيعات الصافية عبر جميع الأيام والشهور التراكمية</p>
+      {/* Header and Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 print:hidden backdrop-blur-md bg-white/40 p-4 rounded-2xl border border-white/60 shadow-sm">
+        <div>
+          <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+            <Activity className="text-blue-600" />
+            لوحة التأشيرات والتحليلات
+          </h2>
+          <p className="text-[13px] text-slate-500 mt-1 font-medium">نظرة شاملة ومتقدمة على مؤشرات الأداء والنمو المالي</p>
         </div>
         
-        <div className="bg-white/90 backdrop-blur-2xl p-6  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <p className="text-slate-500 font-bold text-[15px] mb-1">أعلى شهر بالمبيعات</p>
-              <h3 className="text-3xl font-black text-emerald-600 font-mono" dir="ltr">
-                {(() => {
-                  const flattened = yearlyList.flatMap((y: any) => Object.values(y.months)) as any[];
-                  if (flattened.length === 0) return '0';
-                  const maxMonth = flattened.reduce((max, current) => (max.totalPureNetSales > current.totalPureNetSales) ? max : current, flattened[0]);
-                  return `${formatNum(maxMonth.totalPureNetSales)}`;
-                })()}
-              </h3>
-            </div>
-            <div className="bg-emerald-50 p-4 rounded-2xl text-emerald-600">
-              <BarChart3 size={28} />
-            </div>
-          </div>
-          <p className="text-xs text-slate-400">
-             في {(() => {
-                  const flattened = yearlyList.flatMap((y: any) => Object.values(y.months)) as any[];
-                  if (flattened.length === 0) return '-';
-                  const maxMonth = flattened.reduce((max, current) => (max.totalPureNetSales > current.totalPureNetSales) ? max : current, flattened[0]);
-                  return `شهر ${maxMonth.monthYear}`;
-                })()}
-          </p>
-        </div>
-      </div>
-
-      {/* Add Reports Generator Section */}
-      <div className="bg-white/90 backdrop-blur-2xl p-6  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 print:hidden">
-        <h2 className="text-2xl font-bold flex items-center gap-3 mb-6 text-slate-800">
-          <FileText className="text-purple-600" size={28} /> تقارير نصية (قابلة للنسخ)
-        </h2>
-        
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-full lg:w-1/3 flex flex-col gap-4">
-            <div>
-              <label className="block text-[15px] font-bold text-slate-700 mb-2">نوع التقرير</label>
-              <div className="flex bg-slate-100 p-1 rounded-xl">
-                {[{id: 'daily', label: 'يومي'}, {id: 'monthly', label: 'شهري'}, {id: 'yearly', label: 'سنوي'}].map(rt => (
-                  <button 
-                    key={rt.id}
-                    onClick={() => setReportType(rt.id as any)}
-                    className={`flex-1 py-2 text-[15px] font-bold rounded-xl transition-all ${reportType === rt.id ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/50'}`}
-                  >
-                    {rt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-[15px] font-bold text-slate-700 mb-2">
-                {reportType === 'daily' ? 'اختر اليوم' : reportType === 'monthly' ? 'اختر أي يوم في الشهر' : 'اختر أي يوم في السنة'}
-              </label>
-              <input 
-                type="date" 
-                value={reportDateInput}
-                onChange={(e) => setReportDateInput(e.target.value)}
-                className="w-full bg-slate-50 hover:bg-white border text-slate-700 border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-[3px] focus:ring-purple-500/20 focus:border-purple-500 focus:bg-white transition-all text-[15px]"
-              />
-            </div>
-            
-            <div className="flex gap-2 mt-auto">
-              <button 
-                onClick={handlePrintSales}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all bg-blue-600 text-white hover:bg-blue-700 active:scale-95 shadow-sm hover:shadow-md"
-              >
-                <Printer size={20} />
-                طباعة التقرير
-              </button>
-              <button 
-                onClick={handleCopy}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${copySuccess ? 'bg-emerald-100 text-emerald-700 pointer-events-none' : 'bg-purple-600 text-white hover:bg-purple-700 active:scale-95 shadow-sm hover:shadow-md'}`}
-              >
-                {copySuccess ? <Check size={20} /> : <Copy size={20} />}
-                {copySuccess ? 'تم' : 'WhatsApp'}
-              </button>
-            </div>
-          </div>
-          
-          <div className="w-full lg:w-2/3 bg-slate-800 text-slate-300 rounded-2xl p-4 md:p-6 relative overflow-hidden font-mono text-[15px] leading-relaxed whitespace-pre-wrap flex items-center justify-center min-h-[250px]" dir="rtl">
-             <div className="relative z-10 w-full text-right">{reportText}</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white/90 backdrop-blur-2xl p-6  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5">
-        <h2 className="text-2xl font-bold flex flex-col md:flex-row md:items-center justify-between mb-6 text-slate-800 border-b border-slate-100 pb-4 gap-4">
-          <div className="flex flex-col md:flex-row items-center gap-3">
-            <BarChart3 className="text-blue-600" size={28} /> ملخص الأداء الشهري والسنوي
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-               onClick={() => {
-                 setExpandedYears(yearlyList.map((y: any) => y.year));
-                 setTimeout(() => window.print(), 300);
-               }}
-               className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm active:scale-95 print:hidden border border-slate-300"
-            >
-              <Printer size={20} /> طباعة
-            </button>
-            <button
-               onClick={() => setShowHistoryModal(true)}
-               className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm active:scale-95 print:hidden"
-            >
-              <PlusCircle size={20} /> إدخال تاريخي
-            </button>
+        <div className="flex bg-white/80 p-1 rounded-xl shadow-sm border border-slate-200/50 w-full sm:w-auto">
+          {[
+            { id: 'all', label: 'كل الأوقات' },
+            { id: 'year', label: 'العام الحالي' },
+            { id: 'month', label: 'الشهر الحالي' }
+          ].map(rt => (
             <button 
-              onClick={handleAnalyzeSales}
-              disabled={aiLoading}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-md active:scale-95 disabled:opacity-50 print:hidden"
+              key={rt.id}
+              onClick={() => { setDateRange(rt.id as any); setAiAnalysis(null); }}
+              className={`flex-1 sm:px-6 py-2 text-[13px] sm:text-sm font-bold rounded-lg transition-all duration-300 ${dateRange === rt.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
             >
-              {aiLoading ? (
-                <div className="flex items-center gap-2 animate-pulse">جاري تحليل البيانات...</div>
-              ) : (
-                <>تحليل بواسطة الذكاء الاصطناعي <span className="bg-white/20 px-2 py-0.5 rounded-xl text-xs leading-none">AI</span></>
-              )}
+              {rt.label}
             </button>
-          </div>
-        </h2>
-
-        {aiAnalysis && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-8 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-3xl p-6 md:p-8 shadow-sm"
-          >
-            <h3 className="font-black text-indigo-900 text-xl mb-6 flex items-center gap-3">
-              <Sparkles className="text-purple-600" /> تحليل خبير الذكاء الاصطناعي
-            </h3>
-            <div className="prose prose-indigo prose-sm sm:prose-base max-w-none 
-               prose-headings:text-indigo-900 prose-headings:font-bold prose-h3:text-lg 
-               prose-p:leading-relaxed text-slate-700
-               prose-table:w-full prose-table:border-collapse prose-table:rounded-xl prose-table:overflow-hidden prose-table:shadow-sm prose-table:my-6
-               prose-th:bg-indigo-100 prose-th:text-indigo-900 prose-th:p-3 prose-th:text-right prose-th:border-b-2 prose-th:border-indigo-200
-               prose-td:p-3 prose-td:border-b prose-td:border-indigo-50 prose-tr:bg-white
-               prose-strong:text-indigo-800" dir="rtl">
-              <Markdown remarkPlugins={[remarkGfm]}>{aiAnalysis}</Markdown>
-            </div>
-            <div className="mt-6 flex justify-end border-t border-indigo-100 pt-4">
-               <button onClick={() => setAiAnalysis(null)} className="text-indigo-500 hover:text-indigo-700 font-bold transition-colors text-[15px] flex items-center gap-2">
-                 <X size={16} /> إغلاق التحليل
-               </button>
-            </div>
-          </motion.div>
-        )}
-
-        {yearlyList.length > 0 ? (
-          <div className="space-y-6">
-            {yearlyList.map((yData: any) => (
-              <div key={yData.year} className="bg-white/60 backdrop-blur-sm border border-slate-200/80 rounded-[2rem] overflow-hidden transition-all shadow-sm">
-                <button 
-                  onClick={() => toggleYear(yData.year)}
-                  className="w-full bg-white p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-50 transition-colors border-b border-slate-100"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2.5 rounded-2xl transition-all duration-300 ${expandedYears.includes(yData.year) ? 'rotate-180 bg-slate-100 text-slate-700' : 'bg-blue-50 text-blue-600 shadow-sm'}`}>
-                      <ChevronDown size={22} />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-slate-800 text-right">سنة {yData.year}</h3>
-                      <p className="text-slate-500 text-[15px] text-right mt-1">{Object.keys(yData.months).length} أشهر مسجلة</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-6 self-start md:self-auto">
-                    <div className="text-right">
-                      <span className="text-xs text-slate-500 font-bold block mb-1">صافي المبيعات الكلي السنة</span>
-                      <span className="text-xl font-bold text-blue-600 font-mono" dir="ltr">{formatNum(yData.totalPureNetSales)}</span>
-                    </div>
-                  </div>
-                </button>
-                
-                <AnimatePresence>
-                  {expandedYears.includes(yData.year) && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="p-6 pb-2 border-b border-slate-200">
-                        <div className="h-64 w-full">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={Object.values(yData.months).sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime())} margin={{ top: 10, right: 30, left: 0, bottom: 0 }} dir="ltr">
-                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                              <XAxis dataKey="monthYear" tick={{ fill: '#64748B', fontSize: 12 }} axisLine={false} tickLine={false} />
-                              <YAxis tick={{ fill: '#64748B', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(value) => `${value / 1000}k`} />
-                              <RechartsTooltip cursor={{ fill: '#F1F5F9' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }} />
-                              <Bar dataKey="totalPureNetSales" name="المبيعات" fill="#4F46E5" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </div>
-                      <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-100/50">
-                        {Object.values(yData.months).sort((a: any, b: any) => a.dateObj.getTime() - b.dateObj.getTime()).map((m: any) => (
-                          <div key={m.monthYear} className="bg-white border text-center relative border-slate-200 rounded-2xl hover:shadow-md transition-all overflow-hidden flex flex-col">
-                             <div className="p-5 relative flex-1">
-                               <div className="absolute top-0 right-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400"></div>
-                               {m.isHistorical && (
-                                 <button 
-                                   onClick={(e) => {
-                                     e.stopPropagation();
-                                     if (m.historicalId) {
-                                       handleDeleteHistoricalItem(m.historicalId);
-                                     } else {
-                                       // backward compatibility for old historicalMonths
-                                       onUpdate((prevState: any) => ({
-                                         ...prevState,
-                                         historicalMonths: (prevState.historicalMonths || []).filter((h: any) => h.monthYear !== m.monthYear)
-                                       }));
-                                     }
-                                   }}
-                                   className="absolute top-3 left-3 text-rose-400 hover:text-rose-600 border border-slate-100 p-1 rounded-md hover:bg-rose-50"
-                                   title="حذف هذه البيانات"
-                                 >
-                                   <Trash2 size={14} />
-                                 </button>
-                               )}
-                               <h4 className="text-xl font-bold text-slate-700 mb-1 border-b border-slate-100 pb-2">
-                                 {m.isHistorical ? (
-                                    m.monthYear.startsWith('إجمالي/') ? `إجمالي سنة ${m.monthYear.split('/')[1]}` : (m.monthYear.split('/').length === 3 ? `يوم ${m.monthYear}` : `شهر ${m.monthYear}`)
-                                 ) : `شهر ${m.monthYear}`}
-                               </h4>
-                               <p className="text-xs text-slate-500 mb-4">{m.isHistorical ? 'تم إدخاله يدوياً' : `${m.daysCount} أيام عمل مسجلة`}</p>
-                               
-                               <div className="flex flex-col gap-1 items-center mb-3">
-                                 <span className="text-[15px] text-slate-500 font-bold">صافي المبيعات</span>
-                                 <span className="text-2xl font-black text-blue-700 font-mono" dir="ltr">{formatNum(m.totalPureNetSales)}</span>
-                               </div>
-                             </div>
-                             
-                             <div className="pt-3 border-t border-slate-100 bg-slate-50 relative mt-auto p-4 rounded-b-2xl">
-                                <div className="flex justify-between items-center text-xs px-1">
-                                  <span className="text-slate-500 font-bold">المتوسط اليومي</span>
-                                  <span className="font-bold text-slate-700 font-mono" dir="ltr">{formatNum(m.daysCount > 0 ? m.totalPureNetSales / m.daysCount : 0)}</span>
-                                </div>
-                             </div>
-
-                             {/* Toggle days visibility button */}
-                             {(!m.isHistorical || m.monthYear.split('/').length < 3) && (
-                                <button 
-                                  onClick={() => toggleMonth(m.monthYear)}
-                                  className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs flex justify-center items-center gap-2 border-t border-slate-200 transition-colors"
-                                >
-                                  {expandedMonths.includes(m.monthYear) ? (
-                                    <>إخفاء الأيام <ChevronDown size={14} className="rotate-180" /></>
-                                  ) : (
-                                    <>عرض الأيام <ChevronDown size={14} /></>
-                                  )}
-                                </button>
-                             )}
-
-                             {/* Days Breakdown Table */}
-                             <AnimatePresence>
-                               {expandedMonths.includes(m.monthYear) && (!m.isHistorical || m.monthYear.split('/').length < 3) && (
-                                 <motion.div
-                                   initial={{ height: 0, opacity: 0 }}
-                                   animate={{ height: 'auto', opacity: 1 }}
-                                   exit={{ height: 0, opacity: 0 }}
-                                   className="overflow-hidden bg-white border-t border-slate-200 text-right"
-                                 >
-                                   <div className="overflow-y-auto max-h-48 text-xs">
-                                     <table className="w-full border-collapse">
-                                       <thead className="bg-slate-50 sticky top-0 border-b border-slate-200">
-                                         <tr>
-                                           <th className="py-5 px-3 font-bold text-slate-600">التاريخ</th>
-                                           <th className="py-5 px-3 font-bold text-slate-600 border-r border-slate-200 text-center">المبيعات</th>
-                                           <th className="py-5 px-3 w-10 text-center border-r border-slate-200"></th>
-                                         </tr>
-                                       </thead>
-                                       <tbody>
-                                          {dailyMetrics.filter((d: any) => d.monthYear === m.monthYear).map((day: any, idx: number) => (
-                                            <tr key={`${day.dateStr}-${day.isCurrent ? 'cur' : 'hist'}-${idx}`} className={`border-b border-slate-100 hover:bg-blue-50/50 ${day.isCurrent ? 'bg-blue-50/30' : ''}`}>
-                                               <td className="py-4 px-3 font-mono text-slate-700">{day.dateName}</td>
-                                               <td className="py-4 px-3 font-mono font-bold text-blue-700 border-r border-slate-100 text-center" dir="ltr">{formatNum(day.pureNetSales)}</td>
-                                               <td className="py-1 px-1 border-r border-slate-100 text-center">
-                                                 {day.isHistoricalDay ? (
-                                                   <button
-                                                     onClick={(e) => {
-                                                       e.stopPropagation();
-                                                       handleDeleteHistoricalItem(day.historicalId);
-                                                     }}
-                                                     className="text-rose-400 hover:text-rose-600 p-1"
-                                                     title="حذف"
-                                                   ><Trash2 size={12} /></button>
-                                                 ) : (
-                                                    <span className="text-slate-300 text-[10px]" title="مسجل بالنظام">--</span>
-                                                 )}
-                                               </td>
-                                            </tr>
-                                          ))}
-                                          {dailyMetrics.filter((d: any) => d.monthYear === m.monthYear).length === 0 && (
-                                            <tr>
-                                              <td colSpan={3} className="py-3 text-center text-slate-400">لا توجد تفاصيل يومية</td>
-                                            </tr>
-                                          )}
-                                       </tbody>
-                                     </table>
-                                   </div>
-                                 </motion.div>
-                               )}
-                             </AnimatePresence>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-slate-500 text-center py-6">لا توجد بيانات كافية لعرض التقرير</p>
-        )}
-      </div>
-
-      <div className="bg-white/90 backdrop-blur-2xl p-6  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 print:break-inside-avoid">
-        <h2 className="text-2xl font-bold flex items-center gap-3 mb-8 text-slate-800">
-          <TrendingUp className="text-blue-600" size={28} /> حركة المبيعات الصافية اليومية
-        </h2>
-        
-        {dailyMetrics.length >= 1 ? (
-          <div className="h-[400px] w-full mb-8" dir="ltr">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={dailyMetrics} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.3} vertical={false} />
-                <XAxis dataKey="dateName" tick={{ fill: '#64748b', fontSize: 13, fontFamily: 'monospace' }} tickMargin={10} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 13, fontFamily: 'monospace' }} tickFormatter={(val) => Math.floor(val).toLocaleString()} width={80} />
-                <RechartsTooltip 
-                  formatter={(value: number, name: string) => [formatNum(value), 'صافي المبيعات']}
-                  labelFormatter={(label) => `التاريخ: ${label}`}
-                  contentStyle={{ borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', fontFamily: 'Cairo', textAlign: 'right', padding: '12px 16px' }}
-                />
-                <Legend wrapperStyle={{ fontFamily: 'Cairo', paddingTop: '20px' }} formatter={() => 'صافي المبيعات'} />
-                <Line type="monotone" dataKey="pureNetSales" name="pureNetSales" stroke="#3b82f6" strokeWidth={4} dot={{ r: 5, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8, strokeWidth: 0 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <p className="text-slate-500 text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300 font-medium">لا توجد مبيعات مسجلة حتى الآن.</p>
-        )}
-
-        <div className="overflow-x-auto print:mt-8">
-          <table className="w-full text-right text-base border-collapse">
-            <thead>
-              <tr className="bg-slate-100 border-b-2 border-slate-200 text-slate-700">
-                <th className="py-4 px-6 font-bold w-1/3">التاريخ</th>
-                <th className="py-4 px-6 font-bold text-center text-blue-700">صافي المبيعات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dailyMetrics.map((day: any, idx: number) => (
-                <tr key={`${day.dateStr}-${day.isCurrent ? 'cur' : 'hist'}-${idx}`} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${day.isCurrent ? 'bg-blue-50/40 hover:bg-blue-50/60' : ''}`}>
-                  <td className="py-4 px-6 font-bold text-slate-700 flex items-center gap-3 border-l border-slate-100">
-                    <span className="font-mono text-[15px]">{day.dateStr}</span>
-                    {day.isCurrent && <span className="bg-blue-600 text-white px-2 py-0.5 rounded-md text-xs">اليوم (جاري)</span>}
-                  </td>
-                  <td className="py-4 px-6 font-black text-center text-blue-800 font-mono text-lg bg-blue-50/20" dir="ltr">{formatNum(day.pureNetSales)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          ))}
         </div>
       </div>
 
-      <AnimatePresence>
-        {showHistoryModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:hidden"
-            dir="rtl"
-          >
-            <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
-              className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-200"
-            >
-              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h3 className="font-bold text-lg text-slate-800">إدخال مبيعات تاريخية سابقة</h3>
-                <button onClick={() => setShowHistoryModal(false)} className="text-slate-400 hover:text-slate-600 bg-white shadow-sm p-1.5 rounded-xl border border-slate-200"><X size={20} /></button>
-              </div>
-              
-              <div className="p-6 space-y-4">
-                <div>
-                   <label className="block text-[15px] font-bold text-slate-700 mb-2">نوع الإدخال</label>
-                   <select 
-                      value={histType} onChange={(e) => setHistType(e.target.value)} 
-                      className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-bold" 
-                   >
-                     <option value="year">تجميع على مستوى السنة</option>
-                     <option value="month">تجميع على مستوى الشهر</option>
-                     <option value="day">يوم محدد</option>
-                   </select>
-                </div>
-                
-                {histType === 'year' && (
-                  <div>
-                      <label className="block text-[15px] font-bold text-slate-700 mb-2">السنة</label>
-                      <input 
-                        type="number" min="2000" max="2100" placeholder="مثال: 2025" 
-                        value={histYear} onChange={(e) => setHistYear(e.target.value)} 
-                        className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono" 
-                      />
-                  </div>
-                )}
-                
-                {histType === 'month' && (
-                  <div className="grid grid-cols-2 gap-4">
-                     <div>
-                        <label className="block text-[15px] font-bold text-slate-700 mb-2">الشهر رقم</label>
-                        <input 
-                          type="number" min="1" max="12" placeholder="مثال: 1" 
-                          value={histMonth} onChange={(e) => setHistMonth(e.target.value)} 
-                          className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono" 
-                        />
-                     </div>
-                     <div>
-                        <label className="block text-[15px] font-bold text-slate-700 mb-2">السنة</label>
-                        <input 
-                          type="number" min="2000" max="2100" placeholder="مثال: 2025" 
-                          value={histYear} onChange={(e) => setHistYear(e.target.value)} 
-                          className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono" 
-                        />
-                     </div>
-                  </div>
-                )}
-                
-                {histType === 'day' && (
-                  <div>
-                      <label className="block text-[15px] font-bold text-slate-700 mb-2">التاريخ</label>
-                      <input 
-                        type="date"
-                        value={histDayDate} onChange={(e) => setHistDayDate(e.target.value)} 
-                        className="w-full bg-slate-50 hover:bg-white border text-center text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono" 
-                      />
-                  </div>
-                )}
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 print:hidden">
+        <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+          <div className="absolute top-0 right-0 w-1.5 h-full bg-blue-500"></div>
+          <p className="text-slate-500 text-sm font-bold mb-3 flex items-center gap-2">
+             <TrendingUp size={16} className="text-blue-500"/> إجمالي المبيعات
+          </p>
+          <div className="flex items-end justify-between">
+            <h3 className="text-3xl font-black text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(totalSalesVal)}</h3>
+          </div>
+        </div>
 
-                <div>
-                   <label className="block text-[15px] font-bold text-slate-700 mb-2">المبيعات الصافية</label>
-                   <input 
-                      type="number" placeholder="مثال: 120000" 
-                      value={histSales} onChange={(e) => setHistSales(e.target.value)} 
-                      className="w-full bg-slate-50 hover:bg-white border text-left text-slate-700 border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono text-lg" 
-                   />
-                </div>
-              </div>
-              
-              <div className="p-5 border-t border-slate-100 bg-slate-50">
-                <button 
-                  onClick={handleAddHistoricalMonth}
-                  className="w-full py-3 rounded-xl font-bold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <Plus size={20} /> إضافة للسجل
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+        <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+          <div className="absolute top-0 right-0 w-1.5 h-full bg-rose-500"></div>
+          <p className="text-slate-500 text-sm font-bold mb-3 flex items-center gap-2">
+            <TrendingDown size={16} className="text-rose-500"/> المنصرفات والمدفوعات
+          </p>
+          <div className="flex items-end justify-between">
+            <h3 className="text-3xl font-black text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(totalExpensesVal)}</h3>
+          </div>
+        </div>
+
+        <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+          <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500"></div>
+          <p className="text-slate-500 text-sm font-bold mb-3 flex items-center gap-2">
+            <Wallet size={16} className="text-emerald-500"/> صافي التدفق المالي
+          </p>
+          <div className="flex items-end justify-between">
+            <h3 className={`text-3xl font-black font-mono tracking-tight ${totalNetVal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`} dir="ltr">{formatCurrency(totalNetVal)}</h3>
+          </div>
+        </div>
+
+        <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+          <div className="absolute top-0 right-0 w-1.5 h-full bg-indigo-500"></div>
+          <p className="text-slate-500 text-sm font-bold mb-3 flex items-center gap-2">
+            <CalendarDays size={16} className="text-indigo-500"/> المتوسط اليومي
+          </p>
+          <div className="flex items-end justify-between">
+            <h3 className="text-3xl font-black text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(avgDailySales)}</h3>
+            <div className="text-indigo-600 bg-indigo-50/80 px-2 py-1 rounded-lg text-[11px] font-bold">
+               ${daysRecorded} أيام
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Charts Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Trend Combo Chart */}
+        <div className="bg-white/90 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 lg:col-span-2 flex flex-col transition-all hover:shadow-lg">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
+              <LineChartIcon className="text-blue-500" size={20} /> الاتجاه العام للمبيعات والمصروفات
+            </h3>
+          </div>
+          {dailyMetrics.length >= 2 ? (
+            <div className="h-[320px] w-full" dir="ltr">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={dailyMetrics} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                  <XAxis dataKey="dateName" tick={{ fill: '#64748B', fontSize: 12, fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickMargin={10} minTickGap={20} />
+                  <YAxis tick={{ fill: '#64748B', fontSize: 12, fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val >= 1000 ? val/1000 + 'k' : val}`} />
+                  <RechartsTooltip 
+                    formatter={(value: number, name: string) => [formatNum(value), name === 'pureNetSales' ? 'المبيعات الصافية' : 'المصروفات والمدفوعات']}
+                    labelFormatter={(label) => `التاريخ: ${label}`}
+                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)', fontFamily: 'Cairo', textAlign: 'right', fontWeight: 'bold' }}
+                    itemStyle={{ padding: '4px 0' }}
+                  />
+                  <Legend wrapperStyle={{ fontFamily: 'Cairo', fontSize: '13px', paddingTop: '15px' }} />
+                  <Area type="monotone" dataKey="pureNetSales" name="المبيعات الصافية" fill="url(#colorSales)" stroke="#3b82f6" strokeWidth={3} activeDot={{r: 6, strokeWidth: 0}} />
+                  <Line type="monotone" dataKey="expenses" name="المصروفات والمدفوعات" stroke="#f43f5e" strokeWidth={2} dot={{ r: 3, fill: '#f43f5e', strokeWidth: 0 }} activeDot={{r: 5, strokeWidth: 0}} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 min-h-[250px]">
+              <LineChartIcon size={40} className="mb-3 opacity-30" />
+              <p className="font-medium text-[15px]">نحتاج إلى يومين على الأقل لتوضيح الاتجاه</p>
+            </div>
+          )}
+        </div>
+
+        {/* POS Breakdown Chart */}
+        <div className="bg-white/90 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 flex flex-col transition-all hover:shadow-lg">
+          <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2 text-lg">
+            <PieChartIcon className="text-emerald-500" size={20} /> مساهمة نقاط البيع
+          </h3>
+          {posChartData.length > 0 ? (
+            <div className="h-[280px] w-full flex flex-col" dir="ltr">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={posChartData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {posChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="hover:opacity-80 transition-opacity outline-none" />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip 
+                    formatter={(value: number) => formatNum(value)}
+                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontFamily: 'Cairo', textAlign: 'right', fontSize: '14px', fontWeight: 'bold' }}
+                  />
+                  <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontFamily: 'Cairo', fontSize: '12px', paddingTop: '10px' }} iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 min-h-[250px]">
+              <PieChartIcon size={40} className="mb-3 opacity-30" />
+              <p className="font-medium text-[15px]">تصنيف مبيعات النقاط غير متاح</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* AI Assistant Section */}
+      <div className="bg-indigo-950 rounded-[1.5rem] shadow-xl p-[2px] relative overflow-hidden mt-8 print:hidden transition-all hover:shadow-2xl">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/microbial-mat.png')] opacity-10 MixBlendMode-overlay"></div>
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600 rounded-full mix-blend-screen filter blur-[80px] opacity-20"></div>
+        <div className="bg-[#0f172a]/90 backdrop-blur-xl rounded-[1.4rem] p-6 md:p-8 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 border border-indigo-500/20">
+          <div className="text-right md:flex-1">
+            <h3 className="text-xl md:text-2xl font-black text-white mb-2 flex items-center gap-2">
+              <Sparkles className="text-indigo-400" /> تحليل مالي متقدم (AI)
+            </h3>
+            <p className="text-indigo-200 text-[14px] leading-relaxed max-w-2xl opacity-90">
+              احصل على تحليل فوري وعميق لبيانات الخزينة والمبيعات ({dateRange === 'all' ? 'لكل الأوقات' : dateRange === 'year' ? 'للعام الحالي' : 'للشهر الحالي'}) لاكتشاف فرص النمو، ومراقبة المصروفات بدقة.
+            </p>
+          </div>
+          <button 
+            onClick={handleAnalyzeSales}
+            disabled={aiLoading}
+            className="w-full md:w-auto shrink-0 bg-white text-indigo-900 px-8 py-3.5 rounded-xl font-black hover:bg-slate-100 hover:scale-105 transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)] disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2"
+          >
+            {aiLoading ? (
+              <><div className="w-5 h-5 border-2 border-indigo-900 border-t-transparent rounded-full animate-spin"></div> جاري المعالجة...</>
+            ) : (
+              <><Sparkles size={18} className="text-indigo-600" /> بدء التحليل</>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* AI Analysis Result */}
+      {aiAnalysis && (
+        <div className="bg-gradient-to-b from-indigo-50 to-white border border-indigo-100 rounded-[1.5rem] p-6 md:p-8 shadow-md mt-6 animate-in slide-in-from-top-4 duration-500">
+          <div className="flex justify-between items-start mb-6 border-b border-indigo-100 pb-4">
+            <h3 className="font-black text-indigo-900 text-xl flex items-center gap-2">
+              <FileText className="text-indigo-600" /> تقرير المحلل المالي
+            </h3>
+            <button onClick={() => setAiAnalysis(null)} className="text-slate-400 hover:text-indigo-700 bg-white p-2 rounded-xl shadow-sm transition-colors border border-slate-100">
+              <X size={18} />
+            </button>
+          </div>
+          <div className="prose prose-indigo prose-sm sm:prose-base max-w-none 
+             prose-headings:text-indigo-900 prose-headings:font-bold prose-h3:text-lg 
+             prose-p:leading-relaxed text-slate-700
+             prose-table:w-full prose-table:border-collapse prose-table:rounded-xl prose-table:overflow-hidden prose-table:shadow-sm prose-table:my-6
+             prose-th:bg-indigo-600 prose-th:text-white prose-th:p-4 prose-th:text-right prose-th:border-0
+             prose-td:p-4 prose-td:border-b prose-td:border-indigo-50 prose-tr:bg-white prose-tr:hover:bg-indigo-50/30 transition-colors
+             prose-strong:text-indigo-900" dir="rtl">
+            <Markdown remarkPlugins={[remarkGfm]}>{aiAnalysis}</Markdown>
+          </div>
+        </div>
+      )}
+
+      {/* Daily Records List */}
+      <div className="bg-white/90 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 mt-8 print:hidden transition-all hover:shadow-lg">
+        <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2 text-lg">
+           <Layers className="text-slate-500" size={20} /> السجلات اليومية ({dailyMetrics.length})
+        </h3>
+        {dailyMetrics.length > 0 ? (
+          <div className="overflow-x-auto rounded-xl border border-slate-200/60">
+            <table className="w-full text-right text-sm border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600">
+                  <th className="py-4 px-6 font-bold w-1/3 text-right">التاريخ</th>
+                  <th className="py-4 px-6 font-bold text-center text-blue-700">المبيعات</th>
+                  <th className="py-4 px-6 font-bold text-center text-rose-600">المصروفات</th>
+                  <th className="py-4 px-6 font-bold text-center text-emerald-600">الصافي</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dailyMetrics.map((day: any, idx: number) => (
+                  <tr key={`${day.dateStr}-${idx}`} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
+                    <td className="py-4 px-6 font-bold text-slate-700 flex items-center gap-3 border-l border-slate-100">
+                      <span className="font-mono text-[14px]">{day.dateStr}</span>
+                      {day.isCurrent && <span className="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md text-[10px] tracking-tight">قيد التشغيل</span>}
+                    </td>
+                    <td className="py-4 px-6 font-bold text-center text-blue-700 font-mono" dir="ltr">{formatCurrency(day.pureNetSales)}</td>
+                    <td className="py-4 px-6 font-bold text-center text-rose-600 font-mono" dir="ltr">{formatCurrency(day.expenses)}</td>
+                    <td className="py-4 px-6 font-black text-center text-emerald-600 font-mono bg-emerald-50/30" dir="ltr">{formatCurrency(day.pureNetSales - day.expenses)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10 text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+            <CalendarDays size={40} className="mb-3 opacity-30" />
+            <p className="font-medium text-[15px]">لا يوجد سجلات لهذه الفترة</p>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
 
     </div>
   );
@@ -3519,7 +3023,7 @@ export default function App() {
           </div>
         )}
 
-        {(!isExporting || exportMode === 'detailed') && (
+        {(!isExporting || exportMode === 'detailed') && (!userProfile || userProfile.role !== 'admin' || currentBranchId) && (
           <div className="bg-white/90 backdrop-blur-md px-4 sm:px-5 py-5 rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 mb-8 flex flex-wrap gap-8 items-center print:hidden">
             <div className="flex items-center gap-3">
               <label className="font-semibold text-slate-600">تاريخ اليوم:</label>
@@ -3536,7 +3040,7 @@ export default function App() {
         <div className={`flex flex-col lg:flex-row gap-8 ${isExporting && exportMode === 'summary' ? 'justify-center' : ''}`}>
           {(!isExporting || exportMode === 'detailed') && (
             <div className="flex-1 min-w-0 print:w-full">
-              {!isExporting && (
+              {(!isExporting && (!userProfile || userProfile.role !== 'admin' || currentBranchId)) && (
                 <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-2xl border-t border-slate-200 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-2 print:hidden md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-3 md:gap-3 overscroll-x-contain shadow-[0_-10px_30px_rgba(0,0,0,0.05)] md:shadow-none items-center">
                   {[
                     { id: 'sales', label: 'المبيعات', icon: Receipt },
@@ -3573,6 +3077,41 @@ export default function App() {
               )}
 
               <div className="print:block">
+                {userProfile?.role === 'admin' && !currentBranchId && activeTab !== 'admin' && activeTab !== 'settings' ? (
+                  <div className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-xl border border-blue-100/60 p-8 sm:p-12 mb-8 text-center mt-4">
+                    <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-blue-100/50">
+                       <Database size={48} />
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">اختر الفرع للبدء</h2>
+                    <p className="text-slate-600 font-medium text-base mb-10 max-w-xl mx-auto leading-relaxed">بصفتك مديراً للنظام، يجب عليك اختيار الفرع الذي تود استعراض أو إدخال بيانات الخزينة والمبيعات الخاصة به.</p>
+                    
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+                      <select 
+                        value=""
+                        onChange={(e) => {
+                          setCurrentBranchId(e.target.value || null);
+                          if (e.target.value) {
+                            loadBranchData(e.target.value);
+                          }
+                        }}
+                        className="bg-slate-50 border-2 border-blue-200 text-blue-900 text-lg rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 block w-full sm:w-[400px] px-6 py-4 outline-none font-bold shadow-sm transition-all hover:bg-white hover:border-blue-300 cursor-pointer"
+                      >
+                        <option value="" disabled>-- الرجاء الضغط لاختيار الفرع --</option>
+                        {branches.filter(b => !b.deleted).map(b => (
+                          <option key={b.id} value={b.id}>{b.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {branches.length === 0 && (
+                       <p className="text-rose-500 font-bold mb-4 bg-rose-50 p-3 rounded-xl inline-block">لا توجد فروع مضافة في النظام حالياً. يرجى إضافة فروع من الإعدادات ⚙️</p>
+                    )}
+                    
+                    <div className="mt-10 pt-8 border-t border-slate-100">
+                      <p className="text-sm text-slate-500 mb-4">أو يمكنك إدارة النظام والنسخ الاحتياطي عبر قائمة الإعدادات العلوية</p>
+                    </div>
+                  </div>
+                ) : (
+                <>
                 {/* Sales Tab */}
                 <div className={`${activeTab === 'sales' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
                 <div className="bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
@@ -4208,17 +3747,21 @@ export default function App() {
               <div className={`${activeTab === 'analytics' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
                 <AnalyticsView history={history} currentState={state} formatNum={formatNum} onUpdate={setState} />
               </div>
+              </>
+              )}
             </div>
             </div>
           )}
 
           {/* Right Column: Sticky Summary Dashboard */}
-          <div className="w-full lg:w-80 xl:w-96 shrink-0 print:w-full">
-            <div className={`sticky top-20 flex flex-col gap-4 ${isExporting ? '' : 'max-h-[calc(100vh-6rem)] overflow-y-auto'} pb-4 scrollbar-hide`}>
-              <div className="sm:hidden mb-4 flex justify-center"><LiveClock /></div>
-              <SummaryDashboard state={state} summary={currentSummary} isExport={isExporting} />
+          {(!userProfile || userProfile.role !== 'admin' || currentBranchId) && (
+            <div className="w-full lg:w-80 xl:w-96 shrink-0 print:w-full">
+              <div className={`sticky top-20 flex flex-col gap-4 ${isExporting ? '' : 'max-h-[calc(100vh-6rem)] overflow-y-auto'} pb-4 scrollbar-hide`}>
+                <div className="sm:hidden mb-4 flex justify-center"><LiveClock /></div>
+                <SummaryDashboard state={state} summary={currentSummary} isExport={isExporting} />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
       </div>
