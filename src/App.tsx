@@ -40,6 +40,7 @@ export type Branch = {
   id: string;
   name: string;
   createdAt: number;
+  deleted?: boolean;
 };
 
 type AppState = {
@@ -70,7 +71,7 @@ type AppState = {
   historicalMonths?: { monthYear: string, netSales: number }[];
   historicalSales?: {
     id: string;
-    type: 'day' | 'month' | 'year';
+    type: string;
     dateStr: string;
     netSales: number;
   }[];
@@ -2140,6 +2141,72 @@ export default function App() {
     return () => window.removeEventListener('afterprint', handleAfterPrint);
   }, []);
 
+
+const handleCopyDailyReport = () => {
+    // Calculate monthly data based on history and current state
+    const allData = [...history.map((s: any) => ({ ...s.state, isCurrent: false })), { ...state, isCurrent: true }];
+    const uniqueMetricsMap = new Map();
+    
+    allData.forEach((item: any) => {
+        let netSales = 0;
+        if (item.posData) {
+            netSales = item.posData.reduce((acc: number, pos: any) => acc + (pos.sales - pos.returns), 0);
+        }
+        
+        let d = item.date;
+        const parts = d.split('/');
+        let month = String(new Date().getMonth() + 1).padStart(2, '0');
+        let year = String(new Date().getFullYear());
+        
+        if (parts.length === 3) {
+            month = parts[1];
+            year = parts[2];
+        }
+        
+        if (!uniqueMetricsMap.has(d)) {
+            uniqueMetricsMap.set(d, { netSales, month, year, isCurrent: item.isCurrent });
+        } else {
+            if (item.isCurrent) {
+                uniqueMetricsMap.set(d, { netSales, month, year, isCurrent: item.isCurrent });
+            }
+        }
+    });
+
+    const currentMonthStr = String(new Date().getMonth() + 1).padStart(2, '0');
+    const currentYearStr = String(new Date().getFullYear());
+    
+    const dailyMetrics = Array.from(uniqueMetricsMap.values());
+    const monthlyMetrics = dailyMetrics.filter(d => d.month === currentMonthStr && d.year === currentYearStr);
+    
+    const totalMonthlySales = monthlyMetrics.reduce((sum, d) => sum + d.netSales, 0);
+    const daysRecorded = monthlyMetrics.length || 1;
+    const monthlyAverage = totalMonthlySales / daysRecorded;
+
+    const timeFormatter = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    
+    const text = `═══════════════════════════════════════
+           📊 تقرير مبيعات اليوم
+═══════════════════════════════════════
+
+📅 التاريخ: ${state.date}
+
+💰 إجمالي مبيعات اليوم
+   ${formatNum(currentSummary.netSales)} ريال
+
+📈 المتوسط الشهري (حتى اليوم)
+   ${formatNum(monthlyAverage)} ريال
+
+📊 إجمالي مبيعات الشهر (تراكمي)
+   ${formatNum(totalMonthlySales)} ريال
+
+═══════════════════════════════════════
+   تم إنشاء التقرير في: ${timeFormatter.format(new Date())}
+═══════════════════════════════════════`;
+
+    navigator.clipboard.writeText(text);
+    showToast('تم نسخ التقرير للحافظة', 'success');
+};
+
   const handleExport = (format: 'a4' | 'thermal' = 'a4') => {
     setShowExportModal(false);
     
@@ -2955,7 +3022,7 @@ export default function App() {
             
             {/* Action Buttons on the left side (RTL end) */}
             <div className="flex items-center gap-2 md:gap-3 justify-end">
-              <div className="hidden sm:block"><LiveClock /></div>
+              
               {!user ? (
                 <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-gradient-to-r from-[#015941] to-[#128a63] text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl hover:from-[#014a36] hover:to-[#0f7554] transition-all font-bold shadow-lg shadow-[#015941]/20 active:scale-95">
                   <LogIn size={18} /> <span className="text-[15px] sm:text-base hidden sm:inline">تسجيل الدخول</span>
@@ -2987,27 +3054,27 @@ export default function App() {
                     <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     <span className="font-mono">{user.email?.split('@')[0]}</span>
                   </div>
-                  <button onClick={() => setShowCalculator(true)} className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-90 ${showCalculator ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50'}`} title="آلة حاسبة">
-                    <Calculator size={20} />
+                  <button onClick={() => setShowCalculator(true)} className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors active:scale-95 ${showCalculator ? 'bg-slate-200/80 text-slate-900' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`} title="آلة حاسبة">
+                    <Calculator size={20} strokeWidth={1.5} />
                   </button>
-                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center justify-center text-slate-500 hover:text-blue-600 w-10 h-10 rounded-xl hover:bg-blue-50 transition-all active:scale-90" title="إعدادات">
-                    <Settings size={20} />
+                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center justify-center text-slate-500 hover:text-slate-800 w-10 h-10 rounded-full hover:bg-slate-100 transition-colors active:scale-95" title="إعدادات">
+                    <Settings size={20} strokeWidth={1.5} />
                   </button>
-                  <button onClick={handleLogout} className="flex items-center justify-center text-slate-500 hover:text-rose-600 w-10 h-10 rounded-xl hover:bg-rose-50 transition-all active:scale-90" title="تسجيل الخروج">
-                    <LogOut size={20} />
+                  <button onClick={handleLogout} className="flex items-center justify-center text-slate-500 hover:text-rose-600 w-10 h-10 rounded-full hover:bg-rose-50 transition-colors active:scale-95" title="تسجيل الخروج">
+                    <LogOut size={20} strokeWidth={1.5} />
                   </button>
                   <div className="w-px h-8 bg-slate-200/80 mx-1 hidden sm:block"></div>
-                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold shadow-sm disabled:opacity-50 hover:shadow-md active:scale-95 ${saving ? 'bg-amber-100 text-amber-700 border border-amber-200/60' : 'bg-emerald-50/80 text-emerald-700 border border-emerald-200/60 hover:bg-emerald-100'}`}>
-                    {saving ? <Save size={18} className="animate-pulse" /> : <CheckCircle2 size={18} />}
-                    <span className="hidden sm:inline">{saving ? 'جاري الحفظ...' : 'صافي وحفظ'}</span>
+                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-4 py-2 text-[14px] rounded-full transition-all font-medium disabled:opacity-50 active:scale-95 ${saving ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+                    {saving ? <Save size={16} className="animate-pulse" strokeWidth={2} /> : <CheckCircle2 size={16} strokeWidth={2} />}
+                    <span className="hidden sm:inline">{saving ? 'جاري الحفظ...' : 'حفظ'}</span>
                   </button>
                 </>
               )}
-              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-white text-slate-700 border border-slate-200/80 px-5 py-2.5 rounded-xl hover:bg-slate-50 transition-all font-bold shadow-sm hover:shadow-md active:scale-95">
-                <Printer size={18} /> <span className="hidden sm:inline">طباعة / تصدير</span>
+              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-white text-slate-700 border border-slate-200 px-4 py-2 text-[14px] rounded-full hover:bg-slate-50 transition-all font-medium active:scale-95">
+                <Printer size={16} strokeWidth={2} /> <span className="hidden sm:inline">تصدير</span>
               </button>
-              <button onClick={handleNewDay} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 transition-all font-bold shadow-sm hover:shadow-md active:scale-95 shadow-indigo-600/20 ring-1 ring-indigo-500/50">
-                <FilePlus size={18} /> <span className="hidden sm:inline">يوم جديد</span>
+              <button onClick={handleNewDay} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 text-[14px] rounded-full hover:bg-blue-700 transition-all font-medium active:scale-95 flex-nowrap shrink-0 max-w-fit">
+                <FilePlus size={16} strokeWidth={2} /> <span className="hidden sm:inline">يوم جديد</span>
               </button>
             </div>
           </div>
@@ -3041,7 +3108,7 @@ export default function App() {
           {(!isExporting || exportMode === 'detailed') && (
             <div className="flex-1 min-w-0 print:w-full">
               {(!isExporting && (!userProfile || userProfile.role !== 'admin' || currentBranchId)) && (
-                <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-2xl border-t border-slate-200 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-2 print:hidden md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-3 md:gap-3 overscroll-x-contain shadow-[0_-10px_30px_rgba(0,0,0,0.05)] md:shadow-none items-center">
+                <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-2xl border-t border-slate-200 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-1.5 print:hidden md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-2 md:gap-2 overscroll-x-contain shadow-[0_-10px_30px_rgba(0,0,0,0.05)] md:shadow-none items-center scrollbar-hide">
                   {[
                     { id: 'sales', label: 'المبيعات', icon: Receipt },
                     { id: 'payments', label: 'المدفوعات', icon: ArrowUpRight },
@@ -3055,21 +3122,13 @@ export default function App() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-2 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl font-bold transition-all whitespace-nowrap transform hover:scale-[1.02] active:scale-95 border min-w-[72px] sm:min-w-[80px] md:min-w-0 flex-shrink-0 ${
-                        activeTab === tab.id ? 'text-blue-600 md:text-white border-transparent' : 'bg-transparent md:bg-white text-slate-500 md:text-slate-600 border-transparent md:border-slate-200/80 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300'
+                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-lg font-medium transition-colors whitespace-nowrap min-w-[72px] sm:min-w-[80px] md:min-w-0 flex-shrink-0 ${
+                        activeTab === tab.id ? 'text-slate-900 bg-slate-100/80 shadow-sm border border-slate-200/60' : 'bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                       }`}
                     >
-                      {activeTab === tab.id && (
-                        <motion.div
-                          layoutId="activeTabIndicator"
-                          className="absolute inset-0 bg-blue-50 md:bg-blue-600 rounded-xl md:rounded-2xl"
-                          style={{ zIndex: 0 }}
-                          transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                        />
-                      )}
-                      <span className="relative z-10 flex flex-col md:flex-row items-center gap-1 md:gap-2">
-                        <tab.icon size={24} strokeWidth={activeTab === tab.id ? 2.5 : 2} className={`md:!w-[18px] md:!h-[18px] ${activeTab === tab.id ? 'animate-pulse' : ''}`} /> 
-                        <span className="text-[10px] sm:text-[11px] md:text-base tracking-tight mt-0.5 md:mt-0">{tab.label}</span>
+                      <span className="relative z-10 flex flex-col md:flex-row items-center gap-1.5 md:gap-2">
+                        <tab.icon size={18} strokeWidth={activeTab === tab.id ? 2.5 : 2} /> 
+                        <span className="text-[11px] md:text-[14px] tracking-tight mt-0.5 md:mt-0">{tab.label}</span>
                       </span>
                     </button>
                   ))}
@@ -3754,10 +3813,10 @@ export default function App() {
           )}
 
           {/* Right Column: Sticky Summary Dashboard */}
-          {(!userProfile || userProfile.role !== 'admin' || currentBranchId) && (
+          {(!userProfile || userProfile.role !== 'admin' || currentBranchId) && !['history', 'ledger', 'archive', 'analytics'].includes(activeTab) && (
             <div className="w-full lg:w-80 xl:w-96 shrink-0 print:w-full">
               <div className={`sticky top-20 flex flex-col gap-4 ${isExporting ? '' : 'max-h-[calc(100vh-6rem)] overflow-y-auto'} pb-4 scrollbar-hide`}>
-                <div className="sm:hidden mb-4 flex justify-center"><LiveClock /></div>
+                <div className="mb-4 flex justify-center"><LiveClock /></div>
                 <SummaryDashboard state={state} summary={currentSummary} isExport={isExporting} />
               </div>
             </div>
@@ -3834,6 +3893,15 @@ export default function App() {
                   </button>
                 )}
               </div>
+              
+              {exportMode === 'summary' && (
+                  <button 
+                    onClick={handleCopyDailyReport}
+                    className="w-full mt-3 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Copy size={20} /> نسخ التقرير النصي
+                  </button>
+              )}
             </div>
           </motion.div>
         </motion.div>
