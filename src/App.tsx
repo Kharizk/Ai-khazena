@@ -852,7 +852,7 @@ ${summaryText.substring(0, 3000)}
     <div className="space-y-6 print:block print:w-full animate-in fade-in zoom-in-95 duration-300 pb-10">
       
       {/* Header and Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 print:hidden backdrop-blur-md bg-white/40 p-4 rounded-2xl border border-white/60 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 print:hidden bg-transparent py-2">
         <div>
           <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
             <Activity className="text-blue-600" />
@@ -870,7 +870,7 @@ ${summaryText.substring(0, 3000)}
             <button 
               key={rt.id}
               onClick={() => { setDateRange(rt.id as any); setAiAnalysis(null); }}
-              className={`flex-1 sm:px-6 py-2 text-[13px] sm:text-sm font-bold rounded-lg transition-all duration-300 ${dateRange === rt.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
+              className={`flex-1 sm:px-6 py-2 text-[13px] sm:text-sm font-bold rounded-lg transition-all duration-300 ${dateRange === rt.id ? 'bg-slate-800 text-white shadow-sm border-slate-700' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
             >
               {rt.label}
             </button>
@@ -880,43 +880,43 @@ ${summaryText.substring(0, 3000)}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 print:hidden">
-        <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-          <div className="absolute top-0 right-0 w-1.5 h-full bg-blue-500"></div>
-          <p className="text-slate-500 text-sm font-bold mb-3 flex items-center gap-2">
+        <div className="bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200/60 relative overflow-hidden group hover:border-slate-300 transition-all duration-300">
+          
+          <p className="text-slate-500 text-[13px] font-medium mb-3 flex items-center gap-2">
              <TrendingUp size={16} className="text-blue-500"/> إجمالي المبيعات
           </p>
           <div className="flex items-end justify-between">
-            <h3 className="text-3xl font-black text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(totalSalesVal)}</h3>
+            <h3 className="text-[26px] font-bold text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(totalSalesVal)}</h3>
           </div>
         </div>
 
-        <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-          <div className="absolute top-0 right-0 w-1.5 h-full bg-rose-500"></div>
-          <p className="text-slate-500 text-sm font-bold mb-3 flex items-center gap-2">
+        <div className="bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200/60 relative overflow-hidden group hover:border-slate-300 transition-all duration-300">
+          
+          <p className="text-slate-500 text-[13px] font-medium mb-3 flex items-center gap-2">
             <TrendingDown size={16} className="text-rose-500"/> المنصرفات والمدفوعات
           </p>
           <div className="flex items-end justify-between">
-            <h3 className="text-3xl font-black text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(totalExpensesVal)}</h3>
+            <h3 className="text-[26px] font-bold text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(totalExpensesVal)}</h3>
           </div>
         </div>
 
-        <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
-          <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500"></div>
-          <p className="text-slate-500 text-sm font-bold mb-3 flex items-center gap-2">
+        <div className="bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200/60 relative overflow-hidden group hover:border-slate-300 transition-all duration-300">
+          
+          <p className="text-slate-500 text-[13px] font-medium mb-3 flex items-center gap-2">
             <Wallet size={16} className="text-emerald-500"/> صافي التدفق المالي
           </p>
           <div className="flex items-end justify-between">
-            <h3 className={`text-3xl font-black font-mono tracking-tight ${totalNetVal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`} dir="ltr">{formatCurrency(totalNetVal)}</h3>
+            <h3 className={`text-[26px] font-bold font-mono tracking-tight ${totalNetVal >= 0 ? 'text-slate-800' : 'text-slate-800'}`} dir="ltr">{formatCurrency(totalNetVal)}</h3>
           </div>
         </div>
 
-        <div className="bg-white/90 backdrop-blur-xl p-5 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+        <div className="bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200/60 relative overflow-hidden group hover:border-slate-300 transition-all duration-300">
           <div className="absolute top-0 right-0 w-1.5 h-full bg-indigo-500"></div>
-          <p className="text-slate-500 text-sm font-bold mb-3 flex items-center gap-2">
+          <p className="text-slate-500 text-[13px] font-medium mb-3 flex items-center gap-2">
             <CalendarDays size={16} className="text-indigo-500"/> المتوسط اليومي
           </p>
           <div className="flex items-end justify-between">
-            <h3 className="text-3xl font-black text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(avgDailySales)}</h3>
+            <h3 className="text-[26px] font-bold text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(avgDailySales)}</h3>
             <div className="text-indigo-600 bg-indigo-50/80 px-2 py-1 rounded-lg text-[11px] font-bold">
                ${daysRecorded} أيام
             </div>
@@ -1104,20 +1104,20 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
   if (isExport) {
     return (
       <div className="bg-white text-black p-6 border border-slate-300 rounded-xl print:border-none print:p-0">
-        <h2 className="text-xl font-bold text-center mb-6 border-b-2 border-black pb-2">ملخص التقفيل اليومي</h2>
-        <table className="w-full text-right border-collapse mb-8 text-[15px]">
+        <h2 className="text-xl font-bold text-center mb-6 border-b border-slate-200 pb-4 text-slate-800">ملخص التقفيل اليومي</h2>
+        <table className="w-full text-right border-collapse mb-8 text-[15px] text-slate-700">
           <tbody>
-            <tr className="border-b border-slate-200"><td className="py-3 font-bold">رصيد أول المدة</td><td className="py-3 font-bold" dir="ltr">{formatNum(state.previousBalance)}</td></tr>
-            <tr className="border-b border-slate-200"><td className="py-3 font-bold">+ إجمالي الإيرادات (الوارد)</td><td className="py-3 font-bold" dir="ltr">{formatNum(summary.totalCashIn)}</td></tr>
+            <tr className="border-b border-slate-100"><td className="py-3 font-bold cursor-default hover:text-slate-900 transition-colors">رصيد أول المدة</td><td className="py-3 font-bold text-slate-900" dir="ltr">{formatNum(state.previousBalance)}</td></tr>
+            <tr className="border-b border-slate-100"><td className="py-3 font-bold text-emerald-600">+ إجمالي الإيرادات (الوارد)</td><td className="py-3 font-bold text-emerald-600" dir="ltr">{formatNum(summary.totalCashIn)}</td></tr>
             <tr>
-              <td colSpan={2} className="py-2 pr-4 text-xs text-slate-600">
+              <td colSpan={2} className="py-2 pr-4 text-[13px] text-slate-500 font-medium">
                 <div className="flex justify-between mb-1"><span>صافي المبيعات</span><span dir="ltr">{formatNum(summary.netSales)}</span></div>
                 {summary.totalExpenseRefunds > 0 && <div className="flex justify-between mb-1"><span>مردود مصروفات</span><span dir="ltr">{formatNum(summary.totalExpenseRefunds)}</span></div>}
               </td>
             </tr>
-            <tr className="border-b border-slate-200 border-t"><td className="py-3 font-bold">- إجمالي المخصومات (المنصرف)</td><td className="py-3 font-bold" dir="ltr">{formatNum(summary.totalCashOut)}</td></tr>
+            <tr className="border-b border-slate-100 border-t"><td className="py-3 font-bold text-rose-500">- إجمالي المخصومات (المنصرف)</td><td className="py-3 font-bold text-rose-500" dir="ltr">{formatNum(summary.totalCashOut)}</td></tr>
             <tr>
-              <td colSpan={2} className="py-2 pr-4 text-xs text-slate-600">
+              <td colSpan={2} className="py-2 pr-4 text-[13px] text-slate-500 font-medium">
                 {summary.totalNetworks > 0 && <div className="flex justify-between mb-1"><span>الشبكات</span><span dir="ltr">{formatNum(summary.totalNetworks)}</span></div>}
                 {summary.totalCustomerTransfers > 0 && <div className="flex justify-between mb-1"><span>تحويلات العملاء</span><span dir="ltr">{formatNum(summary.totalCustomerTransfers)}</span></div>}
                 {summary.totalCompanyPayments > 0 && <div className="flex justify-between mb-1"><span>سداد شركات وموردين</span><span dir="ltr">{formatNum(summary.totalCompanyPayments)}</span></div>}
@@ -1128,21 +1128,21 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
                 ))}
               </td>
             </tr>
-            <tr className="border-b-2 border-black bg-slate-50"><td className="py-3 font-bold text-base">الرصيد الدفتري (المتوقع)</td><td className="py-3 font-bold text-base" dir="ltr">{formatNum(summary.expectedCash)}</td></tr>
+            <tr className="border-b border-slate-200 bg-slate-50 opacity-90"><td className="py-3 font-bold text-base text-slate-800 px-2 rounded-r-lg">الرصيد الدفتري (المتوقع)</td><td className="py-3 font-bold text-base text-slate-900 px-2 rounded-l-lg" dir="ltr">{formatNum(summary.expectedCash)}</td></tr>
           </tbody>
         </table>
 
-        <h3 className="text-lg font-bold mb-3 border-b border-black pb-1">تفاصيل الجرد الفعلي</h3>
-        <table className="w-full text-right border-collapse mb-6 text-[15px]">
+        <h3 className="text-lg font-bold mb-4 border-b border-slate-200 pb-2 text-slate-800">تفاصيل الجرد الفعلي</h3>
+        <table className="w-full text-right border-collapse mb-6 text-[15px] text-slate-700">
           <tbody>
-            <tr className="border-b border-slate-200"><td className="py-3 font-bold">النقدية الفعلية (الجرد)</td><td className="py-3 font-bold" dir="ltr">{formatNum(summary.physicalCash)}</td></tr>
-            <tr className="border-b border-slate-200"><td className="py-3 font-bold">+ أموال معلقة لنا</td><td className="py-3 font-bold" dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td></tr>
-            <tr className="border-b border-slate-200"><td className="py-3 font-bold">- أموال معلقة علينا</td><td className="py-3 font-bold" dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td></tr>
-            <tr className="border-b-2 border-black bg-slate-50"><td className="py-3 font-bold text-base">الرصيد الفعلي</td><td className="py-3 font-bold text-base" dir="ltr">{formatNum(summary.actualCash)}</td></tr>
+            <tr className="border-b border-slate-100"><td className="py-3 font-bold">النقدية الفعلية (الجرد)</td><td className="py-3 font-bold text-slate-900" dir="ltr">{formatNum(summary.physicalCash)}</td></tr>
+            <tr className="border-b border-slate-100"><td className="py-3 font-bold text-indigo-500">+ أموال معلقة لنا</td><td className="py-3 font-bold text-indigo-500" dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td></tr>
+            <tr className="border-b border-slate-100"><td className="py-3 font-bold text-slate-500">- أموال معلقة علينا</td><td className="py-3 font-bold text-slate-500" dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td></tr>
+            <tr className="border-b border-slate-200 bg-slate-50 opacity-90"><td className="py-3 font-bold text-base text-slate-800 px-2 rounded-r-lg">الرصيد الفعلي</td><td className="py-3 font-bold text-base text-slate-900 px-2 rounded-l-lg" dir="ltr">{formatNum(summary.actualCash)}</td></tr>
           </tbody>
         </table>
 
-        <div className={`p-4 rounded border-2 text-center font-bold text-lg ${summary.difference === 0 ? 'border-black' : 'border-black'}`}>
+        <div className={`p-4 rounded-xl border text-center font-bold text-lg ${summary.difference === 0 ? 'border-none bg-slate-100 text-slate-700' : summary.difference > 0 ? 'border-none bg-blue-50 text-blue-700' : 'border-none bg-rose-50 text-rose-700'}`}>
           {summary.difference === 0 ? 'الخزينة مطابقة' : summary.difference > 0 ? `يوجد زيادة: ${formatNum(Math.abs(summary.difference))}` : `يوجد عجز: ${formatNum(Math.abs(summary.difference))}`}
         </div>
       </div>
@@ -1151,34 +1151,34 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-slate-900 text-white rounded-3xl shadow-xl overflow-hidden print:bg-white print:text-black print:border print:border-slate-300">
-        <div className="p-4 md:p-5 border-b border-slate-800 print:border-slate-200">
-          <h2 className="text-base font-bold text-slate-300 print:text-slate-800 mb-3">ملخص التقفيل اليومي تفصيلي</h2>
+      <div className="bg-white/60 backdrop-blur border text-slate-800 border-slate-200/50 rounded-[1.2rem] shadow-sm overflow-hidden print:bg-white print:text-black print:border print:border-slate-300">
+        <div className="p-4 md:p-5 border-b border-slate-100 print:border-slate-200">
+          <h2 className="text-[15px] font-semibold text-slate-800 mb-3 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div> ملخص التقفيل تفصيلي</h2>
           <div className="space-y-2 text-xs md:text-[15px]">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-slate-400 print:text-slate-600 truncate">رصيد أول المدة</span>
+              <span className="text-slate-600 font-medium truncate">رصيد أول المدة</span>
               <span className="font-medium shrink-0" dir="ltr">{formatNum(state.previousBalance)}</span>
             </div>
             
             {/* Inflow Breakdown */}
-            <div className="pt-2 border-t border-slate-800 print:border-slate-200">
-              <div className="flex justify-between items-center gap-2 text-emerald-400 print:text-emerald-700 font-bold mb-1">
+            <div className="pt-2 border-t border-slate-100 print:border-slate-200">
+              <div className="flex justify-between items-center gap-2 text-emerald-600 font-bold mb-1 pt-1">
                 <span className="truncate">+ إجمالي الإيرادات (الوارد)</span>
                 <span className="shrink-0" dir="ltr">{formatNum(summary.totalCashIn)}</span>
               </div>
-              <div className="pr-4 space-y-1 text-slate-400 print:text-slate-600 text-xs">
+              <div className="pr-4 space-y-1 text-slate-500 font-medium text-[13px]">
                 <div className="flex justify-between gap-2"><span className="truncate">صافي المبيعات</span><span className="shrink-0" dir="ltr">{formatNum(summary.netSales)}</span></div>
                 {summary.totalExpenseRefunds > 0 && <div className="flex justify-between gap-2"><span className="truncate">مردود مصروفات</span><span className="shrink-0" dir="ltr">{formatNum(summary.totalExpenseRefunds)}</span></div>}
               </div>
             </div>
 
             {/* Outflow Breakdown */}
-            <div className="pt-2 border-t border-slate-800 print:border-slate-200">
-              <div className="flex justify-between items-center gap-2 text-rose-400 print:text-rose-700 font-bold mb-1">
+            <div className="pt-2 border-t border-slate-100 print:border-slate-200">
+              <div className="flex justify-between items-center gap-2 text-rose-500 font-bold mb-1 pt-1">
                 <span className="truncate">- إجمالي المخصومات (المنصرف)</span>
                 <span className="shrink-0" dir="ltr">{formatNum(summary.totalCashOut)}</span>
               </div>
-              <div className="pr-4 space-y-1 text-slate-400 print:text-slate-600 text-xs">
+              <div className="pr-4 space-y-1 text-slate-500 font-medium text-[13px]">
                 {summary.totalNetworks > 0 && <div className="flex justify-between gap-2"><span className="truncate">الشبكات</span><span className="shrink-0" dir="ltr">{formatNum(summary.totalNetworks)}</span></div>}
                 {summary.totalCustomerTransfers > 0 && <div className="flex justify-between gap-2"><span className="truncate">تحويلات العملاء</span><span className="shrink-0" dir="ltr">{formatNum(summary.totalCustomerTransfers)}</span></div>}
                 {summary.totalCompanyPayments > 0 && <div className="flex justify-between gap-2"><span className="truncate">سداد شركات وموردين</span><span className="shrink-0" dir="ltr">{formatNum(summary.totalCompanyPayments)}</span></div>}
@@ -1187,7 +1187,7 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
                 
                 {/* Separated Expenses */}
                 {summary.separatedExpenses.map(exp => (
-                  <div key={exp.id} className="flex justify-between gap-2 text-purple-400 print:text-purple-700 font-medium">
+                  <div key={exp.id} className="flex justify-between gap-2 text-purple-600 font-medium">
                     <span className="truncate">{exp.name || 'مصروف محدد'}</span>
                     <span className="shrink-0" dir="ltr">{formatNum(exp.amount)}</span>
                   </div>
@@ -1195,19 +1195,19 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
               </div>
             </div>
 
-            <div className="pt-2 mt-2 border-t border-slate-800 print:border-slate-200 flex justify-between items-center gap-2 text-base font-bold text-blue-400 print:text-blue-700">
+            <div className="pt-3 mt-3 border-t border-slate-100 flex justify-between items-center gap-2 text-[15px] font-bold text-slate-800">
               <span className="truncate">الرصيد الدفتري (المتوقع)</span>
               <span className="shrink-0" dir="ltr">{formatNum(summary.expectedCash)}</span>
             </div>
           </div>
         </div>
-        <div className="p-4 md:p-5 bg-slate-800/50 print:bg-slate-50">
+        <div className="p-4 md:p-5 bg-slate-50/50 border-t border-slate-100">
           <div className="space-y-2 text-xs md:text-[15px] mb-3">
             <div className="flex justify-between items-center gap-2">
               <span className="text-slate-400 print:text-slate-600 truncate">النقدية الفعلية (الجرد)</span>
               <span className="font-medium shrink-0" dir="ltr">{formatNum(summary.physicalCash)}</span>
             </div>
-            <div className="flex justify-between items-center gap-2 text-amber-400 print:text-amber-700">
+            <div className="flex justify-between items-center gap-2 text-blue-600 font-medium">
               <span className="truncate">+ أموال معلقة لنا (تُحسب بالخزينة)</span>
               <span className="font-medium shrink-0" dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</span>
             </div>
@@ -1216,18 +1216,18 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
               <span className="font-medium shrink-0" dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</span>
             </div>
           </div>
-          <div className="flex justify-between items-center gap-2 text-lg font-bold text-white print:text-black mb-4">
+          <div className="flex justify-between items-center gap-2 text-[16px] font-bold text-slate-900 mb-4 pt-1">
             <span className="truncate">الرصيد الفعلي</span>
             <span className="shrink-0" dir="ltr">{formatNum(summary.actualCash)}</span>
           </div>
           <div className={`p-3 rounded-2xl flex items-center justify-between ${
-            summary.difference === 0 ? 'bg-emerald-500/20 text-emerald-400 print:bg-emerald-100 print:text-emerald-800 border border-emerald-500/30' : summary.difference > 0 ? 'bg-blue-500/20 text-blue-400 print:bg-blue-100 print:text-blue-800 border border-blue-500/30' : 'bg-rose-500/20 text-rose-400 print:bg-rose-100 print:text-rose-800 border border-rose-500/30'
+            summary.difference === 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : summary.difference > 0 ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60'
           }`}>
             <div className="flex items-center gap-2 font-bold text-[15px] md:text-base">
               {summary.difference === 0 ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
               <span>{summary.difference === 0 ? 'الخزينة مطابقة' : summary.difference > 0 ? 'يوجد زيادة' : 'يوجد عجز'}</span>
             </div>
-            <div className="text-xl font-black" dir="ltr">{formatNum(Math.abs(summary.difference))}</div>
+            <div className="text-[18px] font-bold" dir="ltr">{formatNum(Math.abs(summary.difference))}</div>
           </div>
         </div>
       </div>
@@ -1246,7 +1246,7 @@ const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "
       placeholder={placeholder}
       dir={dir}
       list={list}
-      className={`w-full bg-slate-50 hover:bg-slate-100/50 border text-slate-800 border-slate-200/80 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 outline-none focus:ring-[3px] focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-[15px] placeholder-slate-400 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
+      className={`w-full bg-slate-50/50 hover:bg-slate-100/30 border text-slate-800 border-slate-200/60 rounded-lg px-3 py-2 outline-none focus:ring-[3px] focus:ring-slate-900/5 focus:border-slate-400 focus:bg-white transition-all text-[14px] placeholder-slate-400 ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
       {...props}
     />
   );
@@ -1296,12 +1296,12 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
   );
 
   return (
-    <div className="bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-200 overflow-hidden mb-6 transition-all duration-300 hover:shadow-md">
+    <div className="bg-white rounded-[1rem] shadow-sm border border-slate-200/60 overflow-hidden mb-6 transition-all">
       <datalist id={listId}>
         {savedNames?.map((name: string) => <option key={name} value={name} />)}
       </datalist>
       
-      <div className={`flex justify-between items-center px-4 md:px-5 py-3 md:py-4 border-b border-slate-100 ${colorClass}`}>
+      <div className={`flex justify-between items-center px-4 md:px-5 py-3 md:py-4 border-b border-slate-100 bg-transparent text-slate-800`}>
         <div className="flex items-center gap-2 font-bold text-base md:text-lg">
           <Icon size={22} className="opacity-80" />
           {title}
@@ -1320,7 +1320,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالاسم أو المبلغ..."
-              className="w-full pl-3 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[15px] focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-white transition-all placeholder-slate-400"
+              className="w-full pl-3 pr-10 py-2 bg-slate-50/50 border border-slate-200/60 rounded-lg text-[13px] focus:outline-none focus:ring-[3px] focus:ring-slate-900/5 focus:border-slate-400 focus:bg-white transition-all placeholder-slate-400"
             />
           </div>
         </div>
@@ -1357,11 +1357,11 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
                 onChange={(e: any) => onUpdate(item.id, 'name', e.target.value)} 
                 onBlur={(e: any) => onSaveName(field, e.target.value)}
                 placeholder="البيان (اختر من القائمة أو اكتب)" 
-                className="group-hover/row:border-blue-200/60 rounded-xl"
+                className="group-hover/row:border-slate-300/60 !rounded-lg"
               />
             </div>
             <div className="w-1/3">
-              <Input type="number" value={item.amount !== undefined && item.amount !== 0 ? round2(item.amount) : item.amount === 0 ? 0 : ''} onChange={(e: any) => onUpdate(item.id, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="المبلغ" className="text-left font-bold group-hover/row:border-blue-200/60 rounded-xl" dir="ltr" />
+              <Input type="number" value={item.amount !== undefined && item.amount !== 0 ? round2(item.amount) : item.amount === 0 ? 0 : ''} onChange={(e: any) => onUpdate(item.id, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="المبلغ" className="text-left font-semibold group-hover/row:border-slate-300/60 !rounded-lg" dir="ltr" />
             </div>
             {onManage && (
               <button onClick={() => onManage(item)} title="إدارة الحساب وكشف الحساب" className="p-2.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-all hover:scale-105 active:scale-95">
@@ -1413,7 +1413,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
         )}
         {data.length > 0 && (
           <div className="px-5 pb-5">
-            <button onClick={onAdd} className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-800 text-[15px] font-bold px-4 py-3 rounded-xl border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all active:scale-95 group/btn">
+            <button onClick={onAdd} className="flex items-center justify-center gap-2 w-full text-slate-600 hover:text-slate-900 text-[14px] font-medium px-4 py-2.5 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-all active:scale-95 group/btn">
               <Plus size={18} className="group-hover/btn:rotate-90 transition-transform" /> إضافة بند جديد
             </button>
           </div>
@@ -3123,7 +3123,7 @@ const handleCopyDailyReport = () => {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
                       className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-lg font-medium transition-colors whitespace-nowrap min-w-[72px] sm:min-w-[80px] md:min-w-0 flex-shrink-0 ${
-                        activeTab === tab.id ? 'text-slate-900 bg-slate-100/80 shadow-sm border border-slate-200/60' : 'bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                        activeTab === tab.id ? 'text-slate-900 bg-white shadow-sm border border-slate-200/80' : 'bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100/50'
                       }`}
                     >
                       <span className="relative z-10 flex flex-col md:flex-row items-center gap-1.5 md:gap-2">
@@ -3173,8 +3173,8 @@ const handleCopyDailyReport = () => {
                 <>
                 {/* Sales Tab */}
                 <div className={`${activeTab === 'sales' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
-                <div className="bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
-                  <div className="bg-emerald-50 text-emerald-800 p-4 border-b border-emerald-100 flex items-center gap-2 font-bold">
+                <div className="bg-white rounded-[1.2rem] shadow-sm border border-slate-200/60 overflow-hidden mb-6 flex flex-col">
+                  <div className="bg-transparent text-slate-800 px-5 flex items-center gap-2 font-semibold text-[15px] pt-4 pb-2">
                     <Receipt size={20} /> مبيعات نقاط البيع
                   </div>
                   <datalist id="list-posData">
@@ -3281,21 +3281,21 @@ const handleCopyDailyReport = () => {
                         </tr>
                       </tfoot>
                     </table>
-                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 bg-blue-50 text-blue-700 hover:text-blue-800 hover:bg-blue-100 text-[15px] font-bold px-4 py-2.5 rounded-xl border border-blue-100 shadow-sm transition-all active:scale-95">
+                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-100/80 text-[14px] font-medium px-4 py-2 rounded-lg transition-all active:scale-95">
                       <Plus size={16} /> إضافة نقطة بيع جديدة
                     </button>
                   </div>
                 </div>
-                {renderTable('مردود مصروف (يضاف للخزينة)', 'expenseRefunds', Undo2, 'bg-emerald-50 text-emerald-800')}
+                {renderTable('مردود مصروف (يضاف للخزينة)', 'expenseRefunds', Undo2, '')}
               </div>
 
               {/* Payments Tab */}
               <div className={`${activeTab === 'payments' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
-                {renderTable('تحويلات العملاء (شبكة/بنكي تخصم من الخزينة)', 'customerTransfers', CreditCard, 'bg-amber-50 text-amber-800')}
-                {renderTable('سداد شركات وموردين', 'companyPayments', ArrowUpRight, 'bg-rose-50 text-rose-800')}
+                {renderTable('تحويلات العملاء (شبكة/بنكي تخصم من الخزينة)', 'customerTransfers', CreditCard, '')}
+                {renderTable('سداد شركات وموردين', 'companyPayments', ArrowUpRight, '')}
                 {/* Expenses table with showInSummary toggle */}
-                {renderTable('مصروفات متنوعة (رواتب، نثريات...)', 'expenses', ArrowUpRight, 'bg-rose-50 text-rose-800', false, true)}
-                {renderTable('إيداعات بنكية', 'cashDeposits', Wallet, 'bg-blue-50 text-blue-800')}
+                {renderTable('مصروفات متنوعة (رواتب، نثريات...)', 'expenses', ArrowUpRight, '', false, true)}
+                {renderTable('إيداعات بنكية', 'cashDeposits', Wallet, '')}
               </div>
 
               {/* Pending Funds Tab */}
@@ -3315,14 +3315,14 @@ const handleCopyDailyReport = () => {
                     </button>
                   </div>
                 )}
-                {renderTable('أموال معلقة لنا (تُحسب ككاش بالخزينة)', 'pendingFundsOwedToUs', ArrowDownRight, 'bg-amber-100 text-amber-900', true)}
-                {renderTable('أموال معلقة علينا (تُخصم من الخزينة)', 'pendingFundsOwedByUs', ArrowUpRight, 'bg-slate-100 text-slate-800', true)}
+                {renderTable('أموال معلقة لنا (تُحسب ككاش بالخزينة)', 'pendingFundsOwedToUs', ArrowDownRight, '', true)}
+                {renderTable('أموال معلقة علينا (تُخصم من الخزينة)', 'pendingFundsOwedByUs', ArrowUpRight, '', true)}
               </div>
 
               {/* Cash Count Tab */}
               <div className={`${activeTab === 'cash' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
-                <div className="bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
-                  <div className="bg-indigo-50 text-indigo-800 p-4 border-b border-indigo-100 flex items-center justify-between font-bold">
+                <div className="bg-white rounded-[1.2rem] shadow-sm border border-slate-200/60 overflow-hidden mb-6 flex flex-col">
+                  <div className="bg-transparent text-slate-800 px-5 pt-4 pb-2 flex items-center justify-between font-semibold text-[15px]">
                     <div className="flex items-center gap-2"><Wallet size={20} /> جرد الخزينة (الفئات النقدية)</div>
                     <div className="bg-white/60 px-3 py-1 rounded-xl" dir="ltr">{formatNum(currentSummary.physicalDenominations)}</div>
                   </div>
@@ -3340,13 +3340,13 @@ const handleCopyDailyReport = () => {
                     ))}
                   </div>
                 </div>
-                {renderTable('مبالغ نقدية مجمعة (رزم أو مبالغ معدودة مسبقاً)', 'customCashAmounts', Layers, 'bg-indigo-50 text-indigo-800')}
+                {renderTable('مبالغ نقدية مجمعة (رزم أو مبالغ معدودة مسبقاً)', 'customCashAmounts', Layers, '')}
               </div>
 
               {/* History Tab */}
               <div className={`${activeTab === 'history' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
-                <div className="bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
-                  <div className="bg-blue-50 text-blue-800 p-4 flex items-center gap-2 font-bold border-b border-blue-100">
+                <div className="bg-white rounded-[1.2rem] shadow-sm border border-slate-200/60 overflow-hidden mb-6 flex flex-col">
+                  <div className="bg-transparent text-slate-800 p-4 flex items-center gap-2 font-bold border-b border-slate-100">
                     <CalendarDays size={20} /> سجل الأيام السابقة
                   </div>
                   <div className="p-4 overflow-x-auto">
@@ -3406,7 +3406,7 @@ const handleCopyDailyReport = () => {
               <div className={`${activeTab === 'ledger' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
                 
                 {/* Filters */}
-                <div className="bg-white/90 backdrop-blur-2xl p-4  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 mb-6">
+                <div className="bg-white p-4 rounded-[1rem] shadow-sm border border-slate-200/60 mb-6">
                   <div className="flex flex-wrap gap-4 items-end">
                     <div className="flex-1 min-w-[200px]">
                       <label className="block text-[15px] font-bold text-slate-700 mb-2">من تاريخ</label>
@@ -3637,28 +3637,28 @@ const handleCopyDailyReport = () => {
                   return (
                     <>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                        <div className="bg-white border border-slate-200/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-emerald-600 text-[15px] font-bold mb-1">إجمالي الوارد (مدين)</p>
-                            <p className="text-xl font-black text-emerald-800" dir="ltr">{formatNum(filteredIn)}</p>
+                            <p className="text-slate-500 text-[13px] font-medium mb-1">إجمالي الوارد (مدين)</p>
+                            <p className="text-[20px] font-bold text-slate-800" dir="ltr">{formatNum(filteredIn)}</p>
                           </div>
                         </div>
-                        <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                        <div className="bg-white border border-slate-200/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-rose-600 text-[15px] font-bold mb-1">إجمالي المنصرف (دائن)</p>
-                            <p className="text-xl font-black text-rose-800" dir="ltr">{formatNum(filteredOut)}</p>
+                            <p className="text-slate-500 text-[13px] font-medium mb-1">إجمالي المنصرف (دائن)</p>
+                            <p className="text-[20px] font-bold text-slate-800" dir="ltr">{formatNum(filteredOut)}</p>
                           </div>
                         </div>
-                        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                        <div className="bg-white border border-slate-200/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-amber-600 text-[15px] font-bold mb-1">إجمالي المعلق</p>
-                            <p className="text-xl font-black text-amber-800" dir="ltr">{formatNum(filteredNeutral)}</p>
+                            <p className="text-slate-500 text-[13px] font-medium mb-1">إجمالي المعلق</p>
+                            <p className="text-[20px] font-bold text-slate-800" dir="ltr">{formatNum(filteredNeutral)}</p>
                           </div>
                         </div>
                         <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-blue-600 text-[15px] font-bold mb-1">صافي الرصيد</p>
-                            <p className="text-xl font-black text-blue-800" dir="ltr">{formatNum(filteredIn - filteredOut)}</p>
+                            <p className="text-slate-500 text-[13px] font-medium mb-1">صافي الرصيد</p>
+                            <p className="text-[20px] font-bold text-slate-800" dir="ltr">{formatNum(filteredIn - filteredOut)}</p>
                           </div>
                         </div>
                       </div>
@@ -3744,8 +3744,8 @@ const handleCopyDailyReport = () => {
 
               {/* Archive Tab */}
               <div className={`${activeTab === 'archive' && !isExporting ? 'block' : 'hidden'} print:block`}>
-                <div className="bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
-                  <div className="bg-slate-800 text-white p-4 flex items-center gap-2 font-bold">
+                <div className="bg-white rounded-[1.2rem] shadow-sm border border-slate-200/60 overflow-hidden mb-6 flex flex-col">
+                  <div className="bg-transparent text-slate-800 p-4 flex items-center gap-2 font-bold border-b border-slate-100">
                     <History size={20} /> أرشيف الأموال المعلقة (المسددة)
                   </div>
                   <div className="p-4 overflow-x-auto">
