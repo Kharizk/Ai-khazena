@@ -629,17 +629,17 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
   const sumOwedByUs = pendingOwedByUs.reduce((a: number, b: any) => a + b.amount, 0);
 
   return (
-    <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px] mx-auto" : "hidden print:block rtl w-[210mm] min-h-[297mm] mx-auto bg-white text-black font-sans p-8 box-border"}>
+    <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px] mx-auto" : "hidden print:block rtl max-w-[210mm] print:w-auto mx-auto bg-white text-black font-sans p-6 print:p-0 box-border"}>
       <div className="text-center mb-8 pb-4 border-b-2 border-gray-300">
         <h2 className="text-2xl font-bold mb-1">{companyName}</h2>
         <h1 className="text-3xl font-bold mb-2">تقرير الأموال المعلقة</h1>
         <p className="text-gray-700 text-lg">تاريخ الطباعة: <span dir="ltr" className="font-bold font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
       </div>
 
-      <div className="grid grid-cols-2 gap-8 text-[15px]">
+      <div className="columns-1 sm:columns-2 gap-8 text-[15px]" style={{ columnFill: 'auto' }}>
         {/* Section 1 */}
-        <div className="flex flex-col">
-          <div className="mb-2 bg-amber-50 rounded-lg border border-amber-200 overflow-hidden shadow-sm">
+        <div className="mb-6 break-inside-avoid-page">
+          <div className="mb-2 bg-amber-50 rounded-lg border border-amber-200 overflow-hidden shadow-sm break-inside-avoid">
             <div className="p-3 flex justify-between items-center text-amber-900 border-b border-amber-200/50">
               <h2 className="text-lg font-bold">أموال لنا (سلف/عهد)</h2>
               <span dir="ltr" className="font-mono font-bold text-xl">{formatNum(sumOwedToUs)}</span>
@@ -647,19 +647,19 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
           </div>
 
           {pendingOwedToUs.length > 0 ? pendingOwedToUs.map((item: any, idx: number) => (
-            <div key={item.id} className="flex justify-between items-center py-2 px-3 border border-gray-200 bg-white mb-2 rounded-lg shadow-sm">
+            <div key={item.id} className="break-inside-avoid flex justify-between items-center py-2 px-3 border border-gray-200 bg-white mb-2 rounded-lg shadow-sm">
                <div className="flex items-center gap-3">
                  <span className="w-7 h-7 flex items-center justify-center text-[13px] text-gray-500 font-bold bg-gray-100 rounded shrink-0">{idx + 1}</span>
                  <span className="font-semibold text-gray-800">{item.name}</span>
                </div>
                <span className="font-bold font-mono text-gray-900" dir="ltr">{formatNum(item.amount)}</span>
             </div>
-          )) : <div className="text-center py-4 text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">لا توجد أموال معلقة لنا</div>}
+          )) : <div className="break-inside-avoid text-center py-4 text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">لا توجد أموال معلقة لنا</div>}
         </div>
 
         {/* Section 2 */}
-        <div className="flex flex-col">
-          <div className="mb-2 bg-slate-100 rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+        <div className="mb-6 break-inside-avoid-page">
+          <div className="mb-2 bg-slate-100 rounded-lg border border-slate-200 overflow-hidden shadow-sm break-inside-avoid">
             <div className="p-3 flex justify-between items-center text-slate-800 border-b border-slate-200/50">
               <h2 className="text-lg font-bold">أموال علينا (أمانات/مستحقات)</h2>
               <span dir="ltr" className="font-mono font-bold text-xl">{formatNum(sumOwedByUs)}</span>
@@ -667,14 +667,14 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
           </div>
 
           {pendingOwedByUs.length > 0 ? pendingOwedByUs.map((item: any, idx: number) => (
-            <div key={item.id} className="flex justify-between items-center py-2 px-3 border border-gray-200 bg-white mb-2 rounded-lg shadow-sm">
+            <div key={item.id} className="break-inside-avoid flex justify-between items-center py-2 px-3 border border-gray-200 bg-white mb-2 rounded-lg shadow-sm">
                <div className="flex items-center gap-3">
                  <span className="w-7 h-7 flex items-center justify-center text-[13px] text-gray-500 font-bold bg-gray-100 rounded shrink-0">{idx + 1}</span>
                  <span className="font-semibold text-gray-800">{item.name}</span>
                </div>
                <span className="font-bold font-mono text-gray-900" dir="ltr">{formatNum(item.amount)}</span>
             </div>
-          )) : <div className="text-center py-4 text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">لا توجد أموال معلقة علينا</div>}
+          )) : <div className="break-inside-avoid text-center py-4 text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">لا توجد أموال معلقة علينا</div>}
         </div>
       </div>
     </div>
@@ -2891,7 +2891,7 @@ const handleCopyDailyReport = () => {
         }}></div>
 
         {/* Status Bar */}
-        <div className="relative z-10 shrink-0 flex justify-between items-start px-6 py-4 drop-shadow-md bg-white/5 opacity-100">
+        <div className="relative z-10 shrink-0 flex justify-between items-start px-6 py-4 drop-shadow-md border-b border-white/5 bg-black/10 backdrop-blur-sm">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 relative">
                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
@@ -2909,26 +2909,21 @@ const handleCopyDailyReport = () => {
              <div>
                <h1 className="text-xl font-extrabold tracking-tight flex items-center gap-2 leading-none">
                  <span className="text-white drop-shadow">ســـرب</span>
-                 <span className="text-[10px] text-white bg-white/20 px-1.5 py-0.5 rounded font-bold tracking-widest font-mono">ERP</span>
+                 <span className="text-[10px] text-emerald-400 bg-white/10 border border-white/10 px-1.5 py-0.5 rounded font-bold tracking-widest font-mono">ERP</span>
                </h1>
              </div>
           </div>
 
-          <div className="flex flex-col items-end gap-1 mt-1">
-            <span className="text-sm font-medium opacity-80">{new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
-            <div className="flex items-center gap-1.5 opacity-80">
-              <div className="flex gap-0.5">
-                <div className="w-1 h-2 bg-white rounded-full"></div>
-                <div className="w-1 h-2.5 bg-white rounded-full"></div>
-                <div className="w-1 h-3 bg-white rounded-full"></div>
-                <div className="w-1 h-2 bg-white/50 rounded-full"></div>
-              </div>
-              <div className="text-[10px] font-bold font-mono">100%</div>
+          <div className="flex flex-col items-end gap-1 mt-1 text-white/90">
+            <span className="text-sm font-bold tracking-wide drop-shadow-md font-mono">{new Date().toLocaleTimeString('ar-SA', { hour12: true, hour: '2-digit', minute: '2-digit' })}</span>
+            <div className="text-[11px] font-medium drop-shadow-md opacity-80">
+              {new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
           </div>
         </div>
 
-        <div className="relative z-10 flex-1 flex flex-col pb-6">
+        <div className="relative z-10 flex-1 flex flex-col pb-6 justify-between">
+
           {/* Apps Grid (TOP) */}
           <div className="pt-8 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-8 px-6 max-w-4xl mx-auto w-full">
             {/* Treasury App */}
@@ -2948,25 +2943,29 @@ const handleCopyDailyReport = () => {
 
             {/* Dummy Apps */}
             {[
-              { name: 'المبيعات', icon: Receipt, color: '#13655B' },
-              { name: 'المخازن', icon: BookOpen, color: '#13655B' },
-              { name: 'الموظفين', icon: LogIn, color: '#13655B' },
-              { name: 'التحليلات', icon: BarChart3, color: '#13655B' },
-              { name: 'المشتريات', icon: Wallet, color: '#13655B' },
-              { name: 'الإعدادات', icon: Settings, color: '#13655B' }
+              { name: 'المبيعات', icon: Receipt, color: '#13655B', disabled: true },
+              { name: 'المخازن', icon: BookOpen, color: '#13655B', disabled: true },
+              { name: 'الموظفين', icon: LogIn, color: '#13655B', disabled: true },
+              { name: 'التحليلات', icon: BarChart3, color: '#13655B', disabled: true },
+              { name: 'المشتريات', icon: Wallet, color: '#13655B', disabled: true },
+              { name: 'الإعدادات', icon: Settings, color: '#13655B', disabled: false, action: () => setShowSettingsModal(true) }
             ].map((app, idx) => (
               <button 
                 key={idx}
-                className="flex flex-col items-center gap-2 group opacity-60 hover:opacity-100 transition-all cursor-not-allowed"
+                onClick={app.action}
+                className={`flex flex-col items-center gap-2 group transition-all ${app.disabled ? 'opacity-60 cursor-not-allowed hover:opacity-100' : 'opacity-100 active:scale-95'}`}
               >
-                <div className="w-[72px] h-[72px] bg-[#13655B]/80 rounded-[1.5rem] shadow-xl ring-1 ring-white/10 flex items-center justify-center">
+                <div className={`w-[72px] h-[72px] rounded-[1.5rem] shadow-xl ring-1 ring-white/10 flex items-center justify-center ${app.disabled ? 'bg-[#13655B]/80' : 'bg-[#13655B] hover:-translate-y-1 hover:shadow-2xl hover:bg-[#1a7a6e] transition-all'}`}>
                   <app.icon size={28} className="text-[#7BE3A1] drop-shadow-md" />
                 </div>
-                <span className="text-xs font-bold drop-shadow-md tracking-wide text-white/80">{app.name}</span>
+                <span className={`text-xs font-bold drop-shadow-md tracking-wide ${app.disabled ? 'text-white/80' : 'text-white/90'}`}>{app.name}</span>
               </button>
             ))}
           </div>
 
+          <div className="text-center text-white/50 text-[11px] font-medium mt-auto w-full">
+            تم التطوير بواسطة <span className="font-bold text-white/80 tracking-wide text-xs">Eng. Khaled Rizk</span>
+          </div>
         </div>
       </div>
     );
