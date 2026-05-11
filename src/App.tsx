@@ -11,6 +11,7 @@ import CalculatorWidget from './components/Calculator';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { motion, AnimatePresence } from 'motion/react';
+import { SettingsModalComponent } from './components/SettingsModal';
 
 type FundHistoryEntry = {
   id: string;
@@ -2732,6 +2733,23 @@ const handleCopyDailyReport = () => {
     return entries;
   };
 
+  const clearHistory = async () => {
+    setConfirmDialog({
+      message: 'هل أنت متأكد من مسح جميع السجلات بأرشيف الأيام السابقة والأموال المعلقة؟ لن يتأثر تقفيل اليوم الحالي المفتوح.',
+      onConfirm: async () => {
+        try {
+          setState(prev => ({ ...prev, archivedPendingFunds: [] }));
+          setHistory([]);
+          localStorage.removeItem('treasury_history');
+          showToast('تم مسح جميع السجلات بنجاح', 'success');
+        } catch (error) {
+          console.error(error);
+          showToast('حدث خطأ أثناء مسح السجلات', 'error');
+        }
+      }
+    });
+  };
+
   const renderTable = (title: string, field: keyof AppState, icon: any, colorClass: string, isPending = false, canShowInSummary = false) => (
     <DynamicTable 
       title={title} 
@@ -2883,6 +2901,7 @@ const handleCopyDailyReport = () => {
 
   if (currentAppView === 'launcher') {
     return (
+      <>
       <div className="fixed inset-0 bg-[#0B2D2E] text-white overflow-hidden flex flex-col" dir="rtl">
         {/* Abstract Background pattern */}
         <div className="absolute inset-0 opacity-10" style={{
@@ -2968,6 +2987,27 @@ const handleCopyDailyReport = () => {
           </div>
         </div>
       </div>
+      
+      <SettingsModalComponent
+        show={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        companyName={companyName}
+        setCompanyName={setCompanyName}
+        uiScale={uiScale}
+        setUiScale={setUiScale}
+        thermalMargins={thermalMargins}
+        setThermalMargins={setThermalMargins}
+        clearHistory={clearHistory}
+        branches={branches}
+        adminUsers={adminUsers}
+        handleUpdateBranch={handleUpdateBranch}
+        handleDeleteBranch={handleDeleteBranch}
+        handleUpdateUser={handleUpdateUser}
+        setShowAddBranchModal={setShowAddBranchModal}
+        user={user}
+        userProfile={userProfile}
+      />
+      </>
     );
   }
 
@@ -3940,302 +3980,25 @@ const handleCopyDailyReport = () => {
       )}
       </AnimatePresence>
 
-      {/* Settings Page (Full Screen Android Style) */}
-      <AnimatePresence>
-      {showSettingsModal && (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} className="fixed inset-0 z-[100] bg-[#f2f2f7] overflow-y-auto print:hidden" dir="rtl">
-          {/* Android-like App Bar */}
-          <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-2 py-3 flex items-center gap-2 shadow-sm">
-            <button onClick={() => setShowSettingsModal(false)} className="p-3 hover:bg-black/5 active:bg-black/10 rounded-full transition-colors">
-              <ArrowRight size={24} className="text-gray-800" />
-            </button>
-            <h2 className="text-xl font-bold text-gray-900 flex-1">الإعدادات</h2>
-          </div>
-          
-          <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-8 pb-12">
-
-            {/* App Preferences */}
-            <section>
-              <div className="px-4 mb-2 flex items-center gap-2">
-                <Settings size={18} className="text-blue-600" />
-                <h3 className="font-bold text-gray-600 text-[15px] tracking-wide">بيانات التطبيق</h3>
-              </div>
-              <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-gray-900 text-base">اسم الشركة</h4>
-                  <p className="text-gray-500 text-[15px] mt-1">يظهر في تقارير الطباعة والتقفيل اليومي.</p>
-                </div>
-                <div className="mt-4 sm:mt-0 w-full sm:w-64">
-                  <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="اسم التطبيق/الشركة" />
-                </div>
-              </div>
-            </section>
-
-            {/* UI Preferences */}
-            <section>
-              <div className="px-4 mb-2 flex items-center gap-2">
-                <Settings size={18} className="text-blue-600" />
-                <h3 className="font-bold text-gray-600 text-[15px] tracking-wide">تفضيلات الواجهة</h3>
-              </div>
-              <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-gray-900 text-base">حجم الخط (تكبير/تصغير)</h4>
-                  <p className="text-gray-500 text-[15px] mt-1">التحكم في حجم الخط والواجهة في جميع أنحاء التطبيق.</p>
-                </div>
-                <div className="flex items-center gap-2 bg-slate-50/50 p-1.5 rounded-2xl border border-gray-200">
-                  <button onClick={() => setUiScale(Math.min(uiScale + 0.1, 1.5))} className="pro-card p-2 hover:bg-white rounded-xl shadow-sm text-gray-700 transition" title="تكبير">+</button>
-                  <span className="font-bold w-12 text-center text-blue-700 dir-ltr">{Math.round(uiScale * 100)}%</span>
-                  <button onClick={() => setUiScale(Math.max(uiScale - 0.1, 0.7))} className="pro-card p-2 hover:bg-white rounded-xl shadow-sm text-gray-700 transition" title="تصغير">-</button>
-                  <button onClick={() => setUiScale(1)} className="p-2 hover:bg-zinc-200 bg-zinc-100 rounded-xl shadow-sm text-xs font-bold mr-1 transition" title="افتراضي">افتراضي</button>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-4">
-                <div>
-                  <h4 className="font-bold text-gray-900 text-base">هوامش الطباعة الحرارية (يمين/يسار)</h4>
-                  <p className="text-gray-500 text-[15px] mt-1">تحديد هوامش الإيصال الحراري لتصحيح العرض التلقائي.</p>
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2 bg-slate-50/50 p-1.5 rounded-2xl border border-gray-200">
-                    <span className="text-[15px] font-semibold px-2 text-slate-500">اليمين:</span>
-                    <button onClick={() => setThermalMargins(p => ({...p, right: p.right + 2}))} className="p-1.5 hover:bg-white rounded-xl shadow-sm text-gray-700 transition">+</button>
-                    <span className="font-bold w-8 text-center text-blue-700">{thermalMargins.right}</span>
-                    <button onClick={() => setThermalMargins(p => ({...p, right: Math.max(0, p.right - 2)}))} className="p-1.5 hover:bg-white rounded-xl shadow-sm text-gray-700 transition">-</button>
-                  </div>
-                  <div className="flex items-center gap-2 bg-slate-50/50 p-1.5 rounded-2xl border border-gray-200">
-                    <span className="text-[15px] font-semibold px-2 text-slate-500">اليسار:</span>
-                    <button onClick={() => setThermalMargins(p => ({...p, left: p.left + 2}))} className="p-1.5 hover:bg-white rounded-xl shadow-sm text-gray-700 transition">+</button>
-                    <span className="font-bold w-8 text-center text-blue-700">{thermalMargins.left}</span>
-                    <button onClick={() => setThermalMargins(p => ({...p, left: Math.max(0, p.left - 2)}))} className="p-1.5 hover:bg-white rounded-xl shadow-sm text-gray-700 transition">-</button>
-                  </div>
-                </div>
-              </div>
-            </section>
-            
-            {/* Lists Management */}
-            <section>
-              <div className="px-4 mb-2 flex items-center gap-2">
-                <BookOpen size={18} className="text-blue-600" />
-                <h3 className="font-bold text-gray-600 text-[15px] tracking-wide">إدارة القوائم المنسدلة (الحفظ التلقائي)</h3>
-              </div>
-              <div className="bg-white rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100">
-                <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-gray-100">
-                  {Object.entries({
-                    expenseRefunds: 'مردود المصروفات',
-                    expenses: 'المصروفات المتنوعة',
-                    companyPayments: 'سداد الشركات والموردين',
-                    customerTransfers: 'تحويلات العملاء',
-                    pendingFundsOwedToUs: 'أموال معلقة لنا (سلف/عهد)',
-                    pendingFundsOwedByUs: 'أموال معلقة علينا (لعملاء)',
-                    cashDeposits: 'الإيداعات البنكية',
-                    customCashAmounts: 'المبالغ النقدية المجمعة',
-                    posData: 'نقاط البيع',
-                  }).map(([fieldKey, label], index) => (
-                    <div key={fieldKey} className={`p-5 ${index % 2 !== 0 ? '' : ''} hover:bg-slate-50/50/50 transition-colors`}>
-                      <h3 className="font-bold text-gray-800 mb-3 text-base flex justify-between items-center">
-                        {label}
-                        <span className="text-xs font-normal bg-slate-50 text-gray-500 px-2 py-1 rounded-full">{(state.savedNames[fieldKey as keyof typeof state.savedNames] || []).length}</span>
-                      </h3>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {(state.savedNames[fieldKey as keyof typeof state.savedNames] || []).map(name => (
-                          <span key={name} className="bg-white group text-gray-700 px-3 py-1.5 rounded-xl text-[15px] flex items-center gap-2 border border-gray-200 shadow-sm">
-                            {name}
-                            <button onClick={() => removeSavedName(fieldKey as any, name)} className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1 rounded-md transition-colors"><Trash2 size={14} /></button>
-                          </span>
-                        ))}
-                      </div>
-                      <AddNameInput onAdd={(name) => addSavedName(fieldKey as any, name)} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* System Actions (Backup / Restore) */}
-            <section>
-              <div className="px-4 mb-2 flex items-center gap-2">
-                <Database size={18} className="text-blue-600" />
-                <h3 className="font-bold text-gray-600 text-[15px] tracking-wide">النسخ الاحتياطي للأجهزة السحابية</h3>
-              </div>
-              <div className="bg-white rounded-3xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <h4 className="font-bold text-gray-900 text-base">حفظ واستعادة البيانات</h4>
-                  <p className="text-gray-500 text-[15px] mt-1">يمكنك تصدير نسخة احتياطية من بيانات التطبيق أو استعادتها. مفيد عند مسح بيانات المتصفح.</p>
-                </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <button 
-                    onClick={() => {
-                      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ state, history }, null, 2));
-                      const downloadAnchorNode = document.createElement('a');
-                      downloadAnchorNode.setAttribute("href", dataStr);
-                      downloadAnchorNode.setAttribute("download", `khazna_backup_${new Date().toISOString().split('T')[0]}.json`);
-                      document.body.appendChild(downloadAnchorNode);
-                      downloadAnchorNode.click();
-                      downloadAnchorNode.remove();
-                      showToast("تم تنزيل النسخة الاحتياطية بنجاح", "success");
-                    }} 
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl font-bold transition-colors"
-                  >
-                    <Download size={18} /> تصدير نسخة
-                  </button>
-                  <label className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-bold transition-colors cursor-pointer">
-                    <Database size={18} /> استعادة نسخة
-                    <input 
-                      type="file" 
-                      accept=".json" 
-                      className="hidden" 
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            try {
-                              const result = JSON.parse(event.target?.result as string);
-                              if (result.state && result.history) {
-                                if (window.confirm('هل أنت متأكد من استعادة هذه النسخة؟ سيتم استبدال جميع البيانات الحالية.')) {
-                                  setState(result.state);
-                                  setHistory(result.history);
-                                  showToast('تمت استعادة البيانات بنجاح', 'success');
-                                  setShowSettingsModal(false);
-                                }
-                              } else {
-                                showToast('ملف النسخة الاحتياطية غير صالح', 'error');
-                              }
-                            } catch (err) {
-                              showToast('حدث خطأ أثناء قراءة الملف', 'error');
-                            }
-                          };
-                          reader.readAsText(file);
-                        }
-                      }} 
-                    />
-                  </label>
-                  <button 
-                    onClick={() => {
-                      if (window.confirm("تحذير ⚠️: سيتم حذف جميع البيانات والتقارير بشكل نهائي! هل أنت متأكد من مسح كافة بيانات التطبيق واسترجاع الحالة الافتراضية؟")) {
-                        setState(getInitialState());
-                        setHistory([]);
-                        showToast("تم مسح كافة البيانات بنجاح", "success");
-                        setShowSettingsModal(false);
-                      }
-                    }} 
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-xl font-bold transition-colors mt-4 sm:mt-0"
-                  >
-                    <Trash2 size={18} /> مسح كل البيانات
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            {/* Admin Panel */}
-            {userProfile?.role === 'admin' && (
-              <section>
-                <div className="px-4 mb-2 flex items-center gap-2">
-                  <Database size={18} className="text-amber-600" />
-                  <h3 className="font-bold text-gray-600 text-[15px] tracking-wide">إدارة النظام المركزية</h3>
-                </div>
-
-                {/* Branches Settings */}
-                <div className="bg-white rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 mb-6">
-                  <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-slate-50/50/30">
-                    <div>
-                      <h4 className="font-bold text-gray-900 text-lg">الفروع</h4>
-                      <p className="text-gray-500 text-[15px] mt-1">التحكم في منافذ وفروع المنشأة</p>
-                    </div>
-                    <button onClick={() => { setShowSettingsModal(false); setShowAddBranchModal(true); }} className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2.5 rounded-xl text-[15px] font-bold transition-transform active:scale-95 flex items-center gap-2 shadow-sm">
-                      <Plus size={18} /> إضافة فرع
-                    </button>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-[15px] text-right">
-                      <thead className="bg-slate-50/50 text-gray-600 border-b border-gray-100">
-                        <tr>
-                          <th className="p-4 font-semibold">اسم الفرع</th>
-                          <th className="p-4 w-40 text-center font-semibold">إجراء</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {branches.map(b => (
-                          <tr key={b.id} className="hover:bg-slate-50/50/50 transition-colors">
-                            <td className="p-4">
-                              <Input value={b.name} onChange={(e: any) => {
-                                const newBranches = [...branches];
-                                const idx = newBranches.findIndex(x => x.id === b.id);
-                                if (idx > -1) { newBranches[idx].name = e.target.value; setBranches(newBranches); }
-                              }} onBlur={(e: any) => handleUpdateBranch(b.id, e.target.value)} className="w-full max-w-sm bg-transparent border-gray-200 focus:bg-white" />
-                            </td>
-                            <td className="p-4 text-center">
-                              <button onClick={() => handleDeleteBranch(b.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2.5 rounded-xl transition-colors" title="حذف الفرع">
-                                <Trash2 size={18} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                        {branches.length === 0 && <tr><td colSpan={2} className="text-center p-8 text-gray-500 font-medium">لا توجد فروع مسجلة</td></tr>}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Users Settings */}
-                <div className="bg-white rounded-3xl overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100">
-                  <div className="p-5 border-b border-gray-100 bg-slate-50/50/30">
-                    <h4 className="font-bold text-gray-900 text-lg">المستخدمون النشطون</h4>
-                    <p className="text-gray-500 text-[15px] mt-1">صلاحيات التحكم والدخول للمنصة</p>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-right">
-                      <thead className="bg-slate-50/50 text-gray-600 border-b border-gray-100 text-[15px]">
-                        <tr>
-                          <th className="p-4 font-semibold">البريد الإلكتروني</th>
-                          <th className="p-4 font-semibold">تحديد الدور</th>
-                          <th className="p-4 font-semibold">تعيين الفرع</th>
-                          <th className="p-4 font-semibold">حالة الحساب</th>
-                          <th className="p-4 font-semibold text-left">تاريخ الانضمام</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 text-[15px]">
-                        {adminUsers.map(u => (
-                          <tr key={u.uid} className="hover:bg-slate-50/50/50 transition-colors">
-                            <td className="p-4 font-bold text-gray-800">{u.email}</td>
-                            <td className="p-4">
-                              <select value={u.role} onChange={(e) => handleUpdateUser(u.uid, { role: e.target.value as UserRole })} className="cursor-pointer border border-gray-200 rounded-xl px-3 py-2 bg-white outline-none w-full max-w-[150px] shadow-sm hover:border-gray-300 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
-                                <option value="cashier">كاشير (إدخال)</option>
-                                <option value="manager">مدير (تقفيل)</option>
-                                <option value="admin">أدمن (كامل)</option>
-                              </select>
-                            </td>
-                            <td className="p-4">
-                              <select value={u.branchId || ''} onChange={(e) => handleUpdateUser(u.uid, { branchId: e.target.value || null })} className="cursor-pointer border border-gray-200 rounded-xl px-3 py-2 bg-white outline-none w-full max-w-[150px] shadow-sm hover:border-gray-300 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
-                                <option value="">-- بلا فرع --</option>
-                                {branches.map(b => (
-                                  <option key={b.id} value={b.id}>{b.name}</option>
-                                ))}
-                              </select>
-                            </td>
-                            <td className="p-4">
-                              <select value={u.status} onChange={(e) => handleUpdateUser(u.uid, { status: e.target.value as UserStatus })} className={`cursor-pointer border rounded-xl px-3 py-2 outline-none font-bold shadow-sm transition-colors w-full max-w-[150px] focus:ring-2 ${u.status === 'active' ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:border-emerald-300 focus:ring-emerald-100' : u.status === 'pending' ? 'bg-amber-50 text-amber-800 border-amber-200 hover:border-amber-300 focus:ring-amber-100' : 'bg-rose-50 text-rose-800 border-rose-200 hover:border-rose-300 focus:ring-rose-100'}`}>
-                                <option value="pending">قيد الانتظار</option>
-                                <option value="active">حساب نشط</option>
-                                <option value="suspended">موقوف/مجمد</option>
-                              </select>
-                            </td>
-                            <td className="p-4 text-gray-500 font-mono text-left" dir="ltr">{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
-                          </tr>
-                        ))}
-                        {adminUsers.length === 0 && <tr><td colSpan={5} className="text-center p-8 text-gray-500 font-medium">لم يتم تسجيل أي مستخدم</td></tr>}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-              </section>
-            )}
-
-          </div>
-        </motion.div>
-      )}
-      </AnimatePresence>
+            <SettingsModalComponent
+        show={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        companyName={companyName}
+        setCompanyName={setCompanyName}
+        uiScale={uiScale}
+        setUiScale={setUiScale}
+        thermalMargins={thermalMargins}
+        setThermalMargins={setThermalMargins}
+        clearHistory={clearHistory}
+        branches={branches}
+        adminUsers={adminUsers}
+        handleUpdateBranch={handleUpdateBranch}
+        handleDeleteBranch={handleDeleteBranch}
+        handleUpdateUser={handleUpdateUser}
+        setShowAddBranchModal={setShowAddBranchModal}
+        user={user}
+        userProfile={userProfile}
+      />
 
       {/* Toast Notification */}
       <AnimatePresence>
