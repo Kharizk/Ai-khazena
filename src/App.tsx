@@ -629,54 +629,53 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
   const sumOwedByUs = pendingOwedByUs.reduce((a: number, b: any) => a + b.amount, 0);
 
   return (
-    <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white text-black font-sans"}>
+    <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px] mx-auto" : "hidden print:block rtl w-[210mm] min-h-[297mm] mx-auto bg-white text-black font-sans p-8 box-border"}>
       <div className="text-center mb-8 pb-4 border-b-2 border-gray-300">
         <h2 className="text-2xl font-bold mb-1">{companyName}</h2>
         <h1 className="text-3xl font-bold mb-2">تقرير الأموال المعلقة</h1>
         <p className="text-gray-700 text-lg">تاريخ الطباعة: <span dir="ltr" className="font-bold font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
       </div>
 
-      <div className="columns-1 sm:columns-2 gap-8 print:columns-2 print:gap-8 text-[15px]">
-        {/* Section 1 Header */}
-        <div className="break-inside-avoid mb-2 bg-amber-50 rounded-lg border border-amber-200 overflow-hidden mt-0 shadow-sm">
-          <div className="p-3 flex justify-between items-center text-amber-900 border-b border-amber-200/50">
-            <h2 className="text-lg font-bold">أموال لنا (سلف/عهد)</h2>
-            <span dir="ltr" className="font-mono font-bold text-xl">{formatNum(sumOwedToUs)}</span>
+      <div className="grid grid-cols-2 gap-8 text-[15px]">
+        {/* Section 1 */}
+        <div className="flex flex-col">
+          <div className="mb-2 bg-amber-50 rounded-lg border border-amber-200 overflow-hidden shadow-sm">
+            <div className="p-3 flex justify-between items-center text-amber-900 border-b border-amber-200/50">
+              <h2 className="text-lg font-bold">أموال لنا (سلف/عهد)</h2>
+              <span dir="ltr" className="font-mono font-bold text-xl">{formatNum(sumOwedToUs)}</span>
+            </div>
           </div>
+
+          {pendingOwedToUs.length > 0 ? pendingOwedToUs.map((item: any, idx: number) => (
+            <div key={item.id} className="flex justify-between items-center py-2 px-3 border border-gray-200 bg-white mb-2 rounded-lg shadow-sm">
+               <div className="flex items-center gap-3">
+                 <span className="w-7 h-7 flex items-center justify-center text-[13px] text-gray-500 font-bold bg-gray-100 rounded shrink-0">{idx + 1}</span>
+                 <span className="font-semibold text-gray-800">{item.name}</span>
+               </div>
+               <span className="font-bold font-mono text-gray-900" dir="ltr">{formatNum(item.amount)}</span>
+            </div>
+          )) : <div className="text-center py-4 text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">لا توجد أموال معلقة لنا</div>}
         </div>
 
-        {/* Section 1 Items */}
-        {pendingOwedToUs.length > 0 ? pendingOwedToUs.map((item: any, idx: number) => (
-          <div key={item.id} className="break-inside-avoid flex justify-between items-center py-2 px-3 border border-gray-200 bg-white mb-2 rounded-lg shadow-sm">
-             <div className="flex items-center gap-3">
-               <span className="w-7 h-7 flex items-center justify-center text-[13px] text-gray-500 font-bold bg-gray-100 rounded shrink-0">{idx + 1}</span>
-               <span className="font-semibold text-gray-800">{item.name}</span>
-             </div>
-             <span className="font-bold font-mono text-gray-900" dir="ltr">{formatNum(item.amount)}</span>
+        {/* Section 2 */}
+        <div className="flex flex-col">
+          <div className="mb-2 bg-slate-100 rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+            <div className="p-3 flex justify-between items-center text-slate-800 border-b border-slate-200/50">
+              <h2 className="text-lg font-bold">أموال علينا (أمانات/مستحقات)</h2>
+              <span dir="ltr" className="font-mono font-bold text-xl">{formatNum(sumOwedByUs)}</span>
+            </div>
           </div>
-        )) : <div className="break-inside-avoid text-center py-4 text-gray-500 bg-white mb-6 border border-gray-200 rounded-lg">لا توجد أموال معلقة لنا</div>}
 
-        <div className="break-inside-avoid h-4"></div>
-
-        {/* Section 2 Header */}
-        <div className="break-inside-avoid mb-2 bg-slate-100 rounded-lg border border-slate-200 overflow-hidden shadow-sm">
-          <div className="p-3 flex justify-between items-center text-slate-800 border-b border-slate-200/50">
-            <h2 className="text-lg font-bold">أموال علينا (أمانات/مستحقات)</h2>
-            <span dir="ltr" className="font-mono font-bold text-xl">{formatNum(sumOwedByUs)}</span>
-          </div>
+          {pendingOwedByUs.length > 0 ? pendingOwedByUs.map((item: any, idx: number) => (
+            <div key={item.id} className="flex justify-between items-center py-2 px-3 border border-gray-200 bg-white mb-2 rounded-lg shadow-sm">
+               <div className="flex items-center gap-3">
+                 <span className="w-7 h-7 flex items-center justify-center text-[13px] text-gray-500 font-bold bg-gray-100 rounded shrink-0">{idx + 1}</span>
+                 <span className="font-semibold text-gray-800">{item.name}</span>
+               </div>
+               <span className="font-bold font-mono text-gray-900" dir="ltr">{formatNum(item.amount)}</span>
+            </div>
+          )) : <div className="text-center py-4 text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">لا توجد أموال معلقة علينا</div>}
         </div>
-
-        {/* Section 2 Items */}
-        {pendingOwedByUs.length > 0 ? pendingOwedByUs.map((item: any, idx: number) => (
-          <div key={item.id} className="break-inside-avoid flex justify-between items-center py-2 px-3 border border-gray-200 bg-white mb-2 rounded-lg shadow-sm">
-             <div className="flex items-center gap-3">
-               <span className="w-7 h-7 flex items-center justify-center text-[13px] text-gray-500 font-bold bg-gray-100 rounded shrink-0">{idx + 1}</span>
-               <span className="font-semibold text-gray-800">{item.name}</span>
-             </div>
-             <span className="font-bold font-mono text-gray-900" dir="ltr">{formatNum(item.amount)}</span>
-          </div>
-        )) : <div className="break-inside-avoid text-center py-4 text-gray-500 bg-white mb-6 border border-gray-200 rounded-lg">لا توجد أموال معلقة علينا</div>}
-
       </div>
     </div>
   );
@@ -2892,22 +2891,46 @@ const handleCopyDailyReport = () => {
         }}></div>
 
         {/* Status Bar */}
-        <div className="relative z-10 shrink-0 flex justify-between items-center px-6 py-3 text-[15px] font-medium drop-shadow-md opacity-80 mt-2">
-          <span>{new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-0.5">
-              <div className="w-1 h-3 bg-white rounded-full"></div>
-              <div className="w-1 h-3.5 bg-white rounded-full"></div>
-              <div className="w-1 h-4 bg-white rounded-full"></div>
-              <div className="w-1 h-2.5 bg-white/50 rounded-full"></div>
+        <div className="relative z-10 shrink-0 flex justify-between items-start px-6 py-4 drop-shadow-md bg-white/5 opacity-100">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 relative">
+               <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+                 <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="url(#smLogoGrad)" strokeWidth="18" strokeLinecap="round" />
+                 <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
+                 <circle cx="80" cy="28" r="2" fill="#0B2D2E" />
+                 <defs>
+                   <linearGradient id="smLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                     <stop offset="0%" stopColor="#7BE3A1" />
+                     <stop offset="100%" stopColor="#22C55E" />
+                   </linearGradient>
+                 </defs>
+               </svg>
+             </div>
+             <div>
+               <h1 className="text-xl font-extrabold tracking-tight flex items-center gap-2 leading-none">
+                 <span className="text-white drop-shadow">ســـرب</span>
+                 <span className="text-[10px] text-white bg-white/20 px-1.5 py-0.5 rounded font-bold tracking-widest font-mono">ERP</span>
+               </h1>
+             </div>
+          </div>
+
+          <div className="flex flex-col items-end gap-1 mt-1">
+            <span className="text-sm font-medium opacity-80">{new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
+            <div className="flex items-center gap-1.5 opacity-80">
+              <div className="flex gap-0.5">
+                <div className="w-1 h-2 bg-white rounded-full"></div>
+                <div className="w-1 h-2.5 bg-white rounded-full"></div>
+                <div className="w-1 h-3 bg-white rounded-full"></div>
+                <div className="w-1 h-2 bg-white/50 rounded-full"></div>
+              </div>
+              <div className="text-[10px] font-bold font-mono">100%</div>
             </div>
-            <div className="text-xs font-bold font-mono">100%</div>
           </div>
         </div>
 
         <div className="relative z-10 flex-1 flex flex-col pb-6">
           {/* Apps Grid (TOP) */}
-          <div className="pt-6 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-8 px-6 max-w-4xl mx-auto w-full">
+          <div className="pt-8 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-8 px-6 max-w-4xl mx-auto w-full">
             {/* Treasury App */}
             <button 
               onClick={() => setCurrentAppView('treasury')}
@@ -2944,34 +2967,6 @@ const handleCopyDailyReport = () => {
             ))}
           </div>
 
-          {/* Dashboard Name & Logo Area (CENTERED) */}
-          <div className="text-center drop-shadow-lg flex-1 flex flex-col items-center justify-center pb-20">
-            <div className="flex justify-center mb-6">
-              <div className="w-32 h-32 relative">
-                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
-                  {/* S Shape stylized */}
-                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="url(#logoGrad)" strokeWidth="18" strokeLinecap="round" />
-                  {/* Bird head approximation */}
-                  <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
-                  <circle cx="80" cy="28" r="2" fill="#0B2D2E" />
-                  <defs>
-                    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#7BE3A1" />
-                      <stop offset="50%" stopColor="#22C55E" />
-                      <stop offset="100%" stopColor="#13655B" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
-            <h1 className="text-5xl font-extrabold tracking-tight mb-2">ســـرب</h1>
-            <div className="flex items-center gap-4 justify-center mb-4">
-              <div className="h-[1px] w-12 bg-srb-primary"></div>
-              <p className="text-srb-light font-bold text-xl tracking-[0.3em] font-poppins">ERP</p>
-              <div className="h-[1px] w-12 bg-srb-primary"></div>
-            </div>
-            <p className="text-white/80 font-medium text-lg mt-2 font-cairo">نظام واحد .. إدارة متكاملة</p>
-          </div>
         </div>
       </div>
     );
