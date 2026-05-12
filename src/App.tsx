@@ -630,54 +630,97 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
   const sumOwedByUs = pendingOwedByUs.reduce((a: number, b: any) => a + b.amount, 0);
 
   return (
-    <div id={id} className={isPdfMode ? "rtl p-8 bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans w-[800px] mx-auto" : "hidden print:block rtl w-full max-w-[210mm] mx-auto bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans p-6 print:p-0 box-border"}>
-      <div className="text-center mb-8 pb-4 border-b-2 border-gray-300">
-        <h2 className="text-2xl font-bold mb-1">{companyName}</h2>
-        <h1 className="text-3xl font-bold mb-2">تقرير الأموال المعلقة</h1>
-        <p className="text-gray-700 text-lg">تاريخ الطباعة: <span dir="ltr" className="font-bold font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
-      </div>
-
-      <div className="flex flex-col gap-6 text-[15px]">
-        {/* Section 1 */}
-        <div className="mb-6 break-inside-avoid">
-          <div className="mb-2 bg-amber-50 rounded-2xl border border-amber-200 overflow-hidden shadow-sm break-inside-avoid">
-            <div className="p-3 flex justify-between items-center text-amber-900 border-b border-amber-200/50">
-              <h2 className="text-lg font-bold">أموال لنا (سلف/عهد)</h2>
-              <span dir="ltr" className="font-mono font-bold text-xl">{formatNum(sumOwedToUs)}</span>
-            </div>
-          </div>
-
-          {pendingOwedToUs.length > 0 ? pendingOwedToUs.map((item: any, idx: number) => (
-            <div key={item.id} className="break-inside-avoid flex justify-between items-center py-2 px-3 border border-gray-200 bg-white dark:bg-slate-900 print:bg-white mb-2 rounded-2xl shadow-sm">
-               <div className="flex items-center gap-3">
-                 <span className="w-7 h-7 flex items-center justify-center text-[13px] text-gray-500 font-bold bg-gray-100 rounded shrink-0">{idx + 1}</span>
-                 <span className="font-semibold text-gray-800">{item.name}</span>
-               </div>
-               <span className="font-bold font-mono text-gray-900" dir="ltr">{formatNum(item.amount)}</span>
-            </div>
-          )) : <div className="break-inside-avoid text-center py-4 text-gray-500 bg-white dark:bg-slate-900 print:bg-white border border-gray-200 rounded-2xl shadow-sm">لا توجد أموال معلقة لنا</div>}
-        </div>
-
-        {/* Section 2 */}
-        <div className="mb-6 break-inside-avoid">
-          <div className="mb-2 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm break-inside-avoid">
-            <div className="p-3 flex justify-between items-center text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700/50">
-              <h2 className="text-lg font-bold">أموال علينا (أمانات/مستحقات)</h2>
-              <span dir="ltr" className="font-mono font-bold text-xl">{formatNum(sumOwedByUs)}</span>
-            </div>
-          </div>
-
-          {pendingOwedByUs.length > 0 ? pendingOwedByUs.map((item: any, idx: number) => (
-            <div key={item.id} className="break-inside-avoid flex justify-between items-center py-2 px-3 border border-gray-200 bg-white dark:bg-slate-900 print:bg-white mb-2 rounded-2xl shadow-sm">
-               <div className="flex items-center gap-3">
-                 <span className="w-7 h-7 flex items-center justify-center text-[13px] text-gray-500 font-bold bg-gray-100 rounded shrink-0">{idx + 1}</span>
-                 <span className="font-semibold text-gray-800">{item.name}</span>
-               </div>
-               <span className="font-bold font-mono text-gray-900" dir="ltr">{formatNum(item.amount)}</span>
-            </div>
-          )) : <div className="break-inside-avoid text-center py-4 text-gray-500 bg-white dark:bg-slate-900 print:bg-white border border-gray-200 rounded-2xl shadow-sm">لا توجد أموال معلقة علينا</div>}
+    <div id={id} className={isPdfMode ? "rtl bg-white text-black font-sans w-[800px] mx-auto p-10 box-border" : "hidden print:block rtl w-[210mm] mx-auto bg-white text-black font-sans py-8 px-6 box-border"}>
+      
+      {/* Header aligned perfectly */}
+      <div className="text-center mb-6 pb-4 border-b-4 border-double border-slate-300">
+        <h2 className="text-xl font-bold mb-1 text-slate-800">{companyName}</h2>
+        <h1 className="text-3xl font-black mb-3 text-black">تقرير الأموال المعلقة</h1>
+        <div className="flex justify-center items-center gap-6 text-slate-700 text-[15px] font-bold">
+           <span>التاريخ: {new Date().toLocaleDateString('en-GB')}</span>
+           <span>الوقت: {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span>
         </div>
       </div>
+
+      {/* Side-by-Side grid layout taking exactly full width */}
+      <div className="grid grid-cols-2 gap-6 items-start">
+        
+        {/* Us Column */}
+        <div className="flex flex-col border border-slate-300 rounded-xl overflow-hidden shrink-0">
+          <div className="bg-slate-100 p-3 flex justify-between items-center border-b border-slate-300">
+             <h3 className="text-lg font-bold text-slate-800">لنا (سلف / عهد)</h3>
+             <span dir="ltr" className="font-mono font-black text-lg text-slate-900">{formatNum(sumOwedToUs)}</span>
+          </div>
+          <div className="bg-white min-h-[500px]">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="p-2 font-bold text-slate-600 text-xs w-10 text-center">#</th>
+                  <th className="p-2 font-bold text-slate-600 text-[13px]">الاسم</th>
+                  <th className="p-2 font-bold text-slate-600 text-[13px] text-left">المبلغ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingOwedToUs.length > 0 ? pendingOwedToUs.map((item: any, idx: number) => (
+                  <tr key={item.id} className="border-b border-slate-100 last:border-0">
+                    <td className="p-2 text-center text-slate-500 font-bold text-sm">{idx + 1}</td>
+                    <td className="p-2 font-bold text-slate-800 text-[15px]">{item.name}</td>
+                    <td className="p-2 font-mono font-bold text-slate-900 text-[15px] text-left" dir="ltr">{formatNum(item.amount)}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={3} className="p-6 text-center text-slate-400 font-bold text-sm">لا توجد أموال معلقة لنا</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Them Column */}
+        <div className="flex flex-col border border-slate-300 rounded-xl overflow-hidden shrink-0">
+          <div className="bg-slate-100 p-3 flex justify-between items-center border-b border-slate-300">
+             <h3 className="text-lg font-bold text-slate-800">علينا (أمانات / مستحقات)</h3>
+             <span dir="ltr" className="font-mono font-black text-lg text-slate-900">{formatNum(sumOwedByUs)}</span>
+          </div>
+          <div className="bg-white min-h-[500px]">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="p-2 font-bold text-slate-600 text-xs w-10 text-center">#</th>
+                  <th className="p-2 font-bold text-slate-600 text-[13px]">الاسم</th>
+                  <th className="p-2 font-bold text-slate-600 text-[13px] text-left">المبلغ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingOwedByUs.length > 0 ? pendingOwedByUs.map((item: any, idx: number) => (
+                  <tr key={item.id} className="border-b border-slate-100 last:border-0">
+                    <td className="p-2 text-center text-slate-500 font-bold text-sm">{idx + 1}</td>
+                    <td className="p-2 font-bold text-slate-800 text-[15px]">{item.name}</td>
+                    <td className="p-2 font-mono font-bold text-slate-900 text-[15px] text-left" dir="ltr">{formatNum(item.amount)}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={3} className="p-6 text-center text-slate-400 font-bold text-sm">لا توجد أموال معلقة علينا</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <div className="mt-8 p-4 border-2 border-slate-300 bg-slate-50 rounded-xl flex justify-between items-center">
+         <div className="text-lg font-bold text-slate-800">صافي فرق المعلق: 
+            <span dir="ltr" className="mx-3 font-mono text-xl text-black">{formatNum(Math.abs(sumOwedToUs - sumOwedByUs))}</span>
+            <span className="text-[15px] text-slate-600">({sumOwedToUs - sumOwedByUs >= 0 ? 'صافي لنا' : 'صافي علينا'})</span>
+         </div>
+         <div className="text-[15px] font-bold text-slate-500">
+            توقيع المراجع: ..............................
+         </div>
+      </div>
+      
     </div>
   );
 };
