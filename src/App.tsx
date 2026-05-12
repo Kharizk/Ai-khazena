@@ -175,7 +175,7 @@ const formatNum = (num: number) => num.toLocaleString('en-US', { minimumFraction
 const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4', thermalMargins = { right: 24, left: 24, top: 0 }, isPreviewMode = false }: any) => {
   if (printFormat === 'thermal') {
     return (
-      <div id={id} className={`${isPreviewMode ? 'flex flex-col bg-white' : 'hidden print:flex print:flex-col print:bg-white'} rtl text-black font-sans box-border ${isPreviewMode && 'rounded-xl shadow-sm border border-slate-200'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
+      <div id={id} className={`${isPreviewMode ? 'flex flex-col bg-white dark:bg-slate-900 print:bg-white' : 'hidden print:flex print:flex-col print:bg-white dark:bg-slate-900 print:bg-white'} rtl text-black dark:text-white print:text-black font-sans box-border ${isPreviewMode && 'rounded-[1.25rem] shadow-sm border border-slate-200 dark:border-slate-700'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
         {!isPreviewMode && <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page { margin: 0; padding: 0; size: 79mm auto; }
@@ -271,7 +271,7 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
   }
 
   return (
-    <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white text-black font-sans"}>
+    <div id={id} className={isPdfMode ? "rtl p-8 bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans"}>
     <div className="text-center mb-6 pb-4 border-b-2 border-gray-300">
       <h2 className="text-2xl font-bold mb-1">{companyName}</h2>
       <h1 className="text-3xl font-bold mb-2">تقرير التقفيل اليومي</h1>
@@ -279,11 +279,11 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
     </div>
     
     <div className="mb-6">
-      <h2 className="text-2xl font-bold bg-slate-50 p-2 mb-4 border-r-4 border-blue-600">ملخص الوارد والمنصرف</h2>
+      <h2 className="text-2xl font-bold bg-slate-50 dark:bg-slate-800/50 p-2 mb-4 border-r-4 border-slate-900">ملخص الوارد والمنصرف</h2>
       <table className="w-full text-right border-collapse text-lg border border-gray-300">
         <tbody>
           <tr className="border-b border-gray-300">
-            <td className="py-3 px-4 font-bold bg-slate-50/50/50 w-2/3">رصيد أول المدة</td>
+            <td className="py-3 px-4 font-bold bg-slate-50 dark:bg-slate-800/50/50/50 w-2/3">رصيد أول المدة</td>
             <td className="py-3 px-4 font-bold" dir="ltr">{formatNum(state.previousBalance)}</td>
           </tr>
           <tr className="border-b border-gray-300">
@@ -312,7 +312,7 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
               ))}
             </td>
           </tr>
-          <tr className="border-t-2 border-gray-800 bg-slate-50">
+          <tr className="border-t-2 border-gray-800 bg-slate-50 dark:bg-slate-800/50">
             <td className="py-4 px-4 font-black w-2/3">الرصيد الدفتري (المتوقع)</td>
             <td className="py-4 px-4 font-black font-mono" dir="ltr">{formatNum(summary.expectedCash)}</td>
           </tr>
@@ -321,11 +321,11 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
     </div>
 
     <div className="mb-6 break-inside-avoid">
-      <h2 className="text-2xl font-bold bg-slate-50 p-2 mb-4 border-r-4 border-indigo-600">الجرد الفعلي</h2>
+      <h2 className="text-2xl font-bold bg-slate-50 dark:bg-slate-800/50 p-2 mb-4 border-r-4 border-indigo-600">الجرد الفعلي</h2>
       <table className="w-full text-right border-collapse text-lg border border-gray-300">
         <tbody>
           <tr className="border-b border-gray-300">
-            <td className="py-3 px-4 font-bold bg-slate-50/50/50 w-2/3">النقدية الفعلية (الجرد)</td>
+            <td className="py-3 px-4 font-bold bg-slate-50 dark:bg-slate-800/50/50/50 w-2/3">النقدية الفعلية (الجرد)</td>
             <td className="py-3 px-4 font-bold" dir="ltr">{formatNum(summary.physicalCash)}</td>
           </tr>
           <tr className="border-b border-gray-300">
@@ -333,10 +333,10 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
             <td className="py-3 px-4 font-bold text-amber-700" dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td>
           </tr>
           <tr className="border-b border-gray-300">
-            <td className="py-3 px-4 font-bold text-slate-700 w-2/3">- أموال معلقة علينا</td>
-            <td className="py-3 px-4 font-bold text-slate-700" dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td>
+            <td className="py-3 px-4 font-bold text-slate-700 dark:text-slate-300 w-2/3">- أموال معلقة علينا</td>
+            <td className="py-3 px-4 font-bold text-slate-700 dark:text-slate-300" dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td>
           </tr>
-          <tr className="border-t-2 border-gray-800 bg-slate-50">
+          <tr className="border-t-2 border-gray-800 bg-slate-50 dark:bg-slate-800/50">
             <td className="py-4 px-4 font-black w-2/3">الرصيد الفعلي (الصافي)</td>
             <td className="py-4 px-4 font-black font-mono text-indigo-700" dir="ltr">{formatNum(summary.actualCash)}</td>
           </tr>
@@ -344,7 +344,7 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
       </table>
     </div>
 
-    <div className={`p-6 mt-8 rounded-xl border-4 text-center font-black text-2xl ${summary.difference === 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : summary.difference > 0 ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+    <div className={`p-6 mt-8 rounded-[1.25rem] border-4 text-center font-black text-2xl ${summary.difference === 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : summary.difference > 0 ? 'bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
       {summary.difference === 0 ? 'الخزينة مطابقة تماماً' : summary.difference > 0 ? `يوجد زيادة: ${formatNum(Math.abs(summary.difference))}` : `يوجد عجز: ${formatNum(Math.abs(summary.difference))}`}
     </div>
   </div>
@@ -358,7 +358,7 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
   
   if (printFormat === 'thermal') {
     return (
-      <div className={`${isPreviewMode ? 'flex flex-col bg-white' : 'hidden print:flex print:flex-col print:bg-white'} rtl text-black font-sans box-border ${isPreviewMode && 'rounded-xl shadow-sm border border-slate-200'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
+      <div className={`${isPreviewMode ? 'flex flex-col bg-white dark:bg-slate-900 print:bg-white' : 'hidden print:flex print:flex-col print:bg-white dark:bg-slate-900 print:bg-white'} rtl text-black dark:text-white print:text-black font-sans box-border ${isPreviewMode && 'rounded-[1.25rem] shadow-sm border border-slate-200 dark:border-slate-700'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
         {!isPreviewMode && <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page { margin: 0; padding: 0; size: 79mm auto; }
@@ -425,46 +425,46 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
   }
 
   return (
-    <div className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white text-black font-sans mx-auto">
+    <div className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans mx-auto">
       <div className="text-center mb-8 pb-6 border-b-2 border-gray-400">
         <h2 className="text-2xl font-bold mb-2">{companyName}</h2>
         <h1 className="text-4xl font-black mb-3 text-gray-900 border-2 border-slate-800 inline-block px-8 py-3 rounded-2xl shadow-[4px_4px_0_0_rgba(17,24,39,1)]">
           تسوية نقطة بيع: {pos.name || 'بدون اسم'}
         </h1>
         <div className="flex justify-center gap-6 mt-6">
-          <p className="text-lg font-bold bg-slate-50 px-4 py-2 rounded-xl border border-gray-300">
-            تاريخ الإعداد: <span dir="ltr" className="font-mono text-blue-700">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span>
+          <p className="text-lg font-bold bg-slate-50 dark:bg-slate-800/50 px-4 py-2 rounded-[1.25rem] border border-gray-300">
+            تاريخ الإعداد: <span dir="ltr" className="font-mono text-slate-800 dark:text-slate-200 font-bold">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span>
           </p>
-          <p className="text-lg font-bold bg-slate-50 px-4 py-2 rounded-xl border border-gray-300">
+          <p className="text-lg font-bold bg-slate-50 dark:bg-slate-800/50 px-4 py-2 rounded-[1.25rem] border border-gray-300">
             تاريخ الطباعة: <span dir="ltr" className="font-mono text-gray-700">{new Date().toLocaleDateString('en-GB')}</span>
           </p>
         </div>
       </div>
       
-      <table className="w-full text-right border-collapse text-xl border-2 border-gray-400 mb-8 rounded-xl overflow-hidden shadow-sm">
+      <table className="w-full text-right border-collapse text-xl border-2 border-gray-400 mb-8 rounded-[1.25rem] overflow-hidden shadow-sm">
         <tbody>
           <tr className="border-b-2 border-gray-300">
-            <td className="py-4 px-6 font-bold bg-slate-50/50 align-middle w-2/3">إجمالي المبيعات</td>
-            <td className="py-4 px-6 font-black font-mono text-2xl border-r-2 border-gray-300 bg-white" dir="ltr">{formatNum(pos.sales)}</td>
+            <td className="py-4 px-6 font-bold bg-slate-50 dark:bg-slate-800/50/50 align-middle w-2/3">إجمالي المبيعات</td>
+            <td className="py-4 px-6 font-black font-mono text-2xl border-r-2 border-gray-300 bg-white dark:bg-slate-900 print:bg-white" dir="ltr">{formatNum(pos.sales)}</td>
           </tr>
           <tr className="border-b-2 border-gray-300">
             <td className="py-4 px-6 font-bold text-rose-800 bg-rose-50 align-middle w-2/3">المرتجعات (تخصم)</td>
-            <td className="py-4 px-6 font-black font-mono text-2xl text-rose-700 border-r-2 border-gray-300 bg-white" dir="ltr">{formatNum(pos.returns)}</td>
+            <td className="py-4 px-6 font-black font-mono text-2xl text-rose-700 border-r-2 border-gray-300 bg-white dark:bg-slate-900 print:bg-white" dir="ltr">{formatNum(pos.returns)}</td>
           </tr>
           <tr className="border-b-2 border-gray-400">
-            <td className="py-4 px-6 font-black bg-slate-100 text-slate-800 align-middle w-2/3">صافي المبيعات</td>
-            <td className="py-4 px-6 font-black font-mono text-2xl border-r-2 border-gray-400 bg-white text-slate-800" dir="ltr">{formatNum(net)}</td>
+            <td className="py-4 px-6 font-black bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 align-middle w-2/3">صافي المبيعات</td>
+            <td className="py-4 px-6 font-black font-mono text-2xl border-r-2 border-gray-400 bg-white dark:bg-slate-900 print:bg-white text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(net)}</td>
           </tr>
           <tr className="border-b-2 border-gray-300">
-            <td className="py-4 px-6 font-bold text-blue-800 bg-blue-50 align-middle w-2/3 break-words relative">
+            <td className="py-4 px-6 font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800/80 align-middle w-2/3 break-words relative">
               <span className="block mb-1">إجمالي الشبكات (تخصم)</span>
               {pos.networks?.length > 0 && (
-                <span className="text-[15px] font-normal text-blue-600 block bg-blue-100/50 px-2 py-1 rounded inline-block mt-1">
+                <span className="text-[15px] font-normal text-slate-900 dark:text-white tracking-tight block bg-slate-100 dark:bg-slate-800/50 px-2 py-1 rounded inline-block mt-1">
                   ( {pos.networks.map((n: number) => formatNum(n)).join(' + ')} )
                 </span>
               )}
             </td>
-            <td className="py-4 px-6 font-black font-mono text-2xl text-blue-700 border-r-2 border-gray-300 bg-white align-middle" dir="ltr">{formatNum(networksTotal)}</td>
+            <td className="py-4 px-6 font-black font-mono text-2xl text-slate-800 dark:text-slate-200 font-bold border-r-2 border-gray-300 bg-white dark:bg-slate-900 print:bg-white align-middle" dir="ltr">{formatNum(networksTotal)}</td>
           </tr>
           <tr className="border-b-[3px] border-slate-800 bg-amber-50">
             <td className="py-5 px-6 font-black text-amber-900 align-middle w-2/3 text-2xl">المطلوب كاش في الدرج</td>
@@ -479,13 +479,13 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
         </tbody>
       </table>
       {pos.physicalCash !== undefined && (
-        <div className={`p-8 mt-8 rounded-2xl border-4 text-center ${diff === 0 ? 'bg-emerald-50 border-emerald-400' : diff > 0 ? 'bg-blue-50 border-blue-400' : 'bg-rose-50 border-rose-400'}`}>
+        <div className={`p-8 mt-8 rounded-2xl border-4 text-center ${diff === 0 ? 'bg-emerald-50 border-emerald-400' : diff > 0 ? 'bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600' : 'bg-rose-50 border-rose-400'}`}>
           <p className="text-xl font-bold mb-2 text-gray-600">نتيجة جرد الدرج الفعلي</p>
-          <div className={`font-black text-4xl tracking-tight ${diff === 0 ? 'text-emerald-800' : diff > 0 ? 'text-blue-800' : 'text-rose-800'}`}>
+          <div className={`font-black text-4xl tracking-tight ${diff === 0 ? 'text-emerald-800' : diff > 0 ? 'text-slate-900 dark:text-white' : 'text-rose-800'}`}>
             {diff === 0 ? 'الدرج مطابق تماماً (لا عجز ولا زيادة)' : diff > 0 ? `يوجد زيادة: ${formatNum(Math.abs(diff))}` : `يوجد عجز: ${formatNum(Math.abs(diff))}`}
           </div>
           {diff !== 0 && (
-             <p className={`mt-3 font-bold ${diff > 0 ? 'text-blue-600' : 'text-rose-600'}`}>
+             <p className={`mt-3 font-bold ${diff > 0 ? 'text-slate-900 dark:text-white tracking-tight' : 'text-rose-600'}`}>
                يرجى المراجعة والتسوية مع القسم المختص.
              </p>
           )}
@@ -497,7 +497,7 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
 
 const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
   return (
-    <div className="hidden print:block rtl w-[210mm] min-h-[297mm] mx-auto bg-white text-black font-sans p-8 box-border">
+    <div className="hidden print:block rtl w-[210mm] min-h-[297mm] mx-auto bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans p-8 box-border">
       <div className="text-center mb-6 pb-4 border-b-4 border-double border-gray-400">
         <h1 className="text-3xl font-black mb-2 text-gray-900">ملخص الخزينة اليومي للمبيعات والمصروفات</h1>
         <div className="flex justify-between items-center px-4">
@@ -507,15 +507,15 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-6">
-        <div className="border-2 border-gray-300 rounded-xl p-4">
-          <h2 className="text-xl font-bold bg-slate-50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">بيانات الأرصدة</h2>
+        <div className="border-2 border-gray-300 rounded-[1.25rem] p-4">
+          <h2 className="text-xl font-bold bg-slate-50 dark:bg-slate-800/50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">بيانات الأرصدة</h2>
           <table className="w-full text-right font-medium">
             <tbody>
               <tr className="border-b border-gray-200"><td className="py-4">رصيد أول المدة</td><td dir="ltr" className="py-2 text-left">{formatNum(state.previousBalance)}</td></tr>
               <tr className="border-b border-gray-200"><td className="py-4">إجمالي الإيرادات (+)</td><td dir="ltr" className="py-2 text-left text-green-700">{formatNum(summary.totalCashIn)}</td></tr>
               <tr className="border-b border-gray-200"><td className="py-4">إجمالي المصروفات (-)</td><td dir="ltr" className="py-2 text-left text-red-700">{formatNum(summary.totalCashOut)}</td></tr>
-              <tr className="bg-slate-50/50 font-bold text-lg"><td className="py-3">الرصيد الدفتري المتوقع</td><td dir="ltr" className="py-3 text-left">{formatNum(summary.expectedCash)}</td></tr>
-              <tr className="bg-slate-100 font-bold text-lg"><td className="py-3">الرصيد الفعلي (الخزينة)</td><td dir="ltr" className="py-3 text-left">{formatNum(summary.actualCash)}</td></tr>
+              <tr className="bg-slate-50 dark:bg-slate-800/50/50 font-bold text-lg"><td className="py-3">الرصيد الدفتري المتوقع</td><td dir="ltr" className="py-3 text-left">{formatNum(summary.expectedCash)}</td></tr>
+              <tr className="bg-slate-100 dark:bg-slate-800 font-bold text-lg"><td className="py-3">الرصيد الفعلي (الخزينة)</td><td dir="ltr" className="py-3 text-left">{formatNum(summary.actualCash)}</td></tr>
               <tr className={`font-black text-xl ${summary.difference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 <td className="py-3 pt-4 border-t-2 border-gray-400">العجز أو الزيادة</td>
                 <td dir="ltr" className="py-3 pt-4 border-t-2 border-gray-400 text-left">{summary.difference > 0 ? '+' : ''}{formatNum(summary.difference)}</td>
@@ -524,8 +524,8 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
           </table>
         </div>
 
-        <div className="border-2 border-gray-300 rounded-xl p-4">
-          <h2 className="text-xl font-bold bg-slate-50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملخص الإيرادات والنقاط</h2>
+        <div className="border-2 border-gray-300 rounded-[1.25rem] p-4">
+          <h2 className="text-xl font-bold bg-slate-50 dark:bg-slate-800/50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملخص الإيرادات والنقاط</h2>
           <table className="w-full text-right font-medium text-[15px]">
             <thead>
               <tr className="border-b border-gray-300 text-gray-600">
@@ -560,8 +560,8 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-6">
-        <div className="border-2 border-gray-300 rounded-xl p-4">
-          <h2 className="text-xl font-bold bg-slate-50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">المصروفات والمدفوعات</h2>
+        <div className="border-2 border-gray-300 rounded-[1.25rem] p-4">
+          <h2 className="text-xl font-bold bg-slate-50 dark:bg-slate-800/50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">المصروفات والمدفوعات</h2>
           <div className="space-y-4">
             <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">مصروفات متنوعة</h3>
@@ -590,8 +590,8 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
           </div>
         </div>
 
-        <div className="border-2 border-gray-300 rounded-xl p-4">
-          <h2 className="text-xl font-bold bg-slate-50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملاحظات وعهدة</h2>
+        <div className="border-2 border-gray-300 rounded-[1.25rem] p-4">
+          <h2 className="text-xl font-bold bg-slate-50 dark:bg-slate-800/50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملاحظات وعهدة</h2>
            <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">إيداعات بنكية (خوارج)</h3>
               {state.cashDeposits.length > 0 ? state.cashDeposits.map((e: any, i: number) => (
@@ -630,17 +630,17 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
   const sumOwedByUs = pendingOwedByUs.reduce((a: number, b: any) => a + b.amount, 0);
 
   return (
-    <div id={id} className={isPdfMode ? "rtl p-8 bg-white text-black font-sans w-[800px] mx-auto" : "hidden print:block rtl max-w-[210mm] print:w-auto mx-auto bg-white text-black font-sans p-6 print:p-0 box-border"}>
+    <div id={id} className={isPdfMode ? "rtl p-8 bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans w-[800px] mx-auto" : "hidden print:block rtl w-full max-w-[210mm] mx-auto bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans p-6 print:p-0 box-border"}>
       <div className="text-center mb-8 pb-4 border-b-2 border-gray-300">
         <h2 className="text-2xl font-bold mb-1">{companyName}</h2>
         <h1 className="text-3xl font-bold mb-2">تقرير الأموال المعلقة</h1>
         <p className="text-gray-700 text-lg">تاريخ الطباعة: <span dir="ltr" className="font-bold font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
       </div>
 
-      <div className="columns-1 sm:columns-2 gap-8 text-[15px]" style={{ columnFill: 'auto' }}>
+      <div className="flex flex-col gap-6 text-[15px]">
         {/* Section 1 */}
-        <div className="mb-6 break-inside-avoid-page">
-          <div className="mb-2 bg-amber-50 rounded-lg border border-amber-200 overflow-hidden shadow-sm break-inside-avoid">
+        <div className="mb-6 break-inside-avoid">
+          <div className="mb-2 bg-amber-50 rounded-2xl border border-amber-200 overflow-hidden shadow-sm break-inside-avoid">
             <div className="p-3 flex justify-between items-center text-amber-900 border-b border-amber-200/50">
               <h2 className="text-lg font-bold">أموال لنا (سلف/عهد)</h2>
               <span dir="ltr" className="font-mono font-bold text-xl">{formatNum(sumOwedToUs)}</span>
@@ -648,34 +648,34 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
           </div>
 
           {pendingOwedToUs.length > 0 ? pendingOwedToUs.map((item: any, idx: number) => (
-            <div key={item.id} className="break-inside-avoid flex justify-between items-center py-2 px-3 border border-gray-200 bg-white mb-2 rounded-lg shadow-sm">
+            <div key={item.id} className="break-inside-avoid flex justify-between items-center py-2 px-3 border border-gray-200 bg-white dark:bg-slate-900 print:bg-white mb-2 rounded-2xl shadow-sm">
                <div className="flex items-center gap-3">
                  <span className="w-7 h-7 flex items-center justify-center text-[13px] text-gray-500 font-bold bg-gray-100 rounded shrink-0">{idx + 1}</span>
                  <span className="font-semibold text-gray-800">{item.name}</span>
                </div>
                <span className="font-bold font-mono text-gray-900" dir="ltr">{formatNum(item.amount)}</span>
             </div>
-          )) : <div className="break-inside-avoid text-center py-4 text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">لا توجد أموال معلقة لنا</div>}
+          )) : <div className="break-inside-avoid text-center py-4 text-gray-500 bg-white dark:bg-slate-900 print:bg-white border border-gray-200 rounded-2xl shadow-sm">لا توجد أموال معلقة لنا</div>}
         </div>
 
         {/* Section 2 */}
-        <div className="mb-6 break-inside-avoid-page">
-          <div className="mb-2 bg-slate-100 rounded-lg border border-slate-200 overflow-hidden shadow-sm break-inside-avoid">
-            <div className="p-3 flex justify-between items-center text-slate-800 border-b border-slate-200/50">
+        <div className="mb-6 break-inside-avoid">
+          <div className="mb-2 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm break-inside-avoid">
+            <div className="p-3 flex justify-between items-center text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700/50">
               <h2 className="text-lg font-bold">أموال علينا (أمانات/مستحقات)</h2>
               <span dir="ltr" className="font-mono font-bold text-xl">{formatNum(sumOwedByUs)}</span>
             </div>
           </div>
 
           {pendingOwedByUs.length > 0 ? pendingOwedByUs.map((item: any, idx: number) => (
-            <div key={item.id} className="break-inside-avoid flex justify-between items-center py-2 px-3 border border-gray-200 bg-white mb-2 rounded-lg shadow-sm">
+            <div key={item.id} className="break-inside-avoid flex justify-between items-center py-2 px-3 border border-gray-200 bg-white dark:bg-slate-900 print:bg-white mb-2 rounded-2xl shadow-sm">
                <div className="flex items-center gap-3">
                  <span className="w-7 h-7 flex items-center justify-center text-[13px] text-gray-500 font-bold bg-gray-100 rounded shrink-0">{idx + 1}</span>
                  <span className="font-semibold text-gray-800">{item.name}</span>
                </div>
                <span className="font-bold font-mono text-gray-900" dir="ltr">{formatNum(item.amount)}</span>
             </div>
-          )) : <div className="break-inside-avoid text-center py-4 text-gray-500 bg-white border border-gray-200 rounded-lg shadow-sm">لا توجد أموال معلقة علينا</div>}
+          )) : <div className="break-inside-avoid text-center py-4 text-gray-500 bg-white dark:bg-slate-900 print:bg-white border border-gray-200 rounded-2xl shadow-sm">لا توجد أموال معلقة علينا</div>}
         </div>
       </div>
     </div>
@@ -845,14 +845,14 @@ ${summaryText.substring(0, 3000)}
       {/* Header and Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 print:hidden bg-transparent py-2">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-            <Activity className="text-blue-600" />
+          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <Activity className="text-slate-900 dark:text-white tracking-tight" />
             لوحة التأشيرات والتحليلات
           </h2>
-          <p className="text-[13px] text-slate-500 mt-1 font-medium">نظرة شاملة ومتقدمة على مؤشرات الأداء والنمو المالي</p>
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-medium">نظرة شاملة ومتقدمة على مؤشرات الأداء والنمو المالي</p>
         </div>
         
-        <div className="flex bg-white/80 p-1 rounded-xl shadow-sm border border-slate-200/50 w-full sm:w-auto">
+        <div className="flex bg-white dark:bg-slate-900 print:bg-white/80 p-1 rounded-[1.25rem] shadow-sm border border-slate-200 dark:border-slate-700/50 w-full sm:w-auto">
           {[
             { id: 'all', label: 'كل الأوقات' },
             { id: 'year', label: 'العام الحالي' },
@@ -861,7 +861,7 @@ ${summaryText.substring(0, 3000)}
             <button 
               key={rt.id}
               onClick={() => { setDateRange(rt.id as any); setAiAnalysis(null); }}
-              className={`flex-1 sm:px-6 py-2 text-[13px] sm:text-sm font-bold rounded-lg transition-all duration-300 ${dateRange === rt.id ? 'bg-slate-800 text-white shadow-sm border-slate-700' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
+              className={`flex-1 sm:px-6 py-2 text-[13px] sm:text-sm font-bold rounded-2xl transition-all duration-300 ${dateRange === rt.id ? 'bg-slate-800 text-white shadow-sm border-slate-700' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50'}`}
             >
               {rt.label}
             </button>
@@ -871,44 +871,44 @@ ${summaryText.substring(0, 3000)}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 print:hidden">
-        <div className="bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200/60 relative overflow-hidden group hover:border-slate-300 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-900 print:bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 relative overflow-hidden group hover:border-slate-300 dark:border-slate-600 transition-all duration-300">
           
-          <p className="text-slate-500 text-[13px] font-medium mb-3 flex items-center gap-2">
-             <TrendingUp size={16} className="text-blue-500"/> إجمالي المبيعات
+          <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-3 flex items-center gap-2">
+             <TrendingUp size={16} className="text-slate-900 dark:text-white"/> إجمالي المبيعات
           </p>
           <div className="flex items-end justify-between">
-            <h3 className="text-[26px] font-bold text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(totalSalesVal)}</h3>
+            <h3 className="text-[26px] font-bold text-slate-800 dark:text-slate-200 font-mono tracking-tight" dir="ltr">{formatCurrency(totalSalesVal)}</h3>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200/60 relative overflow-hidden group hover:border-slate-300 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-900 print:bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 relative overflow-hidden group hover:border-slate-300 dark:border-slate-600 transition-all duration-300">
           
-          <p className="text-slate-500 text-[13px] font-medium mb-3 flex items-center gap-2">
+          <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-3 flex items-center gap-2">
             <TrendingDown size={16} className="text-rose-500"/> المنصرفات والمدفوعات
           </p>
           <div className="flex items-end justify-between">
-            <h3 className="text-[26px] font-bold text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(totalExpensesVal)}</h3>
+            <h3 className="text-[26px] font-bold text-slate-800 dark:text-slate-200 font-mono tracking-tight" dir="ltr">{formatCurrency(totalExpensesVal)}</h3>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200/60 relative overflow-hidden group hover:border-slate-300 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-900 print:bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 relative overflow-hidden group hover:border-slate-300 dark:border-slate-600 transition-all duration-300">
           
-          <p className="text-slate-500 text-[13px] font-medium mb-3 flex items-center gap-2">
+          <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-3 flex items-center gap-2">
             <Wallet size={16} className="text-emerald-500"/> صافي التدفق المالي
           </p>
           <div className="flex items-end justify-between">
-            <h3 className={`text-[26px] font-bold font-mono tracking-tight ${totalNetVal >= 0 ? 'text-slate-800' : 'text-slate-800'}`} dir="ltr">{formatCurrency(totalNetVal)}</h3>
+            <h3 className={`text-[26px] font-bold font-mono tracking-tight ${totalNetVal >= 0 ? 'text-slate-800 dark:text-slate-200' : 'text-slate-800 dark:text-slate-200'}`} dir="ltr">{formatCurrency(totalNetVal)}</h3>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200/60 relative overflow-hidden group hover:border-slate-300 transition-all duration-300">
+        <div className="bg-white dark:bg-slate-900 print:bg-white p-5 rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 relative overflow-hidden group hover:border-slate-300 dark:border-slate-600 transition-all duration-300">
           <div className="absolute top-0 right-0 w-1.5 h-full bg-indigo-500"></div>
-          <p className="text-slate-500 text-[13px] font-medium mb-3 flex items-center gap-2">
+          <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-3 flex items-center gap-2">
             <CalendarDays size={16} className="text-indigo-500"/> المتوسط اليومي
           </p>
           <div className="flex items-end justify-between">
-            <h3 className="text-[26px] font-bold text-slate-800 font-mono tracking-tight" dir="ltr">{formatCurrency(avgDailySales)}</h3>
-            <div className="text-indigo-600 bg-indigo-50/80 px-2 py-1 rounded-lg text-[11px] font-bold">
+            <h3 className="text-[26px] font-bold text-slate-800 dark:text-slate-200 font-mono tracking-tight" dir="ltr">{formatCurrency(avgDailySales)}</h3>
+            <div className="text-indigo-600 bg-indigo-50/80 px-2 py-1 rounded-2xl text-[11px] font-bold">
                ${daysRecorded} أيام
             </div>
           </div>
@@ -919,10 +919,10 @@ ${summaryText.substring(0, 3000)}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Trend Combo Chart */}
-        <div className="bg-white/90 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 lg:col-span-2 flex flex-col transition-all hover:shadow-lg">
+        <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 dark:border-slate-700/60 lg:col-span-2 flex flex-col transition-all hover:shadow-lg">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
-              <LineChartIcon className="text-blue-500" size={20} /> الاتجاه العام للمبيعات والمصروفات
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 text-lg">
+              <LineChartIcon className="text-slate-900 dark:text-white" size={20} /> الاتجاه العام للمبيعات والمصروفات
             </h3>
           </div>
           {dailyMetrics.length >= 2 ? (
@@ -951,7 +951,7 @@ ${summaryText.substring(0, 3000)}
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 min-h-[250px]">
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-800/50/50 rounded-[1.25rem] border border-dashed border-slate-200 dark:border-slate-700 min-h-[250px]">
               <LineChartIcon size={40} className="mb-3 opacity-30" />
               <p className="font-medium text-[15px]">نحتاج إلى يومين على الأقل لتوضيح الاتجاه</p>
             </div>
@@ -959,8 +959,8 @@ ${summaryText.substring(0, 3000)}
         </div>
 
         {/* POS Breakdown Chart */}
-        <div className="bg-white/90 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 flex flex-col transition-all hover:shadow-lg">
-          <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2 text-lg">
+        <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 dark:border-slate-700/60 flex flex-col transition-all hover:shadow-lg">
+          <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-6 flex items-center gap-2 text-lg">
             <PieChartIcon className="text-emerald-500" size={20} /> مساهمة نقاط البيع
           </h3>
           {posChartData.length > 0 ? (
@@ -990,7 +990,7 @@ ${summaryText.substring(0, 3000)}
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 min-h-[250px]">
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-800/50/50 rounded-[1.25rem] border border-dashed border-slate-200 dark:border-slate-700 min-h-[250px]">
               <PieChartIcon size={40} className="mb-3 opacity-30" />
               <p className="font-medium text-[15px]">تصنيف مبيعات النقاط غير متاح</p>
             </div>
@@ -1014,7 +1014,7 @@ ${summaryText.substring(0, 3000)}
           <button 
             onClick={handleAnalyzeSales}
             disabled={aiLoading}
-            className="w-full md:w-auto shrink-0 bg-white text-indigo-900 px-8 py-3.5 rounded-xl font-black hover:bg-slate-100 hover:scale-105 transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)] disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2"
+            className="w-full md:w-auto shrink-0 bg-white dark:bg-slate-900 print:bg-white text-indigo-900 px-8 py-3.5 rounded-[1.25rem] font-black hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 hover:scale-105 transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)] disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2"
           >
             {aiLoading ? (
               <><div className="w-5 h-5 border-2 border-indigo-900 border-t-transparent rounded-full animate-spin"></div> جاري المعالجة...</>
@@ -1032,16 +1032,16 @@ ${summaryText.substring(0, 3000)}
             <h3 className="font-black text-indigo-900 text-xl flex items-center gap-2">
               <FileText className="text-indigo-600" /> تقرير المحلل المالي
             </h3>
-            <button onClick={() => setAiAnalysis(null)} className="text-slate-400 hover:text-indigo-700 bg-white p-2 rounded-xl shadow-sm transition-colors border border-slate-100">
+            <button onClick={() => setAiAnalysis(null)} className="text-slate-400 hover:text-indigo-700 bg-white dark:bg-slate-900 print:bg-white p-2 rounded-[1.25rem] shadow-sm transition-colors border border-slate-100 dark:border-slate-800">
               <X size={18} />
             </button>
           </div>
           <div className="prose prose-indigo prose-sm sm:prose-base max-w-none 
              prose-headings:text-indigo-900 prose-headings:font-bold prose-h3:text-lg 
-             prose-p:leading-relaxed text-slate-700
-             prose-table:w-full prose-table:border-collapse prose-table:rounded-xl prose-table:overflow-hidden prose-table:shadow-sm prose-table:my-6
+             prose-p:leading-relaxed text-slate-700 dark:text-slate-300
+             prose-table:w-full prose-table:border-collapse prose-table:rounded-[1.25rem] prose-table:overflow-hidden prose-table:shadow-sm prose-table:my-6
              prose-th:bg-indigo-600 prose-th:text-white prose-th:p-4 prose-th:text-right prose-th:border-0
-             prose-td:p-4 prose-td:border-b prose-td:border-indigo-50 prose-tr:bg-white prose-tr:hover:bg-indigo-50/30 transition-colors
+             prose-td:p-4 prose-td:border-b prose-td:border-indigo-50 prose-tr:bg-white dark:bg-slate-900 print:bg-white prose-tr:hover:bg-indigo-50/30 transition-colors
              prose-strong:text-indigo-900" dir="rtl">
             <Markdown remarkPlugins={[remarkGfm]}>{aiAnalysis}</Markdown>
           </div>
@@ -1049,29 +1049,29 @@ ${summaryText.substring(0, 3000)}
       )}
 
       {/* Daily Records List */}
-      <div className="bg-white/90 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 mt-8 print:hidden transition-all hover:shadow-lg">
-        <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2 text-lg">
-           <Layers className="text-slate-500" size={20} /> السجلات اليومية ({dailyMetrics.length})
+      <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-xl p-6 rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 dark:border-slate-700/60 mt-8 print:hidden transition-all hover:shadow-lg">
+        <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-6 flex items-center gap-2 text-lg">
+           <Layers className="text-slate-500 dark:text-slate-400" size={20} /> السجلات اليومية ({dailyMetrics.length})
         </h3>
         {dailyMetrics.length > 0 ? (
-          <div className="overflow-x-auto rounded-xl border border-slate-200/60">
+          <div className="overflow-x-auto rounded-[1.25rem] border border-slate-200 dark:border-slate-700/60">
             <table className="w-full text-right text-sm border-collapse">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600">
+                <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400">
                   <th className="py-4 px-6 font-bold w-1/3 text-right">التاريخ</th>
-                  <th className="py-4 px-6 font-bold text-center text-blue-700">المبيعات</th>
+                  <th className="py-4 px-6 font-bold text-center text-slate-800 dark:text-slate-200 font-bold">المبيعات</th>
                   <th className="py-4 px-6 font-bold text-center text-rose-600">المصروفات</th>
                   <th className="py-4 px-6 font-bold text-center text-emerald-600">الصافي</th>
                 </tr>
               </thead>
               <tbody>
                 {dailyMetrics.map((day: any, idx: number) => (
-                  <tr key={`${day.dateStr}-${idx}`} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-700 flex items-center gap-3 border-l border-slate-100">
+                  <tr key={`${day.dateStr}-${idx}`} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50/80 transition-colors">
+                    <td className="py-4 px-6 font-bold text-slate-700 dark:text-slate-300 flex items-center gap-3 border-l border-slate-100 dark:border-slate-800">
                       <span className="font-mono text-[14px]">{day.dateStr}</span>
                       {day.isCurrent && <span className="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md text-[10px] tracking-tight">قيد التشغيل</span>}
                     </td>
-                    <td className="py-4 px-6 font-bold text-center text-blue-700 font-mono" dir="ltr">{formatCurrency(day.pureNetSales)}</td>
+                    <td className="py-4 px-6 font-bold text-center text-slate-800 dark:text-slate-200 font-bold font-mono" dir="ltr">{formatCurrency(day.pureNetSales)}</td>
                     <td className="py-4 px-6 font-bold text-center text-rose-600 font-mono" dir="ltr">{formatCurrency(day.expenses)}</td>
                     <td className="py-4 px-6 font-black text-center text-emerald-600 font-mono bg-emerald-50/30" dir="ltr">{formatCurrency(day.pureNetSales - day.expenses)}</td>
                   </tr>
@@ -1080,7 +1080,7 @@ ${summaryText.substring(0, 3000)}
             </table>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-10 text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+          <div className="flex flex-col items-center justify-center py-10 text-slate-400 bg-slate-50 dark:bg-slate-800/50/50 rounded-[1.25rem] border border-dashed border-slate-200 dark:border-slate-700">
             <CalendarDays size={40} className="mb-3 opacity-30" />
             <p className="font-medium text-[15px]">لا يوجد سجلات لهذه الفترة</p>
           </div>
@@ -1094,21 +1094,21 @@ ${summaryText.substring(0, 3000)}
 const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppState, summary: ReturnType<typeof getSummary>, isExport?: boolean }) => {
   if (isExport) {
     return (
-      <div className="bg-white text-black p-6 border border-slate-300 rounded-xl print:border-none print:p-0">
-        <h2 className="text-xl font-bold text-center mb-6 border-b border-slate-200 pb-4 text-slate-800">ملخص التقفيل اليومي</h2>
-        <table className="w-full text-right border-collapse mb-8 text-[15px] text-slate-700">
+      <div className="bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black p-6 border border-slate-300 dark:border-slate-600 rounded-[1.25rem] print:border-none print:p-0">
+        <h2 className="text-xl font-bold text-center mb-6 border-b border-slate-200 dark:border-slate-700 pb-4 text-slate-800 dark:text-slate-200">ملخص التقفيل اليومي</h2>
+        <table className="w-full text-right border-collapse mb-8 text-[15px] text-slate-700 dark:text-slate-300">
           <tbody>
-            <tr className="border-b border-slate-100"><td className="py-3 font-bold cursor-default hover:text-slate-900 transition-colors">رصيد أول المدة</td><td className="py-3 font-bold text-slate-900" dir="ltr">{formatNum(state.previousBalance)}</td></tr>
-            <tr className="border-b border-slate-100"><td className="py-3 font-bold text-emerald-600">+ إجمالي الإيرادات (الوارد)</td><td className="py-3 font-bold text-emerald-600" dir="ltr">{formatNum(summary.totalCashIn)}</td></tr>
+            <tr className="border-b border-slate-100 dark:border-slate-800"><td className="py-3 font-bold cursor-default hover:text-slate-900 dark:text-white transition-colors">رصيد أول المدة</td><td className="py-3 font-bold text-slate-900 dark:text-white" dir="ltr">{formatNum(state.previousBalance)}</td></tr>
+            <tr className="border-b border-slate-100 dark:border-slate-800"><td className="py-3 font-bold text-emerald-600">+ إجمالي الإيرادات (الوارد)</td><td className="py-3 font-bold text-emerald-600" dir="ltr">{formatNum(summary.totalCashIn)}</td></tr>
             <tr>
-              <td colSpan={2} className="py-2 pr-4 text-[13px] text-slate-500 font-medium">
+              <td colSpan={2} className="py-2 pr-4 text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                 <div className="flex justify-between mb-1"><span>صافي المبيعات</span><span dir="ltr">{formatNum(summary.netSales)}</span></div>
                 {summary.totalExpenseRefunds > 0 && <div className="flex justify-between mb-1"><span>مردود مصروفات</span><span dir="ltr">{formatNum(summary.totalExpenseRefunds)}</span></div>}
               </td>
             </tr>
-            <tr className="border-b border-slate-100 border-t"><td className="py-3 font-bold text-rose-500">- إجمالي المخصومات (المنصرف)</td><td className="py-3 font-bold text-rose-500" dir="ltr">{formatNum(summary.totalCashOut)}</td></tr>
+            <tr className="border-b border-slate-100 dark:border-slate-800 border-t"><td className="py-3 font-bold text-rose-500">- إجمالي المخصومات (المنصرف)</td><td className="py-3 font-bold text-rose-500" dir="ltr">{formatNum(summary.totalCashOut)}</td></tr>
             <tr>
-              <td colSpan={2} className="py-2 pr-4 text-[13px] text-slate-500 font-medium">
+              <td colSpan={2} className="py-2 pr-4 text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                 {summary.totalNetworks > 0 && <div className="flex justify-between mb-1"><span>الشبكات</span><span dir="ltr">{formatNum(summary.totalNetworks)}</span></div>}
                 {summary.totalCustomerTransfers > 0 && <div className="flex justify-between mb-1"><span>تحويلات العملاء</span><span dir="ltr">{formatNum(summary.totalCustomerTransfers)}</span></div>}
                 {summary.totalCompanyPayments > 0 && <div className="flex justify-between mb-1"><span>سداد شركات وموردين</span><span dir="ltr">{formatNum(summary.totalCompanyPayments)}</span></div>}
@@ -1119,21 +1119,21 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
                 ))}
               </td>
             </tr>
-            <tr className="border-b border-slate-200 bg-slate-50 opacity-90"><td className="py-3 font-bold text-base text-slate-800 px-2 rounded-r-lg">الرصيد الدفتري (المتوقع)</td><td className="py-3 font-bold text-base text-slate-900 px-2 rounded-l-lg" dir="ltr">{formatNum(summary.expectedCash)}</td></tr>
+            <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 opacity-90"><td className="py-3 font-bold text-base text-slate-800 dark:text-slate-200 px-2 rounded-r-lg">الرصيد الدفتري (المتوقع)</td><td className="py-3 font-bold text-base text-slate-900 dark:text-white px-2 rounded-l-lg" dir="ltr">{formatNum(summary.expectedCash)}</td></tr>
           </tbody>
         </table>
 
-        <h3 className="text-lg font-bold mb-4 border-b border-slate-200 pb-2 text-slate-800">تفاصيل الجرد الفعلي</h3>
-        <table className="w-full text-right border-collapse mb-6 text-[15px] text-slate-700">
+        <h3 className="text-lg font-bold mb-4 border-b border-slate-200 dark:border-slate-700 pb-2 text-slate-800 dark:text-slate-200">تفاصيل الجرد الفعلي</h3>
+        <table className="w-full text-right border-collapse mb-6 text-[15px] text-slate-700 dark:text-slate-300">
           <tbody>
-            <tr className="border-b border-slate-100"><td className="py-3 font-bold">النقدية الفعلية (الجرد)</td><td className="py-3 font-bold text-slate-900" dir="ltr">{formatNum(summary.physicalCash)}</td></tr>
-            <tr className="border-b border-slate-100"><td className="py-3 font-bold text-indigo-500">+ أموال معلقة لنا</td><td className="py-3 font-bold text-indigo-500" dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td></tr>
-            <tr className="border-b border-slate-100"><td className="py-3 font-bold text-slate-500">- أموال معلقة علينا</td><td className="py-3 font-bold text-slate-500" dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td></tr>
-            <tr className="border-b border-slate-200 bg-slate-50 opacity-90"><td className="py-3 font-bold text-base text-slate-800 px-2 rounded-r-lg">الرصيد الفعلي</td><td className="py-3 font-bold text-base text-slate-900 px-2 rounded-l-lg" dir="ltr">{formatNum(summary.actualCash)}</td></tr>
+            <tr className="border-b border-slate-100 dark:border-slate-800"><td className="py-3 font-bold">النقدية الفعلية (الجرد)</td><td className="py-3 font-bold text-slate-900 dark:text-white" dir="ltr">{formatNum(summary.physicalCash)}</td></tr>
+            <tr className="border-b border-slate-100 dark:border-slate-800"><td className="py-3 font-bold text-indigo-500">+ أموال معلقة لنا</td><td className="py-3 font-bold text-indigo-500" dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</td></tr>
+            <tr className="border-b border-slate-100 dark:border-slate-800"><td className="py-3 font-bold text-slate-500 dark:text-slate-400">- أموال معلقة علينا</td><td className="py-3 font-bold text-slate-500 dark:text-slate-400" dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</td></tr>
+            <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 opacity-90"><td className="py-3 font-bold text-base text-slate-800 dark:text-slate-200 px-2 rounded-r-lg">الرصيد الفعلي</td><td className="py-3 font-bold text-base text-slate-900 dark:text-white px-2 rounded-l-lg" dir="ltr">{formatNum(summary.actualCash)}</td></tr>
           </tbody>
         </table>
 
-        <div className={`p-4 rounded-xl border text-center font-bold text-lg ${summary.difference === 0 ? 'border-none bg-slate-100 text-slate-700' : summary.difference > 0 ? 'border-none bg-blue-50 text-blue-700' : 'border-none bg-rose-50 text-rose-700'}`}>
+        <div className={`p-4 rounded-[1.25rem] border text-center font-bold text-lg ${summary.difference === 0 ? 'border-none bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300' : summary.difference > 0 ? 'border-none bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold' : 'border-none bg-rose-50 text-rose-700'}`}>
           {summary.difference === 0 ? 'الخزينة مطابقة' : summary.difference > 0 ? `يوجد زيادة: ${formatNum(Math.abs(summary.difference))}` : `يوجد عجز: ${formatNum(Math.abs(summary.difference))}`}
         </div>
       </div>
@@ -1142,34 +1142,34 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-white/60 backdrop-blur border text-slate-800 border-slate-200/50 rounded-[1.2rem] shadow-sm overflow-hidden print:bg-white print:text-black print:border print:border-slate-300">
-        <div className="p-4 md:p-5 border-b border-slate-100 print:border-slate-200">
-          <h2 className="text-[15px] font-semibold text-slate-800 mb-3 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div> ملخص التقفيل تفصيلي</h2>
+      <div className="bg-white dark:bg-slate-900 print:bg-white/60 backdrop-blur border text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700/50 rounded-[1.2rem] shadow-sm overflow-hidden print:bg-white dark:bg-slate-900 print:bg-white print:text-black dark:text-white print:text-black print:border print:border-slate-300 dark:border-slate-600">
+        <div className="p-4 md:p-5 border-b border-slate-100 dark:border-slate-800 print:border-slate-200 dark:border-slate-700">
+          <h2 className="text-[15px] font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-900 animate-pulse"></div> ملخص التقفيل تفصيلي</h2>
           <div className="space-y-2 text-xs md:text-[15px]">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-slate-600 font-medium truncate">رصيد أول المدة</span>
+              <span className="text-slate-600 dark:text-slate-400 font-medium truncate">رصيد أول المدة</span>
               <span className="font-medium shrink-0" dir="ltr">{formatNum(state.previousBalance)}</span>
             </div>
             
             {/* Inflow Breakdown */}
-            <div className="pt-2 border-t border-slate-100 print:border-slate-200">
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 print:border-slate-200 dark:border-slate-700">
               <div className="flex justify-between items-center gap-2 text-emerald-600 font-bold mb-1 pt-1">
                 <span className="truncate">+ إجمالي الإيرادات (الوارد)</span>
                 <span className="shrink-0" dir="ltr">{formatNum(summary.totalCashIn)}</span>
               </div>
-              <div className="pr-4 space-y-1 text-slate-500 font-medium text-[13px]">
+              <div className="pr-4 space-y-1 text-slate-500 dark:text-slate-400 font-medium text-[13px]">
                 <div className="flex justify-between gap-2"><span className="truncate">صافي المبيعات</span><span className="shrink-0" dir="ltr">{formatNum(summary.netSales)}</span></div>
                 {summary.totalExpenseRefunds > 0 && <div className="flex justify-between gap-2"><span className="truncate">مردود مصروفات</span><span className="shrink-0" dir="ltr">{formatNum(summary.totalExpenseRefunds)}</span></div>}
               </div>
             </div>
 
             {/* Outflow Breakdown */}
-            <div className="pt-2 border-t border-slate-100 print:border-slate-200">
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 print:border-slate-200 dark:border-slate-700">
               <div className="flex justify-between items-center gap-2 text-rose-500 font-bold mb-1 pt-1">
                 <span className="truncate">- إجمالي المخصومات (المنصرف)</span>
                 <span className="shrink-0" dir="ltr">{formatNum(summary.totalCashOut)}</span>
               </div>
-              <div className="pr-4 space-y-1 text-slate-500 font-medium text-[13px]">
+              <div className="pr-4 space-y-1 text-slate-500 dark:text-slate-400 font-medium text-[13px]">
                 {summary.totalNetworks > 0 && <div className="flex justify-between gap-2"><span className="truncate">الشبكات</span><span className="shrink-0" dir="ltr">{formatNum(summary.totalNetworks)}</span></div>}
                 {summary.totalCustomerTransfers > 0 && <div className="flex justify-between gap-2"><span className="truncate">تحويلات العملاء</span><span className="shrink-0" dir="ltr">{formatNum(summary.totalCustomerTransfers)}</span></div>}
                 {summary.totalCompanyPayments > 0 && <div className="flex justify-between gap-2"><span className="truncate">سداد شركات وموردين</span><span className="shrink-0" dir="ltr">{formatNum(summary.totalCompanyPayments)}</span></div>}
@@ -1186,33 +1186,33 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
               </div>
             </div>
 
-            <div className="pt-3 mt-3 border-t border-slate-100 flex justify-between items-center gap-2 text-[15px] font-bold text-slate-800">
+            <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center gap-2 text-[15px] font-bold text-slate-800 dark:text-slate-200">
               <span className="truncate">الرصيد الدفتري (المتوقع)</span>
               <span className="shrink-0" dir="ltr">{formatNum(summary.expectedCash)}</span>
             </div>
           </div>
         </div>
-        <div className="p-4 md:p-5 bg-slate-50/50 border-t border-slate-100">
+        <div className="p-4 md:p-5 bg-slate-50 dark:bg-slate-800/50/50 border-t border-slate-100 dark:border-slate-800">
           <div className="space-y-2 text-xs md:text-[15px] mb-3">
             <div className="flex justify-between items-center gap-2">
-              <span className="text-slate-400 print:text-slate-600 truncate">النقدية الفعلية (الجرد)</span>
+              <span className="text-slate-400 print:text-slate-600 dark:text-slate-400 truncate">النقدية الفعلية (الجرد)</span>
               <span className="font-medium shrink-0" dir="ltr">{formatNum(summary.physicalCash)}</span>
             </div>
-            <div className="flex justify-between items-center gap-2 text-blue-600 font-medium">
+            <div className="flex justify-between items-center gap-2 text-slate-900 dark:text-white tracking-tight font-medium">
               <span className="truncate">+ أموال معلقة لنا (تُحسب بالخزينة)</span>
               <span className="font-medium shrink-0" dir="ltr">{formatNum(summary.totalPendingOwedToUs)}</span>
             </div>
-            <div className="flex justify-between items-center gap-2 text-slate-400 print:text-slate-600">
+            <div className="flex justify-between items-center gap-2 text-slate-400 print:text-slate-600 dark:text-slate-400">
               <span className="truncate">- أموال معلقة علينا</span>
               <span className="font-medium shrink-0" dir="ltr">{formatNum(summary.totalPendingOwedByUs)}</span>
             </div>
           </div>
-          <div className="flex justify-between items-center gap-2 text-[16px] font-bold text-slate-900 mb-4 pt-1">
+          <div className="flex justify-between items-center gap-2 text-[16px] font-bold text-slate-900 dark:text-white mb-4 pt-1">
             <span className="truncate">الرصيد الفعلي</span>
             <span className="shrink-0" dir="ltr">{formatNum(summary.actualCash)}</span>
           </div>
           <div className={`p-3 rounded-2xl flex items-center justify-between ${
-            summary.difference === 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : summary.difference > 0 ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60'
+            summary.difference === 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : summary.difference > 0 ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold border border-slate-300 dark:border-slate-600/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60'
           }`}>
             <div className="flex items-center gap-2 font-bold text-[15px] md:text-base">
               {summary.difference === 0 ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
@@ -1237,7 +1237,7 @@ const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "
       placeholder={placeholder}
       dir={dir}
       list={list}
-      className={`w-full bg-slate-50/50 hover:bg-slate-100/30 border text-slate-800 border-slate-200/60 rounded-lg px-3 py-2 outline-none focus:ring-[3px] focus:ring-slate-900/5 focus:border-slate-400 focus:bg-white transition-all text-[14px] placeholder-slate-400 ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
+      className={`w-full bg-slate-50 dark:bg-slate-800/50/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/30 border text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700/60 rounded-2xl px-3 py-2 outline-none focus:ring-[3px] focus:ring-blue-600/5 focus:border-slate-400 focus:bg-white dark:bg-slate-900 print:bg-white transition-all text-[14px] placeholder-slate-400 ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
       {...props}
     />
   );
@@ -1268,7 +1268,7 @@ const AddNameInput = ({ onAdd }: { onAdd: (name: string) => void }) => {
             setVal('');
           }
         }} 
-        className="bg-blue-600 text-white px-3 py-2 rounded-xl border border-blue-700 shadow-sm hover:shadow active:scale-95 hover:bg-blue-700 transition-all flex items-center justify-center shrink-0"
+        className="bg-blue-600 text-white border-none hover:bg-blue-700 text-white px-3 py-2 rounded-[1.25rem] border border-slate-800 shadow-sm hover:shadow active:scale-95 hover:bg-slate-800 transition-all flex items-center justify-center shrink-0"
       >
         <Plus size={18} />
       </button>
@@ -1287,31 +1287,31 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
   );
 
   return (
-    <div className="bg-white rounded-[1rem] shadow-sm border border-slate-200/60 overflow-hidden mb-6 transition-all">
+    <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 transition-all">
       <datalist id={listId}>
         {savedNames?.map((name: string) => <option key={name} value={name} />)}
       </datalist>
       
-      <div className={`flex justify-between items-center px-4 md:px-5 py-3 md:py-4 border-b border-slate-100 bg-transparent text-slate-800`}>
+      <div className={`flex justify-between items-center px-4 md:px-5 py-3 md:py-4 border-b border-slate-100 dark:border-slate-800 bg-transparent text-slate-800 dark:text-slate-200`}>
         <div className="flex items-center gap-2 font-bold text-base md:text-lg">
           <Icon size={22} className="opacity-80" />
           {title}
         </div>
-        <div className="font-bold bg-white/60 px-3 md:px-4 py-1 md:py-1.5 rounded-xl shadow-sm text-[15px] md:text-base cursor-default" dir="ltr">{formatNum(total)}</div>
+        <div className="font-bold bg-white dark:bg-slate-900 print:bg-white/60 px-3 md:px-4 py-1 md:py-1.5 rounded-[1.25rem] shadow-sm text-[15px] md:text-base cursor-default" dir="ltr">{formatNum(total)}</div>
       </div>
       
       {data.length > 0 && (
         <div className="px-4 md:px-5 pt-4 md:pt-5 pb-2 md:pb-3">
           <div className="relative group">
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none transition-opacity opacity-50 group-hover:opacity-100">
-              <Search size={16} className="text-slate-500" />
+              <Search size={16} className="text-slate-500 dark:text-slate-400" />
             </div>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالاسم أو المبلغ..."
-              className="w-full pl-3 pr-10 py-2 bg-slate-50/50 border border-slate-200/60 rounded-lg text-[13px] focus:outline-none focus:ring-[3px] focus:ring-slate-900/5 focus:border-slate-400 focus:bg-white transition-all placeholder-slate-400"
+              className="w-full pl-3 pr-10 py-2 bg-slate-50 dark:bg-slate-800/50/50 border border-slate-200 dark:border-slate-700/60 rounded-2xl text-[13px] focus:outline-none focus:ring-[3px] focus:ring-blue-600/5 focus:border-slate-400 focus:bg-white dark:bg-slate-900 print:bg-white transition-all placeholder-slate-400"
             />
           </div>
         </div>
@@ -1332,10 +1332,10 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
           >
             {onReorder && searchQuery === '' && (
               <div className="flex flex-col opacity-0 group-hover/row:opacity-100 transition-opacity gap-0.5">
-                <button onClick={() => onReorder(item.id, 'up')} disabled={actualIndex === 0} className="text-slate-400 hover:text-blue-600 disabled:opacity-0 disabled:cursor-not-allowed hover:bg-slate-100 rounded">
+                <button onClick={() => onReorder(item.id, 'up')} disabled={actualIndex === 0} className="text-slate-400 hover:text-slate-900 dark:text-white tracking-tight disabled:opacity-0 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded">
                   <ChevronUp size={14} />
                 </button>
-                <button onClick={() => onReorder(item.id, 'down')} disabled={actualIndex === data.length - 1} className="text-slate-400 hover:text-blue-600 disabled:opacity-0 disabled:cursor-not-allowed hover:bg-slate-100 rounded">
+                <button onClick={() => onReorder(item.id, 'down')} disabled={actualIndex === data.length - 1} className="text-slate-400 hover:text-slate-900 dark:text-white tracking-tight disabled:opacity-0 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded">
                   <ChevronDown size={14} />
                 </button>
               </div>
@@ -1348,14 +1348,14 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
                 onChange={(e: any) => onUpdate(item.id, 'name', e.target.value)} 
                 onBlur={(e: any) => onSaveName(field, e.target.value)}
                 placeholder="البيان (اختر من القائمة أو اكتب)" 
-                className="group-hover/row:border-slate-300/60 !rounded-lg"
+                className="group-hover/row:border-slate-300 dark:border-slate-600/60 !rounded-2xl"
               />
             </div>
             <div className="w-1/3">
-              <Input type="number" value={item.amount !== undefined && item.amount !== 0 ? round2(item.amount) : item.amount === 0 ? 0 : ''} onChange={(e: any) => onUpdate(item.id, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="المبلغ" className="text-left font-semibold group-hover/row:border-slate-300/60 !rounded-lg" dir="ltr" />
+              <Input type="number" value={item.amount !== undefined && item.amount !== 0 ? round2(item.amount) : item.amount === 0 ? 0 : ''} onChange={(e: any) => onUpdate(item.id, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="المبلغ" className="text-left font-semibold group-hover/row:border-slate-300 dark:border-slate-600/60 !rounded-2xl" dir="ltr" />
             </div>
             {onManage && (
-              <button onClick={() => onManage(item)} title="إدارة الحساب وكشف الحساب" className="p-2.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-xl transition-all hover:scale-105 active:scale-95">
+              <button onClick={() => onManage(item)} title="إدارة الحساب وكشف الحساب" className="p-2.5 text-slate-900 dark:text-white tracking-tight hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 rounded-[1.25rem] transition-all hover:scale-105 active:scale-95">
                 <PlusCircle size={20} />
               </button>
             )}
@@ -1363,7 +1363,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
               <button 
                 onClick={() => onToggleSummary(item.id)} 
                 title="إظهار منفصل في الملخص"
-                className={`p-2.5 rounded-xl transition-all hover:scale-105 active:scale-95 ${item.showInSummary ? 'text-purple-600 bg-purple-50 shadow-sm' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                className={`p-2.5 rounded-[1.25rem] transition-all hover:scale-105 active:scale-95 ${item.showInSummary ? 'text-purple-600 bg-purple-50 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50'}`}
               >
                 {item.showInSummary ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
@@ -1372,39 +1372,39 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
               <button 
                 onClick={() => onTogglePin(item.id)} 
                 title="تثبيت البند ليظهر يومياً"
-                className={`p-2.5 rounded-xl transition-all hover:scale-105 active:scale-95 ${item.isPinned ? 'text-blue-600 bg-blue-50 shadow-sm' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
+                className={`p-2.5 rounded-[1.25rem] transition-all hover:scale-105 active:scale-95 ${item.isPinned ? 'text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50'}`}
               >
                 <Pin size={20} className={item.isPinned ? "fill-current" : ""} />
               </button>
             )}
             {onArchive && (
-              <button onClick={() => onArchive(item.id)} title="تسوية وترحيل للأرشيف" className="p-2.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all hover:scale-105 active:scale-95">
+              <button onClick={() => onArchive(item.id)} title="تسوية وترحيل للأرشيف" className="p-2.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-[1.25rem] transition-all hover:scale-105 active:scale-95">
                 <CheckCircle2 size={20} />
               </button>
             )}
-            <button onClick={() => onRemove(item.id)} title={onArchive ? "حذف بالخطأ (بدون أرشفة)" : "حذف البند"} className="p-2.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all hover:scale-105 active:scale-95 opacity-50 group-hover/row:opacity-100">
+            <button onClick={() => onRemove(item.id)} title={onArchive ? "حذف بالخطأ (بدون أرشفة)" : "حذف البند"} className="p-2.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-[1.25rem] transition-all hover:scale-105 active:scale-95 opacity-50 group-hover/row:opacity-100">
               <Trash2 size={20} />
             </button>
           </motion.div>
         )})}
         </AnimatePresence>
         {data.length === 0 && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-10 px-4 flex flex-col items-center gap-3 bg-slate-50/50 rounded-2xl mx-5 mb-5 border border-dashed border-slate-200">
-            <div className="bg-white p-4 rounded-full shadow-sm border border-slate-100 text-slate-300">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-10 px-4 flex flex-col items-center gap-3 bg-slate-50 dark:bg-slate-800/50/50 rounded-2xl mx-5 mb-5 border border-dashed border-slate-200 dark:border-slate-700">
+            <div className="bg-white dark:bg-slate-900 print:bg-white p-4 rounded-full shadow-sm border border-slate-100 dark:border-slate-800 text-slate-300">
               <Icon size={32} strokeWidth={1.5} />
             </div>
             <div className="space-y-1">
-              <p className="font-bold text-slate-600">لا يوجد بيانات حالياً</p>
+              <p className="font-bold text-slate-600 dark:text-slate-400">لا يوجد بيانات حالياً</p>
               <p className="text-[15px] text-slate-400">لم تقم بإضافة أي بنود في هذا القسم بعد.</p>
             </div>
-            <button onClick={onAdd} className="mt-2 text-[15px] font-bold text-blue-600 bg-blue-50 px-4 py-2 hover:bg-blue-100 rounded-xl transition-colors flex items-center gap-2">
+            <button onClick={onAdd} className="mt-2 text-[15px] font-bold text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded-[1.25rem] transition-colors flex items-center gap-2">
               <Plus size={16} /> أضف أول بند
             </button>
           </motion.div>
         )}
         {data.length > 0 && (
           <div className="px-5 pb-5">
-            <button onClick={onAdd} className="flex items-center justify-center gap-2 w-full text-slate-600 hover:text-slate-900 text-[14px] font-medium px-4 py-2.5 rounded-lg border border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50 transition-all active:scale-95 group/btn">
+            <button onClick={onAdd} className="flex items-center justify-center gap-2 w-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white text-[14px] font-medium px-4 py-2.5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-all active:scale-95 group/btn">
               <Plus size={18} className="group-hover/btn:rotate-90 transition-transform" /> إضافة بند جديد
             </button>
           </div>
@@ -1564,27 +1564,27 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h3 className="font-bold text-slate-800 flex items-center gap-2">
-            <Calculator size={20} className="text-blue-600" /> 
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+          <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <Calculator size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
             إدارة حساب: {fund.name}
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1">
             <X size={20} />
           </button>
         </div>
         
         <div className="p-6 overflow-y-auto">
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 text-center mb-6">
-            <p className="text-blue-600 font-medium mb-1">الرصيد الحالي</p>
-            <p className="text-4xl font-black text-blue-800" dir="ltr">{formatNum(fund.amount)}</p>
+          <div className="bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-[1.25rem] p-6 text-center mb-6">
+            <p className="text-slate-900 dark:text-white tracking-tight font-medium mb-1">الرصيد الحالي</p>
+            <p className="text-4xl font-black text-slate-900 dark:text-white" dir="ltr">{formatNum(fund.amount)}</p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-8 items-end">
             <div className="flex-1 w-full">
-              <label className="block text-[15px] font-bold text-slate-700 mb-2">المبلغ (إضافة أو خصم)</label>
+              <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">المبلغ (إضافة أو خصم)</label>
               <Input 
                 type="number" 
                 value={amount} 
@@ -1595,33 +1595,33 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
               />
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
-              <button onClick={handleAdd} disabled={!amount} className="flex-1 sm:flex-none bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+              <button onClick={handleAdd} disabled={!amount} className="flex-1 sm:flex-none bg-emerald-600 text-white px-6 py-2.5 rounded-[1.25rem] font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                 <Plus size={18} /> إضافة
               </button>
-              <button onClick={handleSubtract} disabled={!amount} className="flex-1 sm:flex-none bg-rose-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-rose-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+              <button onClick={handleSubtract} disabled={!amount} className="flex-1 sm:flex-none bg-rose-600 text-white px-6 py-2.5 rounded-[1.25rem] font-bold hover:bg-rose-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                 <Trash2 size={18} /> خصم / تسديد
               </button>
             </div>
           </div>
 
-          <div className="border-t border-slate-200 pt-6">
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="font-bold text-slate-800">كشف الحساب (من دفتر الأستاذ)</h4>
+              <h4 className="font-bold text-slate-800 dark:text-slate-200">كشف الحساب (من دفتر الأستاذ)</h4>
               <div className="flex gap-2">
-                <button onClick={handleCopy} className="text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl text-[15px] font-medium transition-colors flex items-center gap-1">
+                <button onClick={handleCopy} className="text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 px-3 py-1.5 rounded-[1.25rem] text-[15px] font-medium transition-colors flex items-center gap-1">
                   <Copy size={16} /> نسخ
                 </button>
-                <button onClick={handlePrint} className="text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl text-[15px] font-medium transition-colors flex items-center gap-1">
+                <button onClick={handlePrint} className="text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 rounded-[1.25rem] text-[15px] font-medium transition-colors flex items-center gap-1">
                   <Printer size={16} /> طباعة
                 </button>
               </div>
             </div>
             
-            <div className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden mb-6">
-              <div className="bg-slate-100 p-3 font-bold text-slate-700 border-b border-slate-200">سجل الحركات التفصيلية (الجديدة)</div>
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[1.25rem] border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+              <div className="bg-slate-100 dark:bg-slate-800 p-3 font-bold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">سجل الحركات التفصيلية (الجديدة)</div>
               <table className="w-full text-[15px] text-right">
                 <thead>
-                  <tr className="text-slate-500 border-b border-slate-200 bg-slate-100/50">
+                  <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50">
                     <th className="p-3 font-medium">التاريخ والوقت</th>
                     <th className="p-3 font-medium">البيان</th>
                     <th className="p-3 font-medium">النوع</th>
@@ -1630,7 +1630,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                 </thead>
                 <tbody>
                   {historyEntries.map((entry: any) => (
-                    <tr key={entry.id} className="border-b border-slate-100 last:border-0 hover:bg-white">
+                    <tr key={entry.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-white dark:bg-slate-900 print:bg-white">
                       <td className="p-3">{entry.date}</td>
                       <td className="p-3">{entry.description}</td>
                       <td className="p-3">
@@ -1638,7 +1638,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                           <select 
                             value={editType} 
                             onChange={(e: any) => setEditType(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-2 py-1 text-[15px] focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="w-full bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700 rounded-[1.25rem] px-2 py-1 text-[15px] focus:ring-2 focus:ring-blue-600/20 outline-none"
                           >
                             <option value="add">إضافة</option>
                             <option value="sub">خصم</option>
@@ -1656,7 +1656,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                               type="number" 
                               value={editAmount} 
                               onChange={(e: any) => setEditAmount(e.target.value)}
-                              className="w-24 bg-white border border-slate-200 rounded-xl px-2 py-1 text-[15px] focus:ring-2 focus:ring-blue-500 outline-none text-left"
+                              className="w-24 bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700 rounded-[1.25rem] px-2 py-1 text-[15px] focus:ring-2 focus:ring-blue-600/20 outline-none text-left"
                               dir="ltr"
                             />
                             <button 
@@ -1667,13 +1667,13 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                                   showToast('تم تعديل الحركة بنجاح', 'success');
                                 }
                               }}
-                              className="text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-xl"
+                              className="text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-[1.25rem]"
                             >
                               <Check size={16} />
                             </button>
                             <button 
                               onClick={() => setEditingEntry(null)}
-                              className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-xl"
+                              className="text-slate-400 hover:text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 p-1.5 rounded-[1.25rem]"
                             >
                               <X size={16} />
                             </button>
@@ -1689,7 +1689,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                                     setEditAmount(entry.amount);
                                     setEditType(entry.type === 'in' ? 'add' : 'sub');
                                   }}
-                                  className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-50 rounded"
+                                  className="text-slate-900 dark:text-white hover:text-slate-800 dark:text-slate-200 font-bold p-1 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 rounded"
                                 >
                                   <Edit2 size={14} />
                                 </button>
@@ -1713,7 +1713,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                   ))}
                   {historyEntries.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="text-center p-8 bg-white">
+                      <td colSpan={4} className="text-center p-8 bg-white dark:bg-slate-900 print:bg-white">
                         <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
                           <History size={32} className="opacity-50" />
                           <span className="font-medium">لا توجد حركات تفصيلية جديدة</span>
@@ -1725,14 +1725,14 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
               </table>
             </div>
 
-            <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-              <div className="bg-slate-100 p-4 font-bold text-slate-800 border-b border-slate-200 flex items-center justify-between">
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+              <div className="bg-slate-100 dark:bg-slate-800 p-4 font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <span>ملخص الأيام السابقة (من دفتر الأستاذ)</span>
-                <span className="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded-md font-medium">سجل قديم مجمع</span>
+                <span className="text-xs bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded-md font-medium">سجل قديم مجمع</span>
               </div>
               <table className="w-full text-[15px] text-right">
                 <thead>
-                  <tr className="text-slate-500 border-b border-slate-200 bg-slate-100/50">
+                  <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50">
                     <th className="p-3 font-semibold pb-4">التاريخ</th>
                     <th className="p-3 font-semibold pb-4">البيان</th>
                     <th className="p-3 font-semibold pb-4">النوع</th>
@@ -1741,20 +1741,20 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                 </thead>
                 <tbody>
                   {personEntries.map((entry: any) => (
-                    <tr key={entry.id} className="border-b border-slate-100 last:border-0 hover:bg-white transition-colors duration-200 group">
-                      <td className="p-3 text-slate-600">{entry.date}</td>
-                      <td className="p-3 font-medium text-slate-700">{entry.description}</td>
+                    <tr key={entry.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-white dark:bg-slate-900 print:bg-white transition-colors duration-200 group">
+                      <td className="p-3 text-slate-600 dark:text-slate-400">{entry.date}</td>
+                      <td className="p-3 font-medium text-slate-700 dark:text-slate-300">{entry.description}</td>
                       <td className="p-3">
                         {entry.type === 'in' ? <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md font-bold">وارد</span> : 
                          entry.type === 'out' ? <span className="text-rose-600 bg-rose-50 px-2 py-1 rounded-md font-bold">منصرف</span> :
                          <span className="text-amber-600 bg-amber-50 px-2 py-1 rounded-md font-bold">معلق</span>}
                       </td>
-                      <td className="p-3 font-bold text-slate-800" dir="ltr">{formatNum(entry.amount)}</td>
+                      <td className="p-3 font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(entry.amount)}</td>
                     </tr>
                   ))}
                   {personEntries.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="text-center p-8 bg-white">
+                      <td colSpan={4} className="text-center p-8 bg-white dark:bg-slate-900 print:bg-white">
                         <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
                           <BookOpen size={32} className="opacity-50" />
                           <span className="font-medium">لا توجد حركات سابقة مسجلة بهذا الاسم</span>
@@ -1779,11 +1779,11 @@ const LiveClock = () => {
     return () => clearInterval(timer);
   }, []);
   return (
-    <div className="flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur border border-slate-200/60 px-3 md:px-4 py-1.5 md:py-2 rounded-2xl shadow-sm text-center min-w-[90px]">
-      <span className="text-xs md:text-sm font-bold text-slate-800 tabular-nums tracking-tight font-mono" dir="ltr">
+    <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50/80 backdrop-blur border border-slate-200 dark:border-slate-700/60 px-3 md:px-4 py-1.5 md:py-2 rounded-2xl shadow-sm text-center min-w-[90px]">
+      <span className="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200 tabular-nums tracking-tight font-mono" dir="ltr">
         {time.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
       </span>
-      <span className="text-[9px] md:text-[10px] font-bold text-blue-600 mt-0.5">
+      <span className="text-[9px] md:text-[10px] font-bold text-slate-900 dark:text-white tracking-tight mt-0.5">
         {time.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })}
       </span>
     </div>
@@ -1838,6 +1838,23 @@ export default function App() {
   const [activeNetworkPosId, setActiveNetworkPosId] = useState<string | null>(null);
 
   const [currentAppView, setCurrentAppView] = useState<'launcher' | 'treasury'>('launcher');
+
+  const [theme, setTheme] = useState<'system'|'light'|'dark'>(() => {
+    return (localStorage.getItem('smart_safe_theme') as any) || 'system';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('smart_safe_theme', theme);
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    if (theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(theme);
+    }
+  }, [theme]);
 
   const [uiScale, setUiScale] = useState<number>(() => {
     return Number(localStorage.getItem('smart_safe_ui_scale') || 1);
@@ -2774,14 +2791,14 @@ const handleCopyDailyReport = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-transparent text-[#1a1c29] p-4 sm:p-6 lg:p-8 selection:bg-blue-200">
+      <div className="min-h-screen bg-transparent text-[#1a1c29] p-4 sm:p-6 lg:p-8 selection:bg-slate-100 dark:bg-slate-800/500 selection:text-black dark:text-white print:text-black">
         <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200"></div>
-            <div className="absolute top-0 left-0 animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent"></div>
-            <Calculator size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-600" />
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 dark:border-slate-700"></div>
+            <div className="absolute top-0 left-0 animate-spin rounded-full h-16 w-16 border-4 border-slate-900 border-t-transparent"></div>
+            <Calculator size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-900 dark:text-white tracking-tight" />
           </div>
-          <p className="font-bold text-slate-500 animate-pulse">جاري تحميل البيانات...</p>
+          <p className="font-bold text-slate-500 dark:text-slate-400 animate-pulse">جاري تحميل البيانات...</p>
         </motion.div>
       </div>
     );
@@ -2790,54 +2807,54 @@ const handleCopyDailyReport = () => {
   
   if (!user && !skipLogin) {
     return (
-      <div className="fixed inset-0 bg-[#0B2D2E] text-white flex flex-col justify-center items-center p-4 selection:bg-blue-200" dir="rtl">
+      <div className="fixed inset-0 bg-[#f4f5f7] text-white flex flex-col justify-center items-center p-4 selection:bg-slate-100 dark:bg-slate-800/500 selection:text-black dark:text-white print:text-black" dir="rtl">
         <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage: 'radial-gradient(circle at 50% 50%, #13655B 0%, transparent 60%), linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent)',
+          backgroundImage: 'radial-gradient(circle at 50% 50%, #1A1A1A 0%, transparent 60%), linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent)',
           backgroundSize: '100% 100%, 50px 50px, 50px 50px'
         }}></div>
-        <div className="z-10 bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden flex flex-col text-slate-800 relative">
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-            <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-              <LogIn className="text-blue-600" size={24} />
+        <div className="z-10 bg-white dark:bg-slate-900 print:bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden flex flex-col text-slate-800 dark:text-slate-200 relative">
+          <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
+              <LogIn className="text-slate-900 dark:text-white tracking-tight" size={24} />
               {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
             </h3>
-            <button onClick={() => setSkipLogin(true)} className="text-slate-400 hover:text-slate-600 px-3 py-1 bg-slate-100 rounded-xl text-xs font-bold hover:bg-slate-200 transition-colors">
+            <button onClick={() => setSkipLogin(true)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-[1.25rem] text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
               تخطي
             </button>
           </div>
           <div className="p-6 pb-8">
             {authError && (
-              <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-xl text-[15px] font-bold border border-red-200 flex items-center gap-2">
+              <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-[1.25rem] text-[15px] font-bold border border-red-200 flex items-center gap-2">
                 <AlertCircle size={18} className="shrink-0" />
                 {authError}
               </div>
             )}
             <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
               <div>
-                <label className="block text-[15px] font-bold text-slate-700 mb-1.5">البريد الإلكتروني</label>
+                <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">البريد الإلكتروني</label>
                 <input
                   type="email"
                   required
                   dir="ltr"
                   value={authEmail}
                   onChange={(e) => setAuthEmail(e.target.value)}
-                  className="w-full border border-slate-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono shadow-sm"
+                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 print:bg-white rounded-[1.25rem] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all font-mono shadow-sm"
                 />
               </div>
               <div>
-                <label className="block text-[15px] font-bold text-slate-700 mb-1.5">كلمة المرور</label>
+                <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">كلمة المرور</label>
                 <input
                   type="password"
                   required
                   dir="ltr"
                   value={authPassword}
                   onChange={(e) => setAuthPassword(e.target.value)}
-                  className="w-full border border-slate-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono shadow-sm"
+                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 print:bg-white rounded-[1.25rem] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all font-mono shadow-sm"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white font-bold py-3.5 px-4 rounded-xl mt-2 hover:bg-blue-700 transition-all shadow-sm active:scale-95 flex justify-center items-center gap-2"
+                className="w-full bg-blue-600 text-white border-none hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-[1.25rem] mt-2 hover:bg-slate-800 transition-all shadow-sm active:scale-95 flex justify-center items-center gap-2"
               >
                 <LogIn size={20} /> {isSignUp ? 'إنشاء الحساب' : 'دخول'}
               </button>
@@ -2845,16 +2862,16 @@ const handleCopyDailyReport = () => {
 
             <div className="mt-5 relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200"></div>
+                <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
               </div>
               <div className="relative flex justify-center text-[15px]">
-                <span className="px-3 bg-white text-slate-500 font-medium text-xs">أو</span>
+                <span className="px-3 bg-white dark:bg-slate-900 print:bg-white text-slate-500 dark:text-slate-400 font-medium text-xs">أو</span>
               </div>
             </div>
 
             <button
               onClick={handleGoogleLogin}
-              className="mt-5 w-full bg-white border border-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-sm"
+              className="mt-5 w-full bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold py-3 px-4 rounded-[1.25rem] hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-sm"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -2868,7 +2885,7 @@ const handleCopyDailyReport = () => {
             <div className="mt-6 text-center">
               <button
                 onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }}
-                className="text-slate-500 hover:text-blue-600 font-bold transition-colors text-[15px]"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white tracking-tight font-bold transition-colors text-[15px]"
               >
                 {isSignUp ? 'لدي حساب بالفعل، تسجيل الدخول' : 'جديد؟ قم بإنشاء حساب'}
               </button>
@@ -2884,14 +2901,14 @@ const handleCopyDailyReport = () => {
 
   if (user && userProfile && userProfile.status === 'pending') {
     return (
-      <div className="min-h-screen bg-transparent text-[#1a1c29] p-4 sm:p-6 lg:p-8 selection:bg-blue-200" dir="rtl">
-        <div className="bg-white/90 backdrop-blur-2xl p-8  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 max-w-md w-full text-center">
+      <div className="min-h-screen bg-transparent text-[#1a1c29] p-4 sm:p-6 lg:p-8 selection:bg-slate-100 dark:bg-slate-800/500 selection:text-black dark:text-white print:text-black" dir="rtl">
+        <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl p-8  rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">حسابك قيد المراجعة</h2>
-          <p className="text-slate-600 mb-6 font-medium">يرجى الانتظار حتى تقوم الإدارة بمراجعة حسابك وتفعيله للتمكن من الدخول للخزينة الفعالة.</p>
-          <button onClick={handleLogout} className="text-slate-500 hover:text-slate-700 underline font-bold mt-2">تسجيل الخروج</button>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">حسابك قيد المراجعة</h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-6 font-medium">يرجى الانتظار حتى تقوم الإدارة بمراجعة حسابك وتفعيله للتمكن من الدخول للخزينة الفعالة.</p>
+          <button onClick={handleLogout} className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 underline font-bold mt-2">تسجيل الخروج</button>
         </div>
       </div>
     );
@@ -2902,10 +2919,10 @@ const handleCopyDailyReport = () => {
   if (currentAppView === 'launcher') {
     return (
       <>
-      <div className="fixed inset-0 bg-[#0B2D2E] text-white overflow-hidden flex flex-col" dir="rtl">
+      <div className="fixed inset-0 bg-slate-900 text-white overflow-hidden flex flex-col" dir="rtl">
         {/* Abstract Background pattern */}
         <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage: 'radial-gradient(circle at 50% 50%, #13655B 0%, transparent 60%), linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent)',
+          backgroundImage: 'radial-gradient(circle at 50% 50%, #1A1A1A 0%, transparent 60%), linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent)',
           backgroundSize: '100% 100%, 50px 50px, 50px 50px'
         }}></div>
 
@@ -2916,11 +2933,11 @@ const handleCopyDailyReport = () => {
                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="url(#smLogoGrad)" strokeWidth="18" strokeLinecap="round" />
                  <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
-                 <circle cx="80" cy="28" r="2" fill="#0B2D2E" />
+                 <circle cx="80" cy="28" r="2" fill="#000000" />
                  <defs>
                    <linearGradient id="smLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                     <stop offset="0%" stopColor="#7BE3A1" />
-                     <stop offset="100%" stopColor="#22C55E" />
+                     <stop offset="0%" stopColor="#0f172a" />
+                     <stop offset="100%" stopColor="#3b82f6" />
                    </linearGradient>
                  </defs>
                </svg>
@@ -2928,7 +2945,7 @@ const handleCopyDailyReport = () => {
              <div>
                <h1 className="text-xl font-extrabold tracking-tight flex items-center gap-2 leading-none">
                  <span className="text-white drop-shadow">ســـرب</span>
-                 <span className="text-[10px] text-emerald-400 bg-white/10 border border-white/10 px-1.5 py-0.5 rounded font-bold tracking-widest font-mono">ERP</span>
+                 <span className="text-[10px] text-blue-400 bg-white dark:bg-slate-900 print:bg-white/10 border border-white/10 px-1.5 py-0.5 rounded font-bold tracking-widest font-mono">ERP</span>
                </h1>
              </div>
           </div>
@@ -2950,10 +2967,10 @@ const handleCopyDailyReport = () => {
               onClick={() => setCurrentAppView('treasury')}
               className="flex flex-col items-center gap-2 group active:scale-95 transition-all"
             >
-              <div className="w-[72px] h-[72px] bg-[#13655B] rounded-[1.5rem] shadow-xl ring-1 ring-white/10 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:shadow-2xl group-hover:-translate-y-1 group-hover:bg-[#1a7a6e]">
+              <div className="w-[72px] h-[72px] bg-white dark:bg-slate-900 print:bg-white rounded-[1.5rem] shadow-xl ring-1 ring-white/10 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:shadow-2xl group-hover:-translate-y-1 group-hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50">
                 {/* Simplified Logo icon for app */}
                 <svg viewBox="0 0 100 100" className="w-10 h-10 drop-shadow-md mb-0.5">
-                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#22C55E" strokeWidth="18" strokeLinecap="round" />
+                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#2563eb" strokeWidth="18" strokeLinecap="round" />
                   <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
                 </svg>
               </div>
@@ -2962,20 +2979,20 @@ const handleCopyDailyReport = () => {
 
             {/* Dummy Apps */}
             {[
-              { name: 'المبيعات', icon: Receipt, color: '#13655B', disabled: true },
-              { name: 'المخازن', icon: BookOpen, color: '#13655B', disabled: true },
-              { name: 'الموظفين', icon: LogIn, color: '#13655B', disabled: true },
-              { name: 'التحليلات', icon: BarChart3, color: '#13655B', disabled: true },
-              { name: 'المشتريات', icon: Wallet, color: '#13655B', disabled: true },
-              { name: 'الإعدادات', icon: Settings, color: '#13655B', disabled: false, action: () => setShowSettingsModal(true) }
+              { name: 'المبيعات', icon: Receipt, color: '#1A1A1A', disabled: true },
+              { name: 'المخازن', icon: BookOpen, color: '#1A1A1A', disabled: true },
+              { name: 'الموظفين', icon: LogIn, color: '#1A1A1A', disabled: true },
+              { name: 'التحليلات', icon: BarChart3, color: '#1A1A1A', disabled: true },
+              { name: 'المشتريات', icon: Wallet, color: '#1A1A1A', disabled: true },
+              { name: 'الإعدادات', icon: Settings, color: '#1A1A1A', disabled: false, action: () => setShowSettingsModal(true) }
             ].map((app, idx) => (
               <button 
                 key={idx}
                 onClick={app.action}
                 className={`flex flex-col items-center gap-2 group transition-all ${app.disabled ? 'opacity-60 cursor-not-allowed hover:opacity-100' : 'opacity-100 active:scale-95'}`}
               >
-                <div className={`w-[72px] h-[72px] rounded-[1.5rem] shadow-xl ring-1 ring-white/10 flex items-center justify-center ${app.disabled ? 'bg-[#13655B]/80' : 'bg-[#13655B] hover:-translate-y-1 hover:shadow-2xl hover:bg-[#1a7a6e] transition-all'}`}>
-                  <app.icon size={28} className="text-[#7BE3A1] drop-shadow-md" />
+                <div className={`w-[72px] h-[72px] rounded-[1.5rem] shadow-xl ring-1 ring-white/10 flex items-center justify-center ${app.disabled ? 'bg-white dark:bg-slate-900 print:bg-white/80' : 'bg-white dark:bg-slate-900 print:bg-white hover:-translate-y-1 hover:shadow-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-all'}`}>
+                  <app.icon size={28} className="text-slate-900 dark:text-white drop-shadow-md" />
                 </div>
                 <span className={`text-xs font-bold drop-shadow-md tracking-wide ${app.disabled ? 'text-white/80' : 'text-white/90'}`}>{app.name}</span>
               </button>
@@ -2993,6 +3010,8 @@ const handleCopyDailyReport = () => {
         onClose={() => setShowSettingsModal(false)}
         companyName={companyName}
         setCompanyName={setCompanyName}
+        theme={theme}
+        setTheme={setTheme}
         uiScale={uiScale}
         setUiScale={setUiScale}
         thermalMargins={thermalMargins}
@@ -3006,41 +3025,44 @@ const handleCopyDailyReport = () => {
         setShowAddBranchModal={setShowAddBranchModal}
         user={user}
         userProfile={userProfile}
+        savedNames={state?.savedNames || {}}
+        addSavedName={addSavedName}
+        removeSavedName={removeSavedName}
       />
       </>
     );
   }
 
   return (
-    <div className={`min-h-screen pb-24 md:pb-0 bg-transparent text-slate-800 font-sans selection:bg-blue-200 selection:text-blue-900 ${printView !== 'none' ? 'print:bg-white' : ''}`} dir="rtl">
+    <div className={`min-h-screen pb-24 md:pb-0 bg-transparent text-slate-800 dark:text-slate-200 font-sans selection:bg-slate-100 dark:bg-slate-800/500 selection:text-black dark:text-white print:text-black  ${printView !== 'none' ? 'print:bg-white dark:bg-slate-900 print:bg-white' : ''}`} dir="rtl">
       <div style={{ zoom: uiScale }}>
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
-        <div className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-slate-200/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] print:hidden transition-all">
+        <div className="sticky top-0 z-50 bg-white dark:bg-slate-900 print:bg-white/70 backdrop-blur-2xl border-b border-slate-200 dark:border-slate-700/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] print:hidden transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-[4.5rem]">
             {/* Logo/Name on the right side (RTL start) */}
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setCurrentAppView('launcher')}
-                className="w-10 h-10 flex items-center justify-center bg-slate-100/50 text-slate-600 rounded-xl hover:bg-srb-main hover:text-white transition-all active:scale-95 border border-slate-200/50"
+                className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 rounded-[1.25rem] hover:bg-srb-main hover:text-white transition-all active:scale-95 border border-slate-200 dark:border-slate-700/50"
                 title="الرئيسية (سرب ERP)"
               >
                 <ArrowRight size={20} />
               </button>
               
-              <div className="flex items-center gap-2.5 bg-slate-50/50 px-3 py-1.5 rounded-2xl border border-slate-100/50">
+              <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/50/50 px-3 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-800/50">
                 <div className="w-9 h-9 md:w-11 md:h-11 bg-srb-main rounded-[12px] shadow-md flex items-center justify-center ring-1 ring-black/5 overflow-hidden">
                   <svg viewBox="0 0 100 100" className="w-6 h-6 md:w-7 md:h-7 mt-0.5 drop-shadow-sm">
-                    <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#22C55E" strokeWidth="18" strokeLinecap="round" />
+                    <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#2563eb" strokeWidth="18" strokeLinecap="round" />
                     <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
                   </svg>
                 </div>
                 <div className="flex flex-col items-start translate-y-0.5">
                   <div className="flex items-center gap-1.5 leading-none">
-                    <h1 className="font-extrabold text-[#0B2D2E] text-base md:text-xl tracking-tight leading-none">سرب</h1>
+                    <h1 className="font-extrabold text-[#000000] text-base md:text-xl tracking-tight leading-none">سرب</h1>
                     <span className="text-srb-main font-bold text-xs md:text-[15px] tracking-[0.1em] font-poppins leading-none">ERP</span>
                   </div>
-                  <span className="text-[9px] md:text-[10px] text-slate-500 font-medium">نظام الخزينة الذكية</span>
+                  <span className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 font-medium">نظام الخزينة الذكية</span>
                 </div>
               </div>
             </div>
@@ -3049,7 +3071,7 @@ const handleCopyDailyReport = () => {
             <div className="flex items-center gap-2 md:gap-3 justify-end">
               
               {!user ? (
-                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-gradient-to-r from-[#015941] to-[#128a63] text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl hover:from-[#014a36] hover:to-[#0f7554] transition-all font-bold shadow-lg shadow-[#015941]/20 active:scale-95">
+                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-gradient-to-r from-[#015941] to-[#128a63] text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-[1.25rem] hover:from-[#014a36] hover:to-[#0f7554] transition-all font-bold shadow-lg shadow-[#015941]/20 active:scale-95">
                   <LogIn size={18} /> <span className="text-[15px] sm:text-base hidden sm:inline">تسجيل الدخول</span>
                 </button>
               ) : (
@@ -3066,7 +3088,7 @@ const handleCopyDailyReport = () => {
                             setHistory([]);
                           }
                         }}
-                        className="bg-white/50 border border-slate-200/60 text-slate-700 text-[15px] rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white block w-full px-4 py-2.5 outline-none font-bold hover:bg-white transition-all cursor-pointer shadow-sm"
+                        className="bg-white dark:bg-slate-900 print:bg-white/50 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[15px] rounded-[1.25rem] focus:ring-4 focus:ring-blue-600/20/10 focus:border-blue-600 focus:ring-4 focus:ring-blue-100 focus:bg-white dark:bg-slate-900 print:bg-white block w-full px-4 py-2.5 outline-none font-bold hover:bg-white dark:bg-slate-900 print:bg-white transition-all cursor-pointer shadow-sm"
                       >
                         <option value="">-- اختر الفرع --</option>
                         {branches.map(b => (
@@ -3075,30 +3097,30 @@ const handleCopyDailyReport = () => {
                       </select>
                     </div>
                   )}
-                  <div className="hidden md:flex items-center gap-2 text-[15px] text-slate-600 bg-white/60 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-slate-200/60 font-medium shadow-sm">
+                  <div className="hidden md:flex items-center gap-2 text-[15px] text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 print:bg-white/60 backdrop-blur-sm px-4 py-2.5 rounded-[1.25rem] border border-slate-200 dark:border-slate-700/60 font-medium shadow-sm">
                     <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     <span className="font-mono">{user.email?.split('@')[0]}</span>
                   </div>
-                  <button onClick={() => setShowCalculator(true)} className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors active:scale-95 ${showCalculator ? 'bg-slate-200/80 text-slate-900' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`} title="آلة حاسبة">
+                  <button onClick={() => setShowCalculator(true)} className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors active:scale-95 ${showCalculator ? 'bg-slate-200 dark:bg-slate-700/80 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800'}`} title="آلة حاسبة">
                     <Calculator size={20} strokeWidth={1.5} />
                   </button>
-                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center justify-center text-slate-500 hover:text-slate-800 w-10 h-10 rounded-full hover:bg-slate-100 transition-colors active:scale-95" title="إعدادات">
+                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors active:scale-95" title="إعدادات">
                     <Settings size={20} strokeWidth={1.5} />
                   </button>
-                  <button onClick={handleLogout} className="flex items-center justify-center text-slate-500 hover:text-rose-600 w-10 h-10 rounded-full hover:bg-rose-50 transition-colors active:scale-95" title="تسجيل الخروج">
+                  <button onClick={handleLogout} className="flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-rose-600 w-10 h-10 rounded-full hover:bg-rose-50 transition-colors active:scale-95" title="تسجيل الخروج">
                     <LogOut size={20} strokeWidth={1.5} />
                   </button>
-                  <div className="w-px h-8 bg-slate-200/80 mx-1 hidden sm:block"></div>
-                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-4 py-2 text-[14px] rounded-full transition-all font-medium disabled:opacity-50 active:scale-95 ${saving ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+                  <div className="w-px h-8 bg-slate-200 dark:bg-slate-700/80 mx-1 hidden sm:block"></div>
+                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-4 py-2 text-[14px] rounded-full transition-all font-medium disabled:opacity-50 active:scale-95 ${saving ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700'}`}>
                     {saving ? <Save size={16} className="animate-pulse" strokeWidth={2} /> : <CheckCircle2 size={16} strokeWidth={2} />}
                     <span className="hidden sm:inline">{saving ? 'جاري الحفظ...' : 'حفظ'}</span>
                   </button>
                 </>
               )}
-              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-white text-slate-700 border border-slate-200 px-4 py-2 text-[14px] rounded-full hover:bg-slate-50 transition-all font-medium active:scale-95">
+              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-white dark:bg-slate-900 print:bg-white text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-4 py-2 text-[14px] rounded-full hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-all font-medium active:scale-95">
                 <Printer size={16} strokeWidth={2} /> <span className="hidden sm:inline">تصدير</span>
               </button>
-              <button onClick={handleNewDay} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 text-[14px] rounded-full hover:bg-blue-700 transition-all font-medium active:scale-95 flex-nowrap shrink-0 max-w-fit">
+              <button onClick={handleNewDay} className="flex items-center gap-2 bg-blue-600 text-white border-none hover:bg-blue-700 text-white px-4 py-2 text-[14px] rounded-full hover:bg-slate-800 transition-all font-medium active:scale-95 flex-nowrap shrink-0 max-w-fit">
                 <FilePlus size={16} strokeWidth={2} /> <span className="hidden sm:inline">يوم جديد</span>
               </button>
             </div>
@@ -3106,25 +3128,25 @@ const handleCopyDailyReport = () => {
         </div>
       </div>
 
-      <div id="export-container" className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${isExporting ? 'bg-white' : ''}`}>
+      <div id="export-container" className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 ${isExporting ? 'bg-white dark:bg-slate-900 print:bg-white' : ''}`}>
         {isExporting && (
-          <div className="text-center mb-8 pb-4 border-b border-slate-200/80">
-            <h1 className="text-2xl font-bold text-slate-900">الخزينة الذكية - تقرير التسوية</h1>
-            <p className="text-slate-500 mt-2">تاريخ: {state.date}</p>
-            <p className="text-slate-500">نوع التقرير: {exportMode === 'detailed' ? 'مفصل' : 'ملخص'}</p>
+          <div className="text-center mb-8 pb-4 border-b border-slate-200 dark:border-slate-700/80">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">الخزينة الذكية - تقرير التسوية</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-2">تاريخ: {state.date}</p>
+            <p className="text-slate-500 dark:text-slate-400">نوع التقرير: {exportMode === 'detailed' ? 'مفصل' : 'ملخص'}</p>
           </div>
         )}
 
         {(!isExporting || exportMode === 'detailed') && (!userProfile || userProfile.role !== 'admin' || currentBranchId) && (
-          <div className="bg-white/90 backdrop-blur-md px-4 sm:px-5 py-5 rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 mb-8 flex flex-wrap gap-8 items-center print:hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-md px-4 sm:px-5 py-5 rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200 dark:border-slate-700/60 mb-8 flex flex-wrap gap-8 items-center print:hidden">
             <div className="flex items-center gap-3">
-              <label className="font-semibold text-slate-600">تاريخ اليوم:</label>
+              <label className="font-semibold text-slate-600 dark:text-slate-400">تاريخ اليوم:</label>
               <Input value={state.date} onChange={(e: any) => updateField('date', e.target.value)} className="w-44 text-center font-bold text-lg" />
             </div>
-            <div className="w-px h-8 bg-slate-200/80 hidden sm:block"></div>
+            <div className="w-px h-8 bg-slate-200 dark:bg-slate-700/80 hidden sm:block"></div>
             <div className="flex items-center gap-3">
-              <label className="font-semibold text-slate-600">رصيد أول المدة:</label>
-              <Input type="number" value={state.previousBalance !== undefined ? Math.round(state.previousBalance * 100) / 100 : ''} onChange={(e: any) => updateField('previousBalance', Number(e.target.value))} className="w-44 text-left font-bold text-blue-700 bg-blue-50/50 hover:bg-blue-50 border-blue-200/80 text-lg focus:ring-blue-500/20" dir="ltr" />
+              <label className="font-semibold text-slate-600 dark:text-slate-400">رصيد أول المدة:</label>
+              <Input type="number" value={state.previousBalance !== undefined ? Math.round(state.previousBalance * 100) / 100 : ''} onChange={(e: any) => updateField('previousBalance', Number(e.target.value))} className="w-44 text-left font-bold text-slate-800 dark:text-slate-200 font-bold bg-slate-100 dark:bg-slate-800/80/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600/80 text-lg focus:ring-blue-600/20/20" dir="ltr" />
             </div>
           </div>
         )}
@@ -3133,7 +3155,7 @@ const handleCopyDailyReport = () => {
           {(!isExporting || exportMode === 'detailed') && (
             <div className="flex-1 min-w-0 print:w-full">
               {(!isExporting && (!userProfile || userProfile.role !== 'admin' || currentBranchId)) && (
-                <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-2xl border-t border-slate-200 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-1.5 print:hidden md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-2 md:gap-2 overscroll-x-contain shadow-[0_-10px_30px_rgba(0,0,0,0.05)] md:shadow-none items-center scrollbar-hide">
+                <div className="fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 print:bg-white/95 backdrop-blur-2xl border-t border-slate-200 dark:border-slate-700 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-1.5 print:hidden md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-2 md:gap-2 overscroll-x-contain shadow-[0_-10px_30px_rgba(0,0,0,0.05)] md:shadow-none items-center scrollbar-hide">
                   {[
                     { id: 'sales', label: 'المبيعات', icon: Receipt },
                     { id: 'payments', label: 'المدفوعات', icon: ArrowUpRight },
@@ -3147,8 +3169,8 @@ const handleCopyDailyReport = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-lg font-medium transition-colors whitespace-nowrap min-w-[72px] sm:min-w-[80px] md:min-w-0 flex-shrink-0 ${
-                        activeTab === tab.id ? 'text-slate-900 bg-white shadow-sm border border-slate-200/80' : 'bg-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100/50'
+                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-2xl font-medium transition-colors whitespace-nowrap min-w-[72px] sm:min-w-[80px] md:min-w-0 flex-shrink-0 ${
+                        activeTab === tab.id ? 'text-slate-900 dark:text-white bg-white dark:bg-slate-900 print:bg-white shadow-sm border border-slate-200 dark:border-slate-700/80' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/50'
                       }`}
                     >
                       <span className="relative z-10 flex flex-col md:flex-row items-center gap-1.5 md:gap-2">
@@ -3162,12 +3184,12 @@ const handleCopyDailyReport = () => {
 
               <div className="print:block">
                 {userProfile?.role === 'admin' && !currentBranchId && activeTab !== 'admin' && activeTab !== 'settings' ? (
-                  <div className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-xl border border-blue-100/60 p-8 sm:p-12 mb-8 text-center mt-4">
-                    <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-blue-100/50">
+                  <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-xl border border-slate-200 dark:border-slate-700/60 p-8 sm:p-12 mb-8 text-center mt-4">
+                    <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white tracking-tight rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-200 dark:border-slate-700/50">
                        <Database size={48} />
                     </div>
-                    <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">اختر الفرع للبدء</h2>
-                    <p className="text-slate-600 font-medium text-base mb-10 max-w-xl mx-auto leading-relaxed">بصفتك مديراً للنظام، يجب عليك اختيار الفرع الذي تود استعراض أو إدخال بيانات الخزينة والمبيعات الخاصة به.</p>
+                    <h2 className="text-3xl font-black text-slate-800 dark:text-slate-200 mb-4 tracking-tight">اختر الفرع للبدء</h2>
+                    <p className="text-slate-600 dark:text-slate-400 font-medium text-base mb-10 max-w-xl mx-auto leading-relaxed">بصفتك مديراً للنظام، يجب عليك اختيار الفرع الذي تود استعراض أو إدخال بيانات الخزينة والمبيعات الخاصة به.</p>
                     
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
                       <select 
@@ -3178,7 +3200,7 @@ const handleCopyDailyReport = () => {
                             loadBranchData(e.target.value);
                           }
                         }}
-                        className="bg-slate-50 border-2 border-blue-200 text-blue-900 text-lg rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 block w-full sm:w-[400px] px-6 py-4 outline-none font-bold shadow-sm transition-all hover:bg-white hover:border-blue-300 cursor-pointer"
+                        className="bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-lg rounded-2xl focus:ring-4 focus:ring-blue-600/20/20 focus:border-blue-600 block w-full sm:w-[400px] px-6 py-4 outline-none font-bold shadow-sm transition-all hover:bg-white dark:bg-slate-900 print:bg-white hover:border-slate-400 cursor-pointer"
                       >
                         <option value="" disabled>-- الرجاء الضغط لاختيار الفرع --</option>
                         {branches.filter(b => !b.deleted).map(b => (
@@ -3187,19 +3209,19 @@ const handleCopyDailyReport = () => {
                       </select>
                     </div>
                     {branches.length === 0 && (
-                       <p className="text-rose-500 font-bold mb-4 bg-rose-50 p-3 rounded-xl inline-block">لا توجد فروع مضافة في النظام حالياً. يرجى إضافة فروع من الإعدادات ⚙️</p>
+                       <button onClick={() => setShowSettingsModal(true)} className="text-rose-500 font-bold mb-4 bg-rose-50 p-4 rounded-[1.25rem] inline-block hover:bg-rose-100 transition-all">لا توجد فروع مضافة في النظام حالياً. اضغط هنا لفتح الإعدادات وإضافة فروع ⚙️</button>
                     )}
                     
-                    <div className="mt-10 pt-8 border-t border-slate-100">
-                      <p className="text-sm text-slate-500 mb-4">أو يمكنك إدارة النظام والنسخ الاحتياطي عبر قائمة الإعدادات العلوية</p>
+                    <div className="mt-10 pt-8 border-t border-slate-100 dark:border-slate-800">
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">أو يمكنك إدارة النظام والنسخ الاحتياطي عبر قائمة الإعدادات العلوية</p>
                     </div>
                   </div>
                 ) : (
                 <>
                 {/* Sales Tab */}
                 <div className={`${activeTab === 'sales' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
-                <div className="bg-white rounded-[1.2rem] shadow-sm border border-slate-200/60 overflow-hidden mb-6 flex flex-col">
-                  <div className="bg-transparent text-slate-800 px-5 flex items-center gap-2 font-semibold text-[15px] pt-4 pb-2">
+                <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 flex flex-col">
+                  <div className="bg-transparent text-slate-800 dark:text-slate-200 px-5 flex items-center gap-2 font-semibold text-[15px] pt-4 pb-2">
                     <Receipt size={20} /> مبيعات نقاط البيع
                   </div>
                   <datalist id="list-posData">
@@ -3208,7 +3230,7 @@ const handleCopyDailyReport = () => {
                   <div className="p-4 overflow-x-auto">
                     <table className="w-full text-[15px] text-right">
                       <thead>
-                        <tr className="text-slate-500 border-b border-slate-200">
+                        <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
                           <th className="pb-3 font-medium w-[22%]">نقطة البيع</th>
                           <th className="pb-3 font-medium w-[13%]">إجمالي المبيعات</th>
                           <th className="pb-3 font-medium w-[13%]">المرتجعات</th>
@@ -3223,7 +3245,7 @@ const handleCopyDailyReport = () => {
                           const net = pos.sales - pos.returns;
                           const posNetworksTotal = sumNetworks(pos.networks);
                           return (
-                            <tr key={pos.id} className="border-b border-slate-100 last:border-0 relative group">
+                            <tr key={pos.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 relative group">
                               <td className="py-4 pr-2">
                                 <Input 
                                   value={pos.name} 
@@ -3234,28 +3256,28 @@ const handleCopyDailyReport = () => {
                                     updateField('posData', newData);
                                   }} 
                                   onBlur={(e: any) => addSavedName('posData', e.target.value)}
-                                  className="bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl"
+                                  className="bg-transparent border-transparent shadow-none hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-slate-300 dark:border-slate-600 transition-colors rounded-[1.25rem]"
                                 />
                               </td>
                               <td className="py-4 px-1"><Input type="number" value={pos.sales !== undefined ? round2(pos.sales) : ''} onChange={(e: any) => {
                                   const newData = [...state.posData];
                                   newData[index].sales = Number(e.target.value);
                                   updateField('posData', newData);
-                                }} dir="ltr" className="text-left bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl" /></td>
+                                }} dir="ltr" className="text-left bg-transparent border-transparent shadow-none hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-slate-300 dark:border-slate-600 transition-colors rounded-[1.25rem]" /></td>
                               <td className="py-4 px-1"><Input type="number" value={pos.returns !== undefined ? round2(pos.returns) : ''} onChange={(e: any) => {
                                   const newData = [...state.posData];
                                   newData[index].returns = Number(e.target.value);
                                   updateField('posData', newData);
-                                }} dir="ltr" className="text-left text-rose-600 bg-transparent border-transparent shadow-none hover:bg-rose-50 focus:bg-white focus:border-rose-200 transition-colors rounded-xl" /></td>
+                                }} dir="ltr" className="text-left text-rose-600 bg-transparent border-transparent shadow-none hover:bg-rose-50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-rose-200 transition-colors rounded-[1.25rem]" /></td>
                               <td className="py-4 px-2 text-left font-bold text-emerald-600" dir="ltr">{formatNum(net)}</td>
                               <td className="py-4 px-1">
                                 <button 
                                   onClick={() => setActiveNetworkPosId(pos.id)}
-                                  className="w-full bg-slate-50/70 border border-slate-200/60 rounded-xl px-3 py-2 text-left hover:bg-amber-50 hover:border-amber-300 transition-colors text-amber-700 font-medium flex justify-between items-center"
+                                  className="w-full bg-slate-50 dark:bg-slate-800/50/70 border border-slate-200 dark:border-slate-700/60 rounded-[1.25rem] px-3 py-2 text-left hover:bg-amber-50 hover:border-amber-300 transition-colors text-amber-700 font-medium flex justify-between items-center"
                                   dir="ltr"
                                 >
                                   <span>{formatNum(posNetworksTotal)}</span>
-                                  <span className="text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-xl">
+                                  <span className="text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-[1.25rem]">
                                     {pos.networks.length} مبالغ
                                   </span>
                                 </button>
@@ -3265,7 +3287,7 @@ const handleCopyDailyReport = () => {
                                   const newData = [...state.posData];
                                   newData[index].physicalCash = e.target.value === '' ? undefined : Number(e.target.value);
                                   updateField('posData', newData);
-                                }} dir="ltr" className="text-left font-bold text-blue-700 pointer-events-auto bg-transparent border-transparent shadow-none hover:bg-slate-50 focus:bg-white focus:border-blue-200 transition-colors rounded-xl font-mono text-lg tracking-tight" />
+                                }} dir="ltr" className="text-left font-bold text-slate-800 dark:text-slate-200 font-bold pointer-events-auto bg-transparent border-transparent shadow-none hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-slate-300 dark:border-slate-600 transition-colors rounded-[1.25rem] font-mono text-lg tracking-tight" />
                               </td>
                               <td className="py-4 pl-2 flex justify-center items-center gap-1.5 print:hidden h-full mt-2">
                                 <button 
@@ -3275,19 +3297,19 @@ const handleCopyDailyReport = () => {
                                     updateField('posData', newData);
                                   }} 
                                   title="تثبيت النقطة لليوم التالي"
-                                  className={`p-2 rounded-xl transition-all ${pos.isPinned ? 'text-blue-600 bg-blue-50 border-blue-200 shadow-sm' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'}`}
+                                  className={`p-2 rounded-[1.25rem] transition-all ${pos.isPinned ? 'text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800'}`}
                                 >
                                   <Pin size={18} className={pos.isPinned ? "fill-current" : ""} />
                                 </button>
                                 <button 
                                   onClick={() => updateField('posData', state.posData.filter(p => p.id !== pos.id))} 
-                                  className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-xl transition-all ml-1" title="إزالة النقطة"
+                                  className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-[1.25rem] transition-all ml-1" title="إزالة النقطة"
                                 >
                                   <Trash2 size={18} />
                                 </button>
-                                  <div className="flex bg-slate-50 text-slate-600 hover:text-blue-700 hover:bg-blue-50 hover:border-blue-200 transition-all rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                                    <button onClick={() => handlePrintPos(pos.id, 'a4')} className="hover:bg-slate-200 hover:text-blue-700 p-1.5 px-2 text-xs font-bold transition-colors border-l border-slate-200" title="طباعة A4">A4</button>
-                                    <button onClick={() => handlePrintPos(pos.id, 'thermal')} className="hover:bg-slate-200 hover:text-blue-700 p-1.5 px-2 text-[11px] font-bold transition-colors flex items-center" title="طباعة إيصال حراري">إيصال</button>
+                                  <div className="flex bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 hover:border-slate-300 dark:border-slate-600 transition-all rounded-[1.25rem] overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+                                    <button onClick={() => handlePrintPos(pos.id, 'a4')} className="hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 hover:text-slate-800 dark:text-slate-200 font-bold p-1.5 px-2 text-xs font-bold transition-colors border-l border-slate-200 dark:border-slate-700" title="طباعة A4">A4</button>
+                                    <button onClick={() => handlePrintPos(pos.id, 'thermal')} className="hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 hover:text-slate-800 dark:text-slate-200 font-bold p-1.5 px-2 text-[11px] font-bold transition-colors flex items-center" title="طباعة إيصال حراري">إيصال</button>
                                   </div>
                               </td>
                             </tr>
@@ -3295,18 +3317,18 @@ const handleCopyDailyReport = () => {
                         })}
                       </tbody>
                       <tfoot>
-                        <tr className="bg-slate-50 font-bold text-slate-800">
+                        <tr className="bg-slate-50 dark:bg-slate-800/50 font-bold text-slate-800 dark:text-slate-200">
                           <td className="py-3 px-2">الإجمالي</td>
                           <td className="py-3 px-2 text-left" dir="ltr">{formatNum(currentSummary.totalSales)}</td>
                           <td className="py-3 px-2 text-left text-rose-600" dir="ltr">{formatNum(currentSummary.totalReturns)}</td>
                           <td className="py-3 px-2 text-left text-emerald-600" dir="ltr">{formatNum(currentSummary.netSales)}</td>
                           <td className="py-3 px-2 text-left text-amber-600" dir="ltr">{formatNum(currentSummary.totalNetworks)}</td>
-                          <td className="py-3 px-2 text-left text-blue-600" dir="ltr">{formatNum(state.posData.reduce((acc, p) => acc + (p.physicalCash || 0), 0))}</td>
+                          <td className="py-3 px-2 text-left text-slate-900 dark:text-white tracking-tight" dir="ltr">{formatNum(state.posData.reduce((acc, p) => acc + (p.physicalCash || 0), 0))}</td>
                           <td className="print:hidden"></td>
                         </tr>
                       </tfoot>
                     </table>
-                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-100/80 text-[14px] font-medium px-4 py-2 rounded-lg transition-all active:scale-95">
+                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 text-[14px] font-medium px-4 py-2 rounded-2xl transition-all active:scale-95">
                       <Plus size={16} /> إضافة نقطة بيع جديدة
                     </button>
                   </div>
@@ -3327,7 +3349,7 @@ const handleCopyDailyReport = () => {
               <div className={`${activeTab === 'pending' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
                 {!isExporting && (
                   <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4">
-                    <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-[15px] flex gap-3 items-start flex-1">
+                    <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-[1.25rem] text-[15px] flex gap-3 items-start flex-1">
                       <AlertCircle className="shrink-0 mt-0.5" size={18} />
                       <p>
                         <strong>الأموال المعلقة:</strong> تُرحل بالكامل لليوم التالي حتى يتم تسويتها. <br/>
@@ -3335,7 +3357,7 @@ const handleCopyDailyReport = () => {
                         - عند السداد، اضغط على <strong>علامة الصح الخضراء</strong> لتسوية المبلغ ونقله إلى <strong>الأرشيف</strong>.
                       </p>
                     </div>
-                    <button onClick={handlePrintPending} className="flex h-fit items-center gap-2 bg-amber-600 text-white px-5 py-3 rounded-xl hover:bg-amber-700 transition-colors font-bold shadow-sm whitespace-nowrap">
+                    <button onClick={handlePrintPending} className="flex h-fit items-center gap-2 bg-amber-600 text-white px-5 py-3 rounded-[1.25rem] hover:bg-amber-700 transition-colors font-bold shadow-sm whitespace-nowrap">
                       <Download size={20} /> تصدير السجل كـ PDF
                     </button>
                   </div>
@@ -3346,15 +3368,15 @@ const handleCopyDailyReport = () => {
 
               {/* Cash Count Tab */}
               <div className={`${activeTab === 'cash' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
-                <div className="bg-white rounded-[1.2rem] shadow-sm border border-slate-200/60 overflow-hidden mb-6 flex flex-col">
-                  <div className="bg-transparent text-slate-800 px-5 pt-4 pb-2 flex items-center justify-between font-semibold text-[15px]">
+                <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 flex flex-col">
+                  <div className="bg-transparent text-slate-800 dark:text-slate-200 px-5 pt-4 pb-2 flex items-center justify-between font-semibold text-[15px]">
                     <div className="flex items-center gap-2"><Wallet size={20} /> جرد الخزينة (الفئات النقدية)</div>
-                    <div className="bg-white/60 px-3 py-1 rounded-xl" dir="ltr">{formatNum(currentSummary.physicalDenominations)}</div>
+                    <div className="bg-white dark:bg-slate-900 print:bg-white/60 px-3 py-1 rounded-[1.25rem]" dir="ltr">{formatNum(currentSummary.physicalDenominations)}</div>
                   </div>
                   <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
                     {['500', '200', '100', '50', '20', '10', '5', '1'].map(denom => (
-                      <div key={denom} className="flex items-center gap-4 p-2 hover:bg-slate-50 rounded-xl transition-colors">
-                        <div className="w-16 font-bold text-slate-700 bg-slate-100 text-center py-2 rounded-xl border border-slate-200">{denom}</div>
+                      <div key={denom} className="flex items-center gap-4 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 rounded-[1.25rem] transition-colors">
+                        <div className="w-16 font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 text-center py-2 rounded-[1.25rem] border border-slate-200 dark:border-slate-700">{denom}</div>
                         <div className="text-slate-400">×</div>
                         <div className="flex-1">
                           <Input type="number" value={state.cashDenominations[denom]} onChange={(e: any) => setState(prev => ({ ...prev, cashDenominations: { ...prev.cashDenominations, [denom]: Number(e.target.value) } }))} className="text-center" />
@@ -3370,14 +3392,14 @@ const handleCopyDailyReport = () => {
 
               {/* History Tab */}
               <div className={`${activeTab === 'history' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
-                <div className="bg-white rounded-[1.2rem] shadow-sm border border-slate-200/60 overflow-hidden mb-6 flex flex-col">
-                  <div className="bg-transparent text-slate-800 p-4 flex items-center gap-2 font-bold border-b border-slate-100">
+                <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 flex flex-col">
+                  <div className="bg-transparent text-slate-800 dark:text-slate-200 p-4 flex items-center gap-2 font-bold border-b border-slate-100 dark:border-slate-800">
                     <CalendarDays size={20} /> سجل الأيام السابقة
                   </div>
                   <div className="p-4 overflow-x-auto">
                     <table className="w-full text-[15px] text-right">
                       <thead>
-                        <tr className="text-slate-500 border-b border-slate-200">
+                        <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
                           <th className="pb-3 font-medium">التاريخ</th>
                           <th className="pb-3 font-medium">الوارد</th>
                           <th className="pb-3 font-medium">المنصرف</th>
@@ -3388,22 +3410,22 @@ const handleCopyDailyReport = () => {
                       </thead>
                       <tbody>
                         {history.map(snap => (
-                          <tr key={snap.id} className="border-b border-slate-100 hover:bg-slate-50">
+                          <tr key={snap.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50">
                             <td className="py-3 font-bold">{snap.state.date}</td>
                             <td className="py-3 text-emerald-600" dir="ltr">{formatNum(snap.summary.totalCashIn)}</td>
                             <td className="py-3 text-rose-600" dir="ltr">{formatNum(snap.summary.totalCashOut)}</td>
                             <td className="py-3 font-bold" dir="ltr">{formatNum(snap.summary.actualCash)}</td>
                             <td className="py-3" dir="ltr">
-                              <span className={`px-2 py-1 rounded-md text-xs font-bold ${snap.summary.difference === 0 ? 'bg-emerald-100 text-emerald-700' : snap.summary.difference > 0 ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'}`}>
+                              <span className={`px-2 py-1 rounded-md text-xs font-bold ${snap.summary.difference === 0 ? 'bg-emerald-100 text-emerald-700' : snap.summary.difference > 0 ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold' : 'bg-rose-100 text-rose-700'}`}>
                                 {formatNum(snap.summary.difference)}
                               </span>
                             </td>
                             <td className="py-3">
                               <div className="flex items-center gap-2">
-                                <button onClick={() => setViewSnapshot(snap)} className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-colors text-xs font-bold flex items-center gap-1">
+                                <button onClick={() => setViewSnapshot(snap)} className="text-slate-900 dark:text-white tracking-tight hover:text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 rounded-[1.25rem] transition-colors text-xs font-bold flex items-center gap-1">
                                   <Eye size={14} /> التفاصيل
                                 </button>
-                                <button onClick={() => handlePrintHistory(snap)} className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors text-xs font-bold flex items-center gap-1">
+                                <button onClick={() => handlePrintHistory(snap)} className="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-[1.25rem] transition-colors text-xs font-bold flex items-center gap-1">
                                   <Printer size={14} /> طباعة
                                 </button>
                               </div>
@@ -3413,9 +3435,9 @@ const handleCopyDailyReport = () => {
                         {history.length === 0 && (
                           <tr>
                             <td colSpan={6}>
-                              <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50/50 rounded-xl my-4 border border-dashed border-slate-200">
+                              <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 dark:bg-slate-800/50/50 rounded-[1.25rem] my-4 border border-dashed border-slate-200 dark:border-slate-700">
                                 <CalendarDays size={48} className="opacity-20 mb-3" />
-                                <p className="font-bold text-lg text-slate-500">سجل الأيام السابقة فارغ</p>
+                                <p className="font-bold text-lg text-slate-500 dark:text-slate-400">سجل الأيام السابقة فارغ</p>
                                 <p className="text-[15px] text-slate-400 mt-1">اضغط على "يوم جديد" للبدء بحفظ التقفيلات اليومية</p>
                               </div>
                             </td>
@@ -3431,22 +3453,22 @@ const handleCopyDailyReport = () => {
               <div className={`${activeTab === 'ledger' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
                 
                 {/* Filters */}
-                <div className="bg-white p-4 rounded-[1rem] shadow-sm border border-slate-200/60 mb-6">
+                <div className="bg-white dark:bg-slate-900 print:bg-white p-4 rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-700/60 mb-6">
                   <div className="flex flex-wrap gap-4 items-end">
                     <div className="flex-1 min-w-[200px]">
-                      <label className="block text-[15px] font-bold text-slate-700 mb-2">من تاريخ</label>
+                      <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">من تاريخ</label>
                       <Input type="date" value={ledgerFilter.startDate} onChange={(e: any) => setLedgerFilter(p => ({...p, startDate: e.target.value}))} dir="ltr" />
                     </div>
                     <div className="flex-1 min-w-[200px]">
-                      <label className="block text-[15px] font-bold text-slate-700 mb-2">إلى تاريخ</label>
+                      <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">إلى تاريخ</label>
                       <Input type="date" value={ledgerFilter.endDate} onChange={(e: any) => setLedgerFilter(p => ({...p, endDate: e.target.value}))} dir="ltr" />
                     </div>
                     <div className="flex-1 min-w-[200px]">
-                      <label className="block text-[15px] font-bold text-slate-700 mb-2">القسم / التصنيف</label>
+                      <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">القسم / التصنيف</label>
                       <select 
                         value={ledgerFilter.category} 
                         onChange={e => setLedgerFilter(p => ({...p, category: e.target.value}))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-[1.25rem] px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600/20"
                       >
                         <option value="all">جميع الأقسام</option>
                         {Array.from(new Set(generateLedgerEntries().map(e => e.category))).map(cat => (
@@ -3455,10 +3477,10 @@ const handleCopyDailyReport = () => {
                       </select>
                     </div>
                     <div className="flex-1 min-w-[200px]">
-                      <label className="block text-[15px] font-bold text-slate-700 mb-2">بحث بالبند / الاسم</label>
+                      <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">بحث بالبند / الاسم</label>
                       <Input type="text" value={ledgerFilter.search} onChange={(e: any) => setLedgerFilter(p => ({...p, search: e.target.value}))} placeholder="اكتب للبحث..." />
                     </div>
-                    <button onClick={() => setLedgerFilter({startDate: '', endDate: '', category: 'all', search: ''})} className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 font-bold transition-colors shrink-0">
+                    <button onClick={() => setLedgerFilter({startDate: '', endDate: '', category: 'all', search: ''})} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-[1.25rem] hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 font-bold transition-colors shrink-0">
                       إعادة ضبط
                     </button>
                   </div>
@@ -3662,48 +3684,48 @@ const handleCopyDailyReport = () => {
                   return (
                     <>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-white border border-slate-200/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
+                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-slate-500 text-[13px] font-medium mb-1">إجمالي الوارد (مدين)</p>
-                            <p className="text-[20px] font-bold text-slate-800" dir="ltr">{formatNum(filteredIn)}</p>
+                            <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">إجمالي الوارد (مدين)</p>
+                            <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredIn)}</p>
                           </div>
                         </div>
-                        <div className="bg-white border border-slate-200/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
+                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-slate-500 text-[13px] font-medium mb-1">إجمالي المنصرف (دائن)</p>
-                            <p className="text-[20px] font-bold text-slate-800" dir="ltr">{formatNum(filteredOut)}</p>
+                            <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">إجمالي المنصرف (دائن)</p>
+                            <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredOut)}</p>
                           </div>
                         </div>
-                        <div className="bg-white border border-slate-200/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
+                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-slate-500 text-[13px] font-medium mb-1">إجمالي المعلق</p>
-                            <p className="text-[20px] font-bold text-slate-800" dir="ltr">{formatNum(filteredNeutral)}</p>
+                            <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">إجمالي المعلق</p>
+                            <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredNeutral)}</p>
                           </div>
                         </div>
-                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between shadow-sm">
+                        <div className="bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-[1.25rem] p-4 flex items-center justify-between shadow-sm">
                           <div>
-                            <p className="text-slate-500 text-[13px] font-medium mb-1">صافي الرصيد</p>
-                            <p className="text-[20px] font-bold text-slate-800" dir="ltr">{formatNum(filteredIn - filteredOut)}</p>
+                            <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">صافي الرصيد</p>
+                            <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredIn - filteredOut)}</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-white rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200/60 overflow-hidden mb-6">
+                      <div className="bg-white dark:bg-slate-900 print:bg-white rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6">
                         <div className="bg-slate-800 text-white p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700">
                           <div className="flex items-center gap-2 font-bold">
                             <BookOpen size={20} className="text-slate-300" /> كشف حساب (النتائج: {filteredLedger.length})
                           </div>
                           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full sm:w-auto">
-                            <div className="flex flex-wrap items-center gap-2 bg-slate-700/50 p-2 rounded-xl border border-slate-600/50 text-xs">
+                            <div className="flex flex-wrap items-center gap-2 bg-slate-700/50 p-2 rounded-[1.25rem] border border-slate-600/50 text-xs">
                               <span className="text-slate-400 ml-1">أعمدة الطباعة:</span>
-                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.date} onChange={e => setLedgerPrintCols({...ledgerPrintCols, date: e.target.checked})} className="accent-blue-500" /> التاريخ</label>
-                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.desc} onChange={e => setLedgerPrintCols({...ledgerPrintCols, desc: e.target.checked})} className="accent-blue-500" /> البيان</label>
-                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.category} onChange={e => setLedgerPrintCols({...ledgerPrintCols, category: e.target.checked})} className="accent-blue-500" /> التصنيف</label>
+                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.date} onChange={e => setLedgerPrintCols({...ledgerPrintCols, date: e.target.checked})} className="accent-slate-900" /> التاريخ</label>
+                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.desc} onChange={e => setLedgerPrintCols({...ledgerPrintCols, desc: e.target.checked})} className="accent-slate-900" /> البيان</label>
+                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.category} onChange={e => setLedgerPrintCols({...ledgerPrintCols, category: e.target.checked})} className="accent-slate-900" /> التصنيف</label>
                               <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.in} onChange={e => setLedgerPrintCols({...ledgerPrintCols, in: e.target.checked})} className="accent-emerald-500" /> وارد</label>
                               <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.out} onChange={e => setLedgerPrintCols({...ledgerPrintCols, out: e.target.checked})} className="accent-rose-500" /> منصرف</label>
-                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.bal} onChange={e => setLedgerPrintCols({...ledgerPrintCols, bal: e.target.checked})} className="accent-blue-500" /> الرصيد</label>
+                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.bal} onChange={e => setLedgerPrintCols({...ledgerPrintCols, bal: e.target.checked})} className="accent-slate-900" /> الرصيد</label>
                             </div>
-                            <button onClick={handlePrintFilteredLedger} className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-[15px] font-bold border border-blue-500 hover:bg-blue-500 transition-colors shrink-0 shadow-sm w-full sm:w-auto">
+                            <button onClick={handlePrintFilteredLedger} className="flex items-center justify-center gap-2 bg-blue-600 text-white border-none hover:bg-blue-700 text-white px-4 py-2 rounded-[1.25rem] text-[15px] font-bold border border-slate-900 hover:bg-slate-900 transition-colors shrink-0 shadow-sm w-full sm:w-auto">
                               <Printer size={16} /> طباعة التقرير
                             </button>
                           </div>
@@ -3711,13 +3733,13 @@ const handleCopyDailyReport = () => {
                         <div className="p-0 overflow-x-auto">
                           <table className="w-full text-[15px] text-right border-collapse">
                             <thead>
-                              <tr className="bg-slate-100 text-slate-600 border-b border-slate-200">
-                                <th className="p-3 font-bold border-l border-slate-200">التاريخ</th>
-                                <th className="p-3 font-bold border-l border-slate-200 w-1/3">البيان</th>
-                                <th className="p-3 font-bold border-l border-slate-200">التصنيف</th>
-                                <th className="p-3 font-bold border-l border-slate-200 text-emerald-700">مدين (وارد)</th>
-                                <th className="p-3 font-bold border-l border-slate-200 text-rose-700">دائن (منصرف)</th>
-                                <th className="p-3 font-bold text-blue-700">الرصيد</th>
+                              <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                                <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-700">التاريخ</th>
+                                <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-700 w-1/3">البيان</th>
+                                <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-700">التصنيف</th>
+                                <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-700 text-emerald-700">مدين (وارد)</th>
+                                <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-700 text-rose-700">دائن (منصرف)</th>
+                                <th className="p-3 font-bold text-slate-800 dark:text-slate-200 font-bold">الرصيد</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -3729,20 +3751,20 @@ const handleCopyDailyReport = () => {
                                   exit={{ opacity: 0, scale: 0.95 }}
                                   transition={{ duration: 0.15 }}
                                   key={entry.id + index} 
-                                  className="border-b border-slate-200 hover:bg-amber-50/50 transition-colors"
+                                  className="border-b border-slate-200 dark:border-slate-700 hover:bg-amber-50/50 transition-colors"
                                 >
-                                  <td className="p-3 font-medium text-slate-700 border-l border-slate-200">{entry.date}</td>
-                                  <td className="p-3 font-bold text-slate-800 border-l border-slate-200">{entry.description}</td>
-                                  <td className="p-3 text-slate-500 text-xs border-l border-slate-200">
-                                    <span className="bg-slate-100 px-2 py-1 rounded border border-slate-200">{entry.category}</span>
+                                  <td className="p-3 font-medium text-slate-700 dark:text-slate-300 border-l border-slate-200 dark:border-slate-700">{entry.date}</td>
+                                  <td className="p-3 font-bold text-slate-800 dark:text-slate-200 border-l border-slate-200 dark:border-slate-700">{entry.description}</td>
+                                  <td className="p-3 text-slate-500 dark:text-slate-400 text-xs border-l border-slate-200 dark:border-slate-700">
+                                    <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">{entry.category}</span>
                                   </td>
-                                  <td className="p-3 border-l border-slate-200 font-mono text-emerald-700 font-bold bg-emerald-50/30" dir="ltr">
+                                  <td className="p-3 border-l border-slate-200 dark:border-slate-700 font-mono text-emerald-700 font-bold bg-emerald-50/30" dir="ltr">
                                     {entry.type === 'in' ? formatNum(entry.amount) : '-'}
                                   </td>
-                                  <td className="p-3 border-l border-slate-200 font-mono text-rose-700 font-bold bg-rose-50/30" dir="ltr">
+                                  <td className="p-3 border-l border-slate-200 dark:border-slate-700 font-mono text-rose-700 font-bold bg-rose-50/30" dir="ltr">
                                     {entry.type === 'out' ? formatNum(entry.amount) : '-'}
                                   </td>
-                                  <td className="p-3 font-mono text-blue-700 font-black bg-blue-50/30" dir="ltr">
+                                  <td className="p-3 font-mono text-slate-800 dark:text-slate-200 font-bold font-black bg-slate-100 dark:bg-slate-800/80/30" dir="ltr">
                                     {formatNum(entry.balance)}
                                   </td>
                                 </motion.tr>
@@ -3751,9 +3773,9 @@ const handleCopyDailyReport = () => {
                               {filteredLedger.length === 0 && (
                                 <tr>
                                   <td colSpan={6}>
-                                    <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50">
+                                    <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 dark:bg-slate-800/50">
                                       <BookOpen size={48} className="opacity-20 mb-3" />
-                                      <p className="font-bold text-lg text-slate-500">لا توجد حركات مسجلة تطابق البحث</p>
+                                      <p className="font-bold text-lg text-slate-500 dark:text-slate-400">لا توجد حركات مسجلة تطابق البحث</p>
                                     </div>
                                   </td>
                                 </tr>
@@ -3769,14 +3791,14 @@ const handleCopyDailyReport = () => {
 
               {/* Archive Tab */}
               <div className={`${activeTab === 'archive' && !isExporting ? 'block' : 'hidden'} print:block`}>
-                <div className="bg-white rounded-[1.2rem] shadow-sm border border-slate-200/60 overflow-hidden mb-6 flex flex-col">
-                  <div className="bg-transparent text-slate-800 p-4 flex items-center gap-2 font-bold border-b border-slate-100">
+                <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 flex flex-col">
+                  <div className="bg-transparent text-slate-800 dark:text-slate-200 p-4 flex items-center gap-2 font-bold border-b border-slate-100 dark:border-slate-800">
                     <History size={20} /> أرشيف الأموال المعلقة (المسددة)
                   </div>
                   <div className="p-4 overflow-x-auto">
                     <table className="w-full text-[15px] text-right">
                       <thead>
-                        <tr className="text-slate-500 border-b border-slate-200">
+                        <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
                           <th className="pb-3 font-medium">تاريخ التسوية</th>
                           <th className="pb-3 font-medium">البيان</th>
                           <th className="pb-3 font-medium">النوع</th>
@@ -3786,13 +3808,13 @@ const handleCopyDailyReport = () => {
                       </thead>
                       <tbody>
                         {state.archivedPendingFunds.map(item => (
-                          <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50">
+                          <tr key={item.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50">
                             <td className="py-3">{item.dateSettled}</td>
                             <td className="py-3 font-medium">{item.name}</td>
                             <td className="py-3">
                               {item.type === 'toUs' ? 
                                 <span className="text-amber-700 bg-amber-50 px-2 py-1 rounded-md text-xs font-bold border border-amber-200">لنا</span> : 
-                                <span className="text-slate-700 bg-slate-100 px-2 py-1 rounded-md text-xs font-bold border border-slate-200">علينا</span>}
+                                <span className="text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md text-xs font-bold border border-slate-200 dark:border-slate-700">علينا</span>}
                             </td>
                             <td className="py-3 font-bold" dir="ltr">{formatNum(item.amount)}</td>
                             <td className="py-3 print:hidden">
@@ -3804,7 +3826,7 @@ const handleCopyDailyReport = () => {
                                     showToast('تم الحذف من الأرشيف', 'success');
                                   }
                                 });
-                              }} className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-xl transition-colors">
+                              }} className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-[1.25rem] transition-colors">
                                 <Trash2 size={16}/>
                               </button>
                             </td>
@@ -3813,9 +3835,9 @@ const handleCopyDailyReport = () => {
                         {state.archivedPendingFunds.length === 0 && (
                           <tr>
                             <td colSpan={5}>
-                              <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50/50 rounded-xl my-4 border border-dashed border-slate-200">
+                              <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 dark:bg-slate-800/50/50 rounded-[1.25rem] my-4 border border-dashed border-slate-200 dark:border-slate-700">
                                 <History size={48} className="opacity-20 mb-3" />
-                                <p className="font-bold text-lg text-slate-500">الأرشيف فارغ حالياً</p>
+                                <p className="font-bold text-lg text-slate-500 dark:text-slate-400">الأرشيف فارغ حالياً</p>
                                 <p className="text-[15px] text-slate-400 mt-1">تظهر هنا الأموال المعلقة بعد تسويتها</p>
                               </div>
                             </td>
@@ -3853,24 +3875,24 @@ const handleCopyDailyReport = () => {
       {/* Export Modal */}
       <AnimatePresence>
       {showExportModal && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                <Download size={20} className="text-blue-600" /> 
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <Download size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
                 تصدير التسوية
               </h3>
-              <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+              <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1">
                 <X size={20} />
               </button>
             </div>
             <div className="p-6">
               <div className="mb-6">
-                <label className="block text-[15px] font-bold text-slate-700 mb-3">نوع التقرير (التفاصيل)</label>
+                <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-3">نوع التقرير (التفاصيل)</label>
                 <div className="grid grid-cols-3 gap-3">
                   <button 
                     onClick={() => setExportMode('summary')}
-                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'summary' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    className={`p-3 rounded-[1.25rem] border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'summary' ? 'border-slate-900 bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'}`}
                   >
                     <FileText size={24} />
                     <span className="font-bold">مبسط</span>
@@ -3878,7 +3900,7 @@ const handleCopyDailyReport = () => {
                   </button>
                   <button 
                     onClick={() => setExportMode('comprehensive')}
-                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'comprehensive' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    className={`p-3 rounded-[1.25rem] border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'comprehensive' ? 'border-slate-900 bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'}`}
                   >
                     <BarChart3 size={24} />
                     <span className="font-bold">شامل</span>
@@ -3886,7 +3908,7 @@ const handleCopyDailyReport = () => {
                   </button>
                   <button 
                     onClick={() => setExportMode('detailed')}
-                    className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'detailed' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                    className={`p-3 rounded-[1.25rem] border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'detailed' ? 'border-slate-900 bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'}`}
                   >
                     <BookOpen size={24} />
                     <span className="font-bold">مفصل</span>
@@ -3899,7 +3921,7 @@ const handleCopyDailyReport = () => {
                 <button 
                   onClick={() => handleExport('a4')}
                   disabled={isExporting}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 bg-blue-600 text-white border-none hover:bg-blue-700 text-white py-3 rounded-[1.25rem] font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isExporting ? 'جاري التحضير...' : (
                     <>
@@ -3912,7 +3934,7 @@ const handleCopyDailyReport = () => {
                   <button 
                     onClick={() => handleExport('thermal')}
                     disabled={isExporting}
-                    className="flex-1 bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 bg-slate-800 text-white py-3 rounded-[1.25rem] font-bold hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <Printer size={20} /> حراري
                   </button>
@@ -3922,7 +3944,7 @@ const handleCopyDailyReport = () => {
               {exportMode === 'summary' && (
                   <button 
                     onClick={handleCopyDailyReport}
-                    className="w-full mt-3 bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                    className="w-full mt-3 bg-emerald-600 text-white py-3 rounded-[1.25rem] font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
                   >
                     <Copy size={20} /> نسخ التقرير النصي
                   </button>
@@ -3936,24 +3958,24 @@ const handleCopyDailyReport = () => {
       {/* View Snapshot Modal */}
       <AnimatePresence>
       {viewSnapshot && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                <CalendarDays size={20} className="text-blue-600" /> 
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 shrink-0">
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <CalendarDays size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
                 تفاصيل يوم: {viewSnapshot.state.date}
               </h3>
               <div className="flex items-center gap-2">
-                <div className="flex bg-blue-50 text-blue-600 rounded-xl overflow-hidden border border-blue-200">
-                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'a4'); }} className="hover:bg-blue-100 px-3 py-1.5 text-[15px] font-bold transition-colors border-l border-blue-200 flex items-center gap-1" title="طباعة A4"><Printer size={16} /> A4</button>
-                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'thermal'); }} className="hover:bg-blue-100 px-3 py-1.5 text-[15px] font-bold transition-colors" title="طباعة حراري">حراري</button>
+                <div className="flex bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white tracking-tight rounded-[1.25rem] overflow-hidden border border-slate-300 dark:border-slate-600">
+                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'a4'); }} className="hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 text-[15px] font-bold transition-colors border-l border-slate-300 dark:border-slate-600 flex items-center gap-1" title="طباعة A4"><Printer size={16} /> A4</button>
+                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'thermal'); }} className="hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 text-[15px] font-bold transition-colors" title="طباعة حراري">حراري</button>
                 </div>
-                <button onClick={() => setViewSnapshot(null)} className="text-slate-400 hover:text-slate-600 p-1">
+                <button onClick={() => setViewSnapshot(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1">
                   <X size={20} />
                 </button>
               </div>
             </div>
-            <div className="p-4 overflow-y-auto bg-slate-100">
+            <div className="p-4 overflow-y-auto bg-slate-100 dark:bg-slate-800">
               <SummaryDashboard state={viewSnapshot.state} summary={viewSnapshot.summary} />
             </div>
           </motion.div>
@@ -3985,6 +4007,8 @@ const handleCopyDailyReport = () => {
         onClose={() => setShowSettingsModal(false)}
         companyName={companyName}
         setCompanyName={setCompanyName}
+        theme={theme}
+        setTheme={setTheme}
         uiScale={uiScale}
         setUiScale={setUiScale}
         thermalMargins={thermalMargins}
@@ -3998,6 +4022,9 @@ const handleCopyDailyReport = () => {
         setShowAddBranchModal={setShowAddBranchModal}
         user={user}
         userProfile={userProfile}
+        savedNames={state.savedNames}
+        addSavedName={addSavedName}
+        removeSavedName={removeSavedName}
       />
 
       {/* Toast Notification */}
@@ -4013,15 +4040,15 @@ const handleCopyDailyReport = () => {
       {/* Confirm Dialog */}
       <AnimatePresence>
       {confirmDialog && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
             <div className="p-6 text-center">
               <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-              <p className="text-lg font-bold text-slate-800 mb-2">تأكيد الإجراء</p>
-              <p className="text-slate-600 mb-6">{confirmDialog.message}</p>
+              <p className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-2">تأكيد الإجراء</p>
+              <p className="text-slate-600 dark:text-slate-400 mb-6">{confirmDialog.message}</p>
               <div className="flex gap-3">
-                <button onClick={() => { confirmDialog.onConfirm(); setConfirmDialog(null); }} className="flex-1 bg-blue-600 text-white py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors">تأكيد</button>
-                <button onClick={() => setConfirmDialog(null)} className="flex-1 bg-slate-100 text-slate-700 py-2 rounded-xl font-bold hover:bg-slate-200 transition-colors">إلغاء</button>
+                <button onClick={() => { confirmDialog.onConfirm(); setConfirmDialog(null); }} className="flex-1 bg-blue-600 text-white border-none hover:bg-blue-700 text-white py-2 rounded-[1.25rem] font-bold hover:bg-slate-800 transition-colors">تأكيد</button>
+                <button onClick={() => setConfirmDialog(null)} className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-2 rounded-[1.25rem] font-bold hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">إلغاء</button>
               </div>
             </div>
           </motion.div>
@@ -4032,14 +4059,14 @@ const handleCopyDailyReport = () => {
       {/* Networks Modal */}
       <AnimatePresence>
       {activeNetworkPosId && activePos && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <CreditCard size={20} className="text-amber-600" /> 
                 مبالغ الشبكات - {activePos.name}
               </h3>
-              <button onClick={() => setActiveNetworkPosId(null)} className="text-slate-400 hover:text-slate-600 p-1">
+              <button onClick={() => setActiveNetworkPosId(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1">
                 <X size={20} />
               </button>
             </div>
@@ -4069,7 +4096,7 @@ const handleCopyDailyReport = () => {
                         posData: prev.posData.map(p => p.id === activePos.id ? { ...p, networks: newNetworks } : p)
                       }));
                     }}
-                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-[1.25rem]"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -4082,17 +4109,17 @@ const handleCopyDailyReport = () => {
                     posData: prev.posData.map(p => p.id === activePos.id ? { ...p, networks: [...p.networks, 0] } : p)
                   }));
                 }}
-                className="w-full py-2 border-2 border-dashed border-slate-200 text-slate-500 rounded-xl hover:border-blue-400 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 font-medium mt-2"
+                className="w-full py-2 border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-[1.25rem] hover:border-slate-300 dark:border-slate-600 hover:text-slate-900 dark:text-white tracking-tight transition-colors flex items-center justify-center gap-2 font-medium mt-2"
               >
                 <Plus size={18} /> إضافة مبلغ شبكة جديد
               </button>
             </div>
-            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
-              <span className="font-bold text-slate-600">إجمالي الشبكات:</span>
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
+              <span className="font-bold text-slate-600 dark:text-slate-400">إجمالي الشبكات:</span>
               <span className="font-black text-amber-600 text-lg" dir="ltr">{formatNum(sumNetworks(activePos.networks))}</span>
             </div>
-            <div className="p-4 pt-0 bg-slate-50">
-              <button onClick={() => setActiveNetworkPosId(null)} className="w-full bg-blue-600 text-white py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors">
+            <div className="p-4 pt-0 bg-slate-50 dark:bg-slate-800/50">
+              <button onClick={() => setActiveNetworkPosId(null)} className="w-full bg-blue-600 text-white border-none hover:bg-blue-700 text-white py-2 rounded-[1.25rem] font-bold hover:bg-slate-800 transition-colors">
                 موافق
               </button>
             </div>
@@ -4105,32 +4132,32 @@ const handleCopyDailyReport = () => {
       <AnimatePresence>
       {showAddBranchModal && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                <Plus className="text-blue-600" size={20} />
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
+                <Plus className="text-slate-900 dark:text-white tracking-tight" size={20} />
                 إضافة فرع جديد
               </h3>
-              <button disabled={loading} onClick={() => setShowAddBranchModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-colors">
+              <button disabled={loading} onClick={() => setShowAddBranchModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleAddBranchSubmit} className="p-6">
               <div className="mb-4">
-                <label className="block text-[15px] font-bold text-slate-700 mb-2">اسم الفرع</label>
+                <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">اسم الفرع</label>
                 <input
                   type="text"
                   required
                   placeholder="مثال: فرع المدينة"
                   value={newBranchName}
                   onChange={(e) => setNewBranchName(e.target.value)}
-                  className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full border border-slate-300 dark:border-slate-600 rounded-[1.25rem] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-transparent transition-all"
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading || !newBranchName.trim()}
-                className="w-full bg-blue-600 outline-none text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition-all shadow-sm shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
+                className="w-full bg-blue-600 text-white border-none hover:bg-blue-700 outline-none text-white font-bold py-3 px-4 rounded-[1.25rem] hover:bg-slate-800 transition-all shadow-sm shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
               >
                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle2 size={20} />}
                 إضافة
@@ -4144,49 +4171,49 @@ const handleCopyDailyReport = () => {
       <AnimatePresence>
       {showAuthModal && createPortal(
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden flex flex-col">
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                <LogIn className="text-blue-600" size={24} />
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
+                <LogIn className="text-slate-900 dark:text-white tracking-tight" size={24} />
                 {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
               </h3>
-              <button onClick={() => setShowAuthModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-colors">
+              <button onClick={() => setShowAuthModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
                 <X size={20} />
               </button>
             </div>
             <div className="p-6">
               {authError && (
-                <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-xl text-[15px] font-bold border border-red-200 flex items-center gap-2">
+                <div className="mb-4 bg-red-50 text-red-700 p-3 rounded-[1.25rem] text-[15px] font-bold border border-red-200 flex items-center gap-2">
                   <AlertCircle size={18} className="shrink-0" />
                   {authError}
                 </div>
               )}
               <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
                 <div>
-                  <label className="block text-[15px] font-bold text-slate-700 mb-1.5">البريد الإلكتروني</label>
+                  <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">البريد الإلكتروني</label>
                   <input
                     type="email"
                     required
                     dir="ltr"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                    className="w-full border border-slate-300 dark:border-slate-600 rounded-[1.25rem] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-[15px] font-bold text-slate-700 mb-1.5">كلمة المرور</label>
+                  <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">كلمة المرور</label>
                   <input
                     type="password"
                     required
                     dir="ltr"
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                    className="w-full border border-slate-300 dark:border-slate-600 rounded-[1.25rem] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all font-mono"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 text-white font-bold py-3.5 px-4 rounded-xl mt-2 hover:bg-blue-700 transition-all shadow-sm active:scale-95"
+                  className="w-full bg-blue-600 text-white border-none hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-[1.25rem] mt-2 hover:bg-slate-800 transition-all shadow-sm active:scale-95"
                 >
                   {isSignUp ? 'إنشاء الحساب' : 'دخول'}
                 </button>
@@ -4194,16 +4221,16 @@ const handleCopyDailyReport = () => {
 
               <div className="mt-5 relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
+                  <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
                 </div>
                 <div className="relative flex justify-center text-[15px]">
-                  <span className="px-2 bg-white text-slate-500 font-medium">أو</span>
+                  <span className="px-2 bg-white dark:bg-slate-900 print:bg-white text-slate-500 dark:text-slate-400 font-medium">أو</span>
                 </div>
               </div>
 
               <button
                 onClick={handleGoogleLogin}
-                className="mt-5 w-full bg-white border-2 border-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95 flex items-center justify-center gap-3"
+                className="mt-5 w-full bg-white dark:bg-slate-900 print:bg-white border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold py-3 px-4 rounded-[1.25rem] hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 hover:border-slate-300 dark:border-slate-600 transition-all active:scale-95 flex items-center justify-center gap-3"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -4217,7 +4244,7 @@ const handleCopyDailyReport = () => {
               <div className="mt-6 text-center">
                 <button
                   onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }}
-                  className="text-slate-500 hover:text-blue-600 font-bold transition-colors text-[15px] relative after:bg-blue-600 after:absolute after:h-[2px] after:w-0 hover:after:w-full after:bottom-0 after:-right-0 after:transition-all after:duration-300"
+                  className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white tracking-tight font-bold transition-colors text-[15px] relative after:bg-blue-600 text-white border-none hover:bg-blue-700 after:absolute after:h-[2px] after:w-0 hover:after:w-full after:bottom-0 after:-right-0 after:transition-all after:duration-300"
                 >
                   {isSignUp ? 'لدي حساب بالفعل، تسجيل الدخول' : 'جديد؟ قم بإنشاء حساب'}
                 </button>
@@ -4247,61 +4274,61 @@ const handleCopyDailyReport = () => {
       
       {thermalPreviewData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden">
-          <div className="bg-slate-100 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-4 border-b border-slate-200 bg-white flex justify-between items-center">
+          <div className="bg-slate-100 dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 print:bg-white flex justify-between items-center">
               <h2 className="font-bold text-lg">معاينة وتخصيص الإيصال الحراري</h2>
-              <button onClick={() => setThermalPreviewData(null)} className="text-slate-400 hover:text-slate-600 p-1 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
+              <button onClick={() => setThermalPreviewData(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded-full transition-colors"><X size={20} /></button>
             </div>
             
-            <div className="p-4 bg-white border-b border-slate-200 flex flex-col gap-4">
-              <p className="text-[15px] text-slate-500 text-center font-bold">هوامش الطباعة (اسحب المسطرة لتوسيط الإيصال)</p>
+            <div className="p-4 bg-white dark:bg-slate-900 print:bg-white border-b border-slate-200 dark:border-slate-700 flex flex-col gap-4">
+              <p className="text-[15px] text-slate-500 dark:text-slate-400 text-center font-bold">هوامش الطباعة (اسحب المسطرة لتوسيط الإيصال)</p>
               <div className="grid grid-cols-2 gap-4">
-                 <div className="flex flex-col gap-1 bg-slate-50/50 p-2.5 rounded-2xl border border-gray-200">
+                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-2xl border border-gray-200">
                    <div className="flex justify-between items-center px-1">
-                     <span className="text-[15px] font-semibold text-slate-600">أعلى (Top)</span>
-                     <span className="font-bold text-[15px] text-blue-700">{thermalMargins.top}px</span>
+                     <span className="text-[15px] font-semibold text-slate-600 dark:text-slate-400">أعلى (Top)</span>
+                     <span className="font-bold text-[15px] text-slate-800 dark:text-slate-200 font-bold">{thermalMargins.top}px</span>
                    </div>
-                   <input type="range" min="0" max="100" value={thermalMargins.top} onChange={(e) => setThermalMargins(p => ({...p, top: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 rounded-xl appearance-none cursor-pointer accent-blue-600" />
+                   <input type="range" min="0" max="100" value={thermalMargins.top} onChange={(e) => setThermalMargins(p => ({...p, top: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-[1.25rem] appearance-none cursor-pointer accent-slate-900" />
                  </div>
-                 <div className="flex flex-col gap-1 bg-slate-50/50 p-2.5 rounded-2xl border border-gray-200 hidden">
+                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-2xl border border-gray-200 hidden">
                    <div className="flex justify-between items-center px-1">
-                     <span className="text-[15px] font-semibold text-slate-600">أسفل</span>
-                     <span className="font-bold text-[15px] text-blue-700">0px</span>
+                     <span className="text-[15px] font-semibold text-slate-600 dark:text-slate-400">أسفل</span>
+                     <span className="font-bold text-[15px] text-slate-800 dark:text-slate-200 font-bold">0px</span>
                    </div>
-                   <input type="range" min="0" max="100" value="0" disabled className="w-full h-2 bg-slate-100 rounded-xl appearance-none cursor-not-allowed accent-gray-400" />
+                   <input type="range" min="0" max="100" value="0" disabled className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-[1.25rem] appearance-none cursor-not-allowed accent-gray-400" />
                  </div>
-                 <div className="flex flex-col gap-1 bg-slate-50/50 p-2.5 rounded-2xl border border-gray-200">
+                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-2xl border border-gray-200">
                    <div className="flex justify-between items-center px-1">
-                     <span className="text-[15px] font-semibold text-slate-600">اليمين (Right)</span>
-                     <span className="font-bold text-[15px] text-blue-700">{thermalMargins.right}px</span>
+                     <span className="text-[15px] font-semibold text-slate-600 dark:text-slate-400">اليمين (Right)</span>
+                     <span className="font-bold text-[15px] text-slate-800 dark:text-slate-200 font-bold">{thermalMargins.right}px</span>
                    </div>
-                   <input type="range" min="0" max="200" value={thermalMargins.right} onChange={(e) => setThermalMargins(p => ({...p, right: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 rounded-xl appearance-none cursor-pointer accent-blue-600" />
+                   <input type="range" min="0" max="200" value={thermalMargins.right} onChange={(e) => setThermalMargins(p => ({...p, right: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-[1.25rem] appearance-none cursor-pointer accent-slate-900" />
                  </div>
-                 <div className="flex flex-col gap-1 bg-slate-50/50 p-2.5 rounded-2xl border border-gray-200">
+                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-2xl border border-gray-200">
                    <div className="flex justify-between items-center px-1">
-                     <span className="text-[15px] font-semibold text-slate-600">اليسار (Left)</span>
-                     <span className="font-bold text-[15px] text-blue-700">{thermalMargins.left}px</span>
+                     <span className="text-[15px] font-semibold text-slate-600 dark:text-slate-400">اليسار (Left)</span>
+                     <span className="font-bold text-[15px] text-slate-800 dark:text-slate-200 font-bold">{thermalMargins.left}px</span>
                    </div>
-                   <input type="range" min="0" max="200" value={thermalMargins.left} onChange={(e) => setThermalMargins(p => ({...p, left: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 rounded-xl appearance-none cursor-pointer accent-blue-600" />
+                   <input type="range" min="0" max="200" value={thermalMargins.left} onChange={(e) => setThermalMargins(p => ({...p, left: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-[1.25rem] appearance-none cursor-pointer accent-slate-900" />
                  </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 flex justify-center bg-slate-200 shadow-inner">
-              <div className="relative mx-auto shrink-0 bg-white shadow border border-slate-300" style={{ width: '80mm', minHeight: '100mm' }}>
+            <div className="flex-1 overflow-y-auto p-6 flex justify-center bg-slate-200 dark:bg-slate-700 shadow-inner">
+              <div className="relative mx-auto shrink-0 bg-white dark:bg-slate-900 print:bg-white shadow border border-slate-300 dark:border-slate-600" style={{ width: '80mm', minHeight: '100mm' }}>
                 <div id="thermal-receipt-preview-export">
                   {thermalPreviewData.type === 'daily' && <DailyPrintView companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
                   {thermalPreviewData.type === 'history' && <DailyPrintView companyName={companyName} state={thermalPreviewData.snap.state} summary={thermalPreviewData.snap.summary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
                   {thermalPreviewData.type === 'pos' && <PosPrintView companyName={companyName} pos={state.posData.find(p => p.id === thermalPreviewData.id)} summary={currentSummary} formatNum={formatNum} date={state.date} printFormat="thermal" thermalMargins={thermalMargins} isPreviewMode={true} />}
                 </div>
                 {/* Margin overlays */}
-                <div className="absolute inset-y-0 right-0 border-l-2 border-dashed border-blue-400/60 bg-blue-500/5 pointer-events-none flex items-center justify-center transition-all" style={{ width: thermalMargins.right }}><span className="-rotate-90 text-[10px] text-blue-500 font-bold mix-blend-multiply opacity-50 whitespace-nowrap">{thermalMargins.right}px</span></div>
-                <div className="absolute inset-y-0 left-0 border-r-2 border-dashed border-blue-400/60 bg-blue-500/5 pointer-events-none flex items-center justify-center transition-all" style={{ width: thermalMargins.left }}><span className="rotate-90 text-[10px] text-blue-500 font-bold mix-blend-multiply opacity-50 whitespace-nowrap">{thermalMargins.left}px</span></div>
-                <div className="absolute inset-x-0 top-0 border-b-2 border-dashed border-blue-400/60 bg-blue-500/5 pointer-events-none flex justify-center items-center transition-all" style={{ height: thermalMargins.top }}><span className="text-[10px] text-blue-500 font-bold mix-blend-multiply opacity-50">{thermalMargins.top}px</span></div>
+                <div className="absolute inset-y-0 right-0 border-l-2 border-dashed border-slate-300 dark:border-slate-600/60 bg-slate-100 dark:bg-slate-800/50 pointer-events-none flex items-center justify-center transition-all" style={{ width: thermalMargins.right }}><span className="-rotate-90 text-[10px] text-slate-900 dark:text-white font-bold mix-blend-multiply opacity-50 whitespace-nowrap">{thermalMargins.right}px</span></div>
+                <div className="absolute inset-y-0 left-0 border-r-2 border-dashed border-slate-300 dark:border-slate-600/60 bg-slate-100 dark:bg-slate-800/50 pointer-events-none flex items-center justify-center transition-all" style={{ width: thermalMargins.left }}><span className="rotate-90 text-[10px] text-slate-900 dark:text-white font-bold mix-blend-multiply opacity-50 whitespace-nowrap">{thermalMargins.left}px</span></div>
+                <div className="absolute inset-x-0 top-0 border-b-2 border-dashed border-slate-300 dark:border-slate-600/60 bg-slate-100 dark:bg-slate-800/50 pointer-events-none flex justify-center items-center transition-all" style={{ height: thermalMargins.top }}><span className="text-[10px] text-slate-900 dark:text-white font-bold mix-blend-multiply opacity-50">{thermalMargins.top}px</span></div>
               </div>
             </div>
             
-            <div className="p-4 bg-white border-t border-slate-200 flex flex-col gap-3">
+            <div className="p-4 bg-white dark:bg-slate-900 print:bg-white border-t border-slate-200 dark:border-slate-700 flex flex-col gap-3">
               <button 
                 onClick={async () => {
                   const element = document.getElementById('thermal-receipt-preview-export');
@@ -4317,7 +4344,7 @@ const handleCopyDailyReport = () => {
                     console.error("Failed to export image", err);
                   }
                 }}
-                className="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2"
+                className="w-full bg-emerald-600 text-white py-3 rounded-[1.25rem] font-bold hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2"
               >
                 <Download size={20} /> تصدير كصورة (Image)
               </button>
@@ -4344,7 +4371,7 @@ const handleCopyDailyReport = () => {
                     }, 500);
                   }
                 }}
-                className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-colors flex justify-center items-center gap-2"
+                className="w-full bg-blue-600 text-white hover:bg-blue-700 py-3 rounded-[1.25rem] font-bold hover:bg-slate-800 transition-colors flex justify-center items-center gap-2"
               >
                 <Printer size={20} /> طباعة حراري الآن
               </button>
@@ -4361,7 +4388,7 @@ const handleCopyDailyReport = () => {
 
       {/* Signature */}
       <div className="py-6 text-center text-slate-400 text-xs font-medium print:hidden">
-        تم التطوير بواسطة <span className="font-bold text-blue-600">Eng. Khaled Rizk</span> &copy; {new Date().getFullYear()}
+        تم التطوير بواسطة <span className="font-bold text-slate-900 dark:text-white tracking-tight">Eng. Khaled Rizk</span> &copy; {new Date().getFullYear()}
       </div>
     </div>
   );

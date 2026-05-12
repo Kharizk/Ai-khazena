@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
 
 @theme {
   --font-sans: "Cairo", "Outfit", ui-sans-serif, system-ui, sans-serif;
@@ -16,9 +17,11 @@
 
 @layer base {
   body {
-    @apply font-sans antialiased;
-    background-color: #f8fafc;
-    color: #0f172a;
+    @apply font-sans antialiased bg-slate-50 text-slate-900;
+  }
+  
+  :is(.dark body) {
+    @apply bg-slate-950 text-slate-100;
   }
   
   .min-h-screen {
@@ -28,6 +31,14 @@
       radial-gradient(at 50% 50%, hsla(280, 100%, 95%, 0.6) 0px, transparent 50%);
     background-attachment: fixed;
     background-color: #f4f7fb;
+  }
+  
+  :is(.dark .min-h-screen) {
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(210, 80%, 15%, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(220, 80%, 15%, 0.4) 0px, transparent 50%),
+      radial-gradient(at 50% 50%, hsla(280, 80%, 15%, 0.6) 0px, transparent 50%);
+    background-color: #020617;
   }
   
   /* Apply a glassmorphic or extremely clean look dynamically via an overlay if needed */
@@ -40,13 +51,25 @@
     background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>') opacity(0.03);
   }
   
+  :is(.dark #root:before) {
+    opacity: 0.15;
+  }
+  
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight font-semibold text-slate-900;
+  }
+  
+  :is(.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6) {
+    @apply text-white;
   }
 
   /* Core UI/UX Pro Max Global Styles for basic tags */
   input[type="text"], input[type="password"], input[type="number"], input[type="email"], select, textarea {
     @apply border border-slate-200/80 rounded-xl bg-white/70 backdrop-blur-md shadow-[0_2px_10px_rgb(0,0,0,0.01)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 focus:bg-white;
+  }
+  
+  :is(.dark input[type="text"], .dark input[type="password"], .dark input[type="number"], .dark input[type="email"], .dark select, .dark textarea) {
+    @apply border-slate-800 bg-slate-900/70 text-white focus:bg-slate-900 focus:ring-blue-500/30 focus:border-blue-500/50;
   }
 
   /* Remove arrows/spinners from number inputs */
@@ -103,9 +126,15 @@
   .pro-card {
     @apply bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 overflow-hidden transition-all duration-300 hover:shadow-[0_8px_40px_rgb(0,0,0,0.06)];
   }
+  :is(.dark .pro-card) {
+    @apply bg-slate-900 border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:shadow-[0_8px_40px_rgb(0,0,0,0.3)];
+  }
 
   .pro-table-container {
     @apply bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-200/50 overflow-hidden;
+  }
+  :is(.dark .pro-table-container) {
+    @apply bg-slate-900 border-slate-800 shadow-[0_4px_20px_rgb(0,0,0,0.2)];
   }
 
   /* Table visual upgrades */
@@ -116,9 +145,15 @@
   thead th {
     @apply bg-slate-50/80 text-slate-500 text-xs uppercase tracking-wider font-semibold py-4 px-4 border-b border-slate-200/80;
   }
+  :is(.dark thead th) {
+    @apply bg-slate-800/80 text-slate-400 border-slate-700/80;
+  }
   
   tbody td {
     @apply py-3 px-4 border-b border-slate-100/80 align-middle;
+  }
+  :is(.dark tbody td) {
+    @apply border-slate-800/80;
   }
 
   tbody tr:last-child td {
@@ -128,6 +163,9 @@
   /* Add subtle hover to table rows */
   tbody tr:not(.font-bold):not(.bg-slate-50):not(.bg-slate-100):hover {
     @apply bg-blue-50/30 transition-colors duration-200;
+  }
+  :is(.dark tbody tr:not(.font-bold):not(.bg-slate-800):not(.bg-slate-900):hover) {
+    @apply bg-slate-800/50;
   }
 
   @keyframes fadeInUp {

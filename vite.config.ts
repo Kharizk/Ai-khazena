@@ -9,7 +9,13 @@ export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
     plugins: [
-      react(), 
+      react({
+        babel: {
+          plugins: [
+            ['babel-plugin-react-compiler', { target: '19' }],
+          ],
+        },
+      }), 
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
