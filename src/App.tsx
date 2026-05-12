@@ -2834,15 +2834,82 @@ const handleCopyDailyReport = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-transparent text-[#1a1c29] p-4 sm:p-6 lg:p-8 selection:bg-slate-100 dark:bg-slate-800/500 selection:text-black dark:text-white print:text-black">
-        <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 dark:border-slate-700"></div>
-            <div className="absolute top-0 left-0 animate-spin rounded-full h-16 w-16 border-4 border-slate-900 border-t-transparent"></div>
-            <Calculator size={24} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-900 dark:text-white tracking-tight" />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 sm:p-6 lg:p-8" dir="rtl">
+        <div className="max-w-[1600px] mx-auto opacity-60">
+          {/* Header Skeleton */}
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <div className="h-10 w-48 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse"></div>
+            <div className="flex gap-3">
+              <div className="h-10 w-10 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse"></div>
+              <div className="h-10 w-32 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse"></div>
+            </div>
           </div>
-          <p className="font-bold text-slate-500 dark:text-slate-400 animate-pulse">جاري تحميل البيانات...</p>
-        </motion.div>
+
+          {/* Nav Skeleton */}
+          <div className="flex gap-2 overflow-x-hidden mb-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+               <div key={i} className="h-12 w-28 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse shrink-0"></div>
+            ))}
+          </div>
+
+          {/* Layout Skeleton */}
+          <div className="flex flex-col xl:flex-row gap-6">
+            {/* Main Content Area */}
+            <div className="w-full xl:w-2/3 flex flex-col gap-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="bg-white dark:bg-slate-900 h-28 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-sm animate-pulse">
+                    <div className="p-4 flex flex-col gap-3">
+                      <div className="h-4 w-1/2 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
+                      <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-700 rounded-lg mt-2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Big Section */}
+              <div className="bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-sm min-h-[300px] animate-pulse p-6">
+                 <div className="h-5 w-40 bg-slate-200 dark:bg-slate-800 rounded-lg mb-6"></div>
+                 <div className="flex flex-col gap-4">
+                   {[1, 2, 3].map(i => (
+                     <div key={i} className="h-16 w-full bg-slate-100 dark:bg-slate-800/50 rounded-xl"></div>
+                   ))}
+                 </div>
+              </div>
+            </div>
+
+            {/* Sidebar Skeleton */}
+            <div className="w-full xl:w-1/3 flex flex-col gap-4">
+               <div className="bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-sm min-h-[500px] animate-pulse p-6">
+                 <div className="h-5 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg mb-6"></div>
+                 <div className="flex justify-center mb-8">
+                   <div className="h-32 w-32 bg-slate-100 dark:bg-slate-800/50 rounded-full"></div>
+                 </div>
+                 <div className="flex flex-col gap-3">
+                   {[1, 2, 3, 4, 5].map(i => (
+                     <div key={i} className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/20 p-3 rounded-xl">
+                       <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                       <div className="h-4 w-16 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Centered spinner overlay just to be sure user knows it's loading */}
+        <div className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none z-50">
+           <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl shadow-xl flex flex-col items-center gap-4">
+             <div className="relative">
+               <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 dark:border-slate-700"></div>
+               <div className="absolute top-0 left-0 animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+               <Calculator size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-500" />
+             </div>
+             <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">جاري تحميل البيانات...</p>
+           </div>
+        </div>
       </div>
     );
   }
