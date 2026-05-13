@@ -428,7 +428,7 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
     <div className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans mx-auto">
       <div className="text-center mb-8 pb-6 border-b-2 border-gray-400">
         <h2 className="text-2xl font-bold mb-2">{companyName}</h2>
-        <h1 className="text-4xl font-black mb-3 text-gray-900 border-2 border-slate-800 inline-block px-8 py-3 rounded-2xl shadow-[4px_4px_0_0_rgba(17,24,39,1)]">
+        <h1 className="text-4xl font-black mb-3 text-gray-900 border-2 border-slate-800 inline-block px-8 py-3 rounded-3xl shadow-[4px_4px_0_0_rgba(17,24,39,1)]">
           تسوية نقطة بيع: {pos.name || 'بدون اسم'}
         </h1>
         <div className="flex justify-center gap-6 mt-6">
@@ -479,7 +479,7 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
         </tbody>
       </table>
       {pos.physicalCash !== undefined && (
-        <div className={`p-8 mt-8 rounded-2xl border-4 text-center ${diff === 0 ? 'bg-emerald-50 border-emerald-400' : diff > 0 ? 'bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600' : 'bg-rose-50 border-rose-400'}`}>
+        <div className={`p-8 mt-8 rounded-3xl border-4 text-center ${diff === 0 ? 'bg-emerald-50 border-emerald-400' : diff > 0 ? 'bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600' : 'bg-rose-50 border-rose-400'}`}>
           <p className="text-xl font-bold mb-2 text-gray-600">نتيجة جرد الدرج الفعلي</p>
           <div className={`font-black text-4xl tracking-tight ${diff === 0 ? 'text-emerald-800' : diff > 0 ? 'text-slate-900 dark:text-white' : 'text-rose-800'}`}>
             {diff === 0 ? 'الدرج مطابق تماماً (لا عجز ولا زيادة)' : diff > 0 ? `يوجد زيادة: ${formatNum(Math.abs(diff))}` : `يوجد عجز: ${formatNum(Math.abs(diff))}`}
@@ -904,7 +904,7 @@ ${summaryText.substring(0, 3000)}
             <button 
               key={rt.id}
               onClick={() => { setDateRange(rt.id as any); setAiAnalysis(null); }}
-              className={`flex-1 sm:px-6 py-2 text-[13px] sm:text-sm font-bold rounded-2xl transition-all duration-300 ${dateRange === rt.id ? 'bg-slate-800 text-white shadow-sm border-slate-700' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50'}`}
+              className={`flex-1 sm:px-6 py-2 text-[13px] sm:text-sm font-bold rounded-3xl transition-all duration-300 ${dateRange === rt.id ? 'bg-slate-800 text-white shadow-sm border-slate-700' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50'}`}
             >
               {rt.label}
             </button>
@@ -951,7 +951,7 @@ ${summaryText.substring(0, 3000)}
           </p>
           <div className="flex items-end justify-between">
             <h3 className="text-[26px] font-bold text-slate-800 dark:text-slate-200 font-mono tracking-tight" dir="ltr">{formatCurrency(avgDailySales)}</h3>
-            <div className="text-indigo-600 bg-indigo-50/80 px-2 py-1 rounded-2xl text-[11px] font-bold">
+            <div className="text-indigo-600 bg-indigo-50/80 px-2 py-1 rounded-3xl text-[11px] font-bold">
                ${daysRecorded} أيام
             </div>
           </div>
@@ -1254,7 +1254,7 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
             <span className="truncate">الرصيد الفعلي</span>
             <span className="shrink-0" dir="ltr">{formatNum(summary.actualCash)}</span>
           </div>
-          <div className={`p-3 rounded-2xl flex items-center justify-between ${
+          <div className={`p-3 rounded-3xl flex items-center justify-between ${
             summary.difference === 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : summary.difference > 0 ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold border border-slate-300 dark:border-slate-600/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60'
           }`}>
             <div className="flex items-center gap-2 font-bold text-[15px] md:text-base">
@@ -1280,7 +1280,7 @@ const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "
       placeholder={placeholder}
       dir={dir}
       list={list}
-      className={`w-full bg-slate-50 dark:bg-slate-800/50/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/30 border text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700/60 rounded-2xl px-3 py-2 outline-none focus:ring-[3px] focus:ring-blue-600/5 focus:border-slate-400 focus:bg-white dark:bg-slate-900 print:bg-white transition-all text-[14px] placeholder-slate-400 ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
+      className={`w-full bg-slate-50 dark:bg-slate-800/50/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/30 border text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700/60 rounded-3xl px-3 py-2 outline-none focus:ring-[3px] focus:ring-blue-600/5 focus:border-slate-400 focus:bg-white dark:bg-slate-900 print:bg-white transition-all text-[14px] placeholder-slate-400 ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
       {...props}
     />
   );
@@ -1354,7 +1354,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالاسم أو المبلغ..."
-              className="w-full pl-3 pr-10 py-2 bg-slate-50 dark:bg-slate-800/50/50 border border-slate-200 dark:border-slate-700/60 rounded-2xl text-[13px] focus:outline-none focus:ring-[3px] focus:ring-blue-600/5 focus:border-slate-400 focus:bg-white dark:bg-slate-900 print:bg-white transition-all placeholder-slate-400"
+              className="w-full pl-3 pr-10 py-2 bg-slate-50 dark:bg-slate-800/50/50 border border-slate-200 dark:border-slate-700/60 rounded-3xl text-[13px] focus:outline-none focus:ring-[3px] focus:ring-blue-600/5 focus:border-slate-400 focus:bg-white dark:bg-slate-900 print:bg-white transition-all placeholder-slate-400"
             />
           </div>
         </div>
@@ -1391,11 +1391,11 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
                 onChange={(e: any) => onUpdate(item.id, 'name', e.target.value)} 
                 onBlur={(e: any) => onSaveName(field, e.target.value)}
                 placeholder="البيان (اختر من القائمة أو اكتب)" 
-                className="group-hover/row:border-slate-300 dark:border-slate-600/60 !rounded-2xl"
+                className="group-hover/row:border-slate-300 dark:border-slate-600/60 !rounded-3xl"
               />
             </div>
             <div className="w-1/3">
-              <Input type="number" value={item.amount !== undefined && item.amount !== 0 ? round2(item.amount) : item.amount === 0 ? 0 : ''} onChange={(e: any) => onUpdate(item.id, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="المبلغ" className="text-left font-semibold group-hover/row:border-slate-300 dark:border-slate-600/60 !rounded-2xl" dir="ltr" />
+              <Input type="number" value={item.amount !== undefined && item.amount !== 0 ? round2(item.amount) : item.amount === 0 ? 0 : ''} onChange={(e: any) => onUpdate(item.id, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="المبلغ" className="text-left font-semibold group-hover/row:border-slate-300 dark:border-slate-600/60 !rounded-3xl" dir="ltr" />
             </div>
             {onManage && (
               <button onClick={() => onManage(item)} title="إدارة الحساب وكشف الحساب" className="p-2.5 text-slate-900 dark:text-white tracking-tight hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 rounded-[1.25rem] transition-all hover:scale-105 active:scale-95">
@@ -1432,7 +1432,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
         )})}
         </AnimatePresence>
         {data.length === 0 && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-10 px-4 flex flex-col items-center gap-3 bg-slate-50 dark:bg-slate-800/50/50 rounded-2xl mx-5 mb-5 border border-dashed border-slate-200 dark:border-slate-700">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-10 px-4 flex flex-col items-center gap-3 bg-slate-50 dark:bg-slate-800/50/50 rounded-3xl mx-5 mb-5 border border-dashed border-slate-200 dark:border-slate-700">
             <div className="bg-white dark:bg-slate-900 print:bg-white p-4 rounded-full shadow-sm border border-slate-100 dark:border-slate-800 text-slate-300">
               <Icon size={32} strokeWidth={1.5} />
             </div>
@@ -1447,7 +1447,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
         )}
         {data.length > 0 && (
           <div className="px-5 pb-5">
-            <button onClick={onAdd} className="flex items-center justify-center gap-2 w-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white text-[14px] font-medium px-4 py-2.5 rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-all active:scale-95 group/btn">
+            <button onClick={onAdd} className="flex items-center justify-center gap-2 w-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white text-[14px] font-medium px-4 py-2.5 rounded-3xl border border-dashed border-slate-300 dark:border-slate-600 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-all active:scale-95 group/btn">
               <Plus size={18} className="group-hover/btn:rotate-90 transition-transform" /> إضافة بند جديد
             </button>
           </div>
@@ -1768,7 +1768,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
               </table>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
               <div className="bg-slate-100 dark:bg-slate-800 p-4 font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <span>ملخص الأيام السابقة (من دفتر الأستاذ)</span>
                 <span className="text-xs bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded-md font-medium">سجل قديم مجمع</span>
@@ -1822,7 +1822,7 @@ const LiveClock = () => {
     return () => clearInterval(timer);
   }, []);
   return (
-    <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50/80 backdrop-blur border border-slate-200 dark:border-slate-700/60 px-3 md:px-4 py-1.5 md:py-2 rounded-2xl shadow-sm text-center min-w-[90px]">
+    <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50/80 backdrop-blur border border-slate-200 dark:border-slate-700/60 px-3 md:px-4 py-1.5 md:py-2 rounded-3xl shadow-sm text-center min-w-[90px]">
       <span className="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200 tabular-nums tracking-tight font-mono" dir="ltr">
         {time.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
       </span>
@@ -2838,17 +2838,17 @@ const handleCopyDailyReport = () => {
         <div className="max-w-[1600px] mx-auto opacity-60">
           {/* Header Skeleton */}
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-            <div className="h-10 w-48 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse"></div>
+            <div className="h-10 w-48 bg-slate-200 dark:bg-slate-800 rounded-3xl animate-pulse"></div>
             <div className="flex gap-3">
               <div className="h-10 w-10 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse"></div>
-              <div className="h-10 w-32 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse"></div>
+              <div className="h-10 w-32 bg-slate-200 dark:bg-slate-800 rounded-3xl animate-pulse"></div>
             </div>
           </div>
 
           {/* Nav Skeleton */}
           <div className="flex gap-2 overflow-x-hidden mb-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
-               <div key={i} className="h-12 w-28 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse shrink-0"></div>
+               <div key={i} className="h-12 w-28 bg-slate-200 dark:bg-slate-800 rounded-3xl animate-pulse shrink-0"></div>
             ))}
           </div>
 
@@ -3160,7 +3160,7 @@ const handleCopyDailyReport = () => {
                 <ArrowRight size={20} />
               </button>
               
-              <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/50/50 px-3 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+              <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/50/50 px-3 py-1.5 rounded-3xl border border-slate-100 dark:border-slate-800/50">
                 <div className="w-9 h-9 md:w-11 md:h-11 bg-srb-main rounded-[12px] shadow-md flex items-center justify-center ring-1 ring-black/5 overflow-hidden">
                   <svg viewBox="0 0 100 100" className="w-6 h-6 md:w-7 md:h-7 mt-0.5 drop-shadow-sm">
                     <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#2563eb" strokeWidth="18" strokeLinecap="round" />
@@ -3248,7 +3248,7 @@ const handleCopyDailyReport = () => {
         )}
 
         {(!isExporting || exportMode === 'detailed') && (!userProfile || userProfile.role !== 'admin' || currentBranchId) && (
-          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-md px-4 sm:px-5 py-5 rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200 dark:border-slate-700/60 mb-8 flex flex-wrap gap-8 items-center print:hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-md px-4 sm:px-5 py-5 rounded-3xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200 dark:border-slate-700/60 mb-8 flex flex-wrap gap-8 items-center print:hidden">
             <div className="flex items-center gap-3">
               <label className="font-semibold text-slate-600 dark:text-slate-400">تاريخ اليوم:</label>
               <Input value={state.date} onChange={(e: any) => updateField('date', e.target.value)} className="w-44 text-center font-bold text-lg" />
@@ -3279,7 +3279,7 @@ const handleCopyDailyReport = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-2xl font-medium transition-colors whitespace-nowrap min-w-[72px] sm:min-w-[80px] md:min-w-0 flex-shrink-0 ${
+                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-3xl font-medium transition-colors whitespace-nowrap min-w-[72px] sm:min-w-[80px] md:min-w-0 flex-shrink-0 ${
                         activeTab === tab.id ? 'text-slate-900 dark:text-white bg-white dark:bg-slate-900 print:bg-white shadow-sm border border-slate-200 dark:border-slate-700/80' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/50'
                       }`}
                     >
@@ -3310,7 +3310,7 @@ const handleCopyDailyReport = () => {
                             loadBranchData(e.target.value);
                           }
                         }}
-                        className="bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-lg rounded-2xl focus:ring-4 focus:ring-blue-600/20/20 focus:border-blue-600 block w-full sm:w-[400px] px-6 py-4 outline-none font-bold shadow-sm transition-all hover:bg-white dark:bg-slate-900 print:bg-white hover:border-slate-400 cursor-pointer"
+                        className="bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-lg rounded-3xl focus:ring-4 focus:ring-blue-600/20/20 focus:border-blue-600 block w-full sm:w-[400px] px-6 py-4 outline-none font-bold shadow-sm transition-all hover:bg-white dark:bg-slate-900 print:bg-white hover:border-slate-400 cursor-pointer"
                       >
                         <option value="" disabled>-- الرجاء الضغط لاختيار الفرع --</option>
                         {branches.filter(b => !b.deleted).map(b => (
@@ -3438,7 +3438,7 @@ const handleCopyDailyReport = () => {
                         </tr>
                       </tfoot>
                     </table>
-                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 text-[14px] font-medium px-4 py-2 rounded-2xl transition-all active:scale-95">
+                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 text-[14px] font-medium px-4 py-2 rounded-3xl transition-all active:scale-95">
                       <Plus size={16} /> إضافة نقطة بيع جديدة
                     </button>
                   </div>
@@ -3820,7 +3820,7 @@ const handleCopyDailyReport = () => {
                         </div>
                       </div>
 
-                      <div className="bg-white dark:bg-slate-900 print:bg-white rounded-2xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6">
+                      <div className="bg-white dark:bg-slate-900 print:bg-white rounded-3xl sm:rounded-[1.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6">
                         <div className="bg-slate-800 text-white p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700">
                           <div className="flex items-center gap-2 font-bold">
                             <BookOpen size={20} className="text-slate-300" /> كشف حساب (النتائج: {filteredLedger.length})
@@ -4393,28 +4393,28 @@ const handleCopyDailyReport = () => {
             <div className="p-4 bg-white dark:bg-slate-900 print:bg-white border-b border-slate-200 dark:border-slate-700 flex flex-col gap-4">
               <p className="text-[15px] text-slate-500 dark:text-slate-400 text-center font-bold">هوامش الطباعة (اسحب المسطرة لتوسيط الإيصال)</p>
               <div className="grid grid-cols-2 gap-4">
-                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-2xl border border-gray-200">
+                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-3xl border border-gray-200">
                    <div className="flex justify-between items-center px-1">
                      <span className="text-[15px] font-semibold text-slate-600 dark:text-slate-400">أعلى (Top)</span>
                      <span className="font-bold text-[15px] text-slate-800 dark:text-slate-200 font-bold">{thermalMargins.top}px</span>
                    </div>
                    <input type="range" min="0" max="100" value={thermalMargins.top} onChange={(e) => setThermalMargins(p => ({...p, top: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-[1.25rem] appearance-none cursor-pointer accent-slate-900" />
                  </div>
-                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-2xl border border-gray-200 hidden">
+                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-3xl border border-gray-200 hidden">
                    <div className="flex justify-between items-center px-1">
                      <span className="text-[15px] font-semibold text-slate-600 dark:text-slate-400">أسفل</span>
                      <span className="font-bold text-[15px] text-slate-800 dark:text-slate-200 font-bold">0px</span>
                    </div>
                    <input type="range" min="0" max="100" value="0" disabled className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-[1.25rem] appearance-none cursor-not-allowed accent-gray-400" />
                  </div>
-                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-2xl border border-gray-200">
+                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-3xl border border-gray-200">
                    <div className="flex justify-between items-center px-1">
                      <span className="text-[15px] font-semibold text-slate-600 dark:text-slate-400">اليمين (Right)</span>
                      <span className="font-bold text-[15px] text-slate-800 dark:text-slate-200 font-bold">{thermalMargins.right}px</span>
                    </div>
                    <input type="range" min="0" max="200" value={thermalMargins.right} onChange={(e) => setThermalMargins(p => ({...p, right: parseInt(e.target.value)}))} className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-[1.25rem] appearance-none cursor-pointer accent-slate-900" />
                  </div>
-                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-2xl border border-gray-200">
+                 <div className="flex flex-col gap-1 bg-slate-50 dark:bg-slate-800/50/50 p-2.5 rounded-3xl border border-gray-200">
                    <div className="flex justify-between items-center px-1">
                      <span className="text-[15px] font-semibold text-slate-600 dark:text-slate-400">اليسار (Left)</span>
                      <span className="font-bold text-[15px] text-slate-800 dark:text-slate-200 font-bold">{thermalMargins.left}px</span>

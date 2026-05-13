@@ -1,18 +1,63 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: "Cairo", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Outfit", "Cairo", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  
-  --color-srb-dark: #0f172a;
-  --color-srb-main: #334155;
-  --color-srb-primary: #1d4ed8;
-  --color-srb-light: #60a5fa;
-  --color-srb-bg: #f8fafc;
-  
-  --app-bg: #8096f9;
+
+  /* Material 3 Expressive Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px; /* M3 Expressive medium shape */
+  --radius-3xl: 36px; /* M3 Expressive large shape */
+
+  /* M3 Expressive Shadows & Elevations */
+  --shadow-sm: 0px 1px 3px 1px rgba(0, 0, 0, 0.05), 0px 1px 2px 0px rgba(0, 0, 0, 0.10); /* Level 1 */
+  --shadow-md: 0px 2px 6px 2px rgba(0, 0, 0, 0.05), 0px 1px 2px 0px rgba(0, 0, 0, 0.10); /* Level 2 */
+  --shadow-lg: 0px 4px 8px 3px rgba(0, 0, 0, 0.05), 0px 1px 3px 0px rgba(0, 0, 0, 0.10); /* Level 3 */
+  --shadow-xl: 0px 6px 10px 4px rgba(0, 0, 0, 0.05), 0px 2px 3px 0px rgba(0, 0, 0, 0.10); /* Level 4 */
+  --shadow-2xl: 0px 8px 12px 6px rgba(0, 0, 0, 0.05), 0px 4px 4px 0px rgba(0, 0, 0, 0.10); /* Level 5 */
+
+  /* Surface Tinted Colors (Overriding Slate for M3 vibe) */
+  --color-slate-50: #FFF8FA;
+  --color-slate-100: #F7EDF2;
+  --color-slate-200: #EBDDE4;
+  --color-slate-300: #DAC4D0;
+  --color-slate-400: #C2A7B8;
+  --color-slate-500: #9B7D8F;
+  --color-slate-600: #7A5B6D;
+  --color-slate-700: #5C4050; /* Text variant */
+  --color-slate-800: #422936; /* Text */
+  --color-slate-900: #2B1622; /* On surface */
+  --color-slate-950: #1A0D15; /* Surface container highest */
+
+  /* Primary (Overriding Blue to Expressive Primary) */
+  --color-blue-50: #FFF0F5; /* Primary container */
+  --color-blue-100: #FFD9E8;
+  --color-blue-200: #FFB3D4;
+  --color-blue-300: #FF80B8;
+  --color-blue-400: #FF4D9B;
+  --color-blue-500: #E61A76; /* Primary */
+  --color-blue-600: #B30055;
+  --color-blue-700: #80003B;
+  --color-blue-800: #570026;
+  --color-blue-900: #330015; /* On Primary Container */
+
+  /* Secondary (Overriding Indigo or Violet) */
+  --color-indigo-50: #F3EEFF;
+  --color-indigo-100: #E4D7FF;
+  --color-indigo-200: #C5ABFF;
+  --color-indigo-300: #A37AFF;
+  --color-indigo-400: #8A52FF;
+  --color-indigo-500: #7326FF;
+  --color-indigo-600: #5A00E6;
+  --color-indigo-700: #4200B3;
+  --color-indigo-800: #2C0080;
+  --color-indigo-900: #1B004D;
 }
 
 @layer base {
@@ -26,19 +71,17 @@
   
   .min-h-screen {
     background-image: 
-      radial-gradient(at 0% 0%, hsla(210, 100%, 95%, 0.4) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(220, 100%, 97%, 0.4) 0px, transparent 50%),
-      radial-gradient(at 50% 50%, hsla(280, 100%, 95%, 0.6) 0px, transparent 50%);
+      radial-gradient(ellipse at top left, hsla(330, 80%, 95%, 0.6), transparent 60%),
+      radial-gradient(ellipse at bottom right, hsla(270, 80%, 95%, 0.5), transparent 60%);
+    background-color: var(--color-slate-50);
     background-attachment: fixed;
-    background-color: #f4f7fb;
   }
   
   :is(.dark .min-h-screen) {
     background-image: 
-      radial-gradient(at 0% 0%, hsla(210, 80%, 15%, 0.4) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(220, 80%, 15%, 0.4) 0px, transparent 50%),
-      radial-gradient(at 50% 50%, hsla(280, 80%, 15%, 0.6) 0px, transparent 50%);
-    background-color: #020617;
+      radial-gradient(ellipse at top left, hsla(330, 60%, 15%, 0.6), transparent 60%),
+      radial-gradient(ellipse at bottom right, hsla(270, 60%, 15%, 0.5), transparent 60%);
+    background-color: var(--color-slate-950);
   }
   
   /* Apply a glassmorphic or extremely clean look dynamically via an overlay if needed */
@@ -48,15 +91,15 @@
     inset: 0;
     pointer-events: none;
     z-index: -1;
-    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>') opacity(0.03);
+    background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>') opacity(0.015);
   }
   
   :is(.dark #root:before) {
-    opacity: 0.15;
+    opacity: 0.1;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply tracking-tight font-semibold text-slate-900;
+    @apply tracking-tight font-extrabold text-slate-900;
   }
   
   :is(.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6) {
@@ -65,11 +108,11 @@
 
   /* Core UI/UX Pro Max Global Styles for basic tags */
   input[type="text"], input[type="password"], input[type="number"], input[type="email"], select, textarea {
-    @apply border border-slate-200/80 rounded-xl bg-white/70 backdrop-blur-md shadow-[0_2px_10px_rgb(0,0,0,0.01)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 focus:bg-white;
+    @apply border-2 border-slate-200/80 rounded-2xl bg-white/70 backdrop-blur-md shadow-sm transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500/80 focus:bg-white;
   }
   
   :is(.dark input[type="text"], .dark input[type="password"], .dark input[type="number"], .dark input[type="email"], .dark select, .dark textarea) {
-    @apply border-slate-800 bg-slate-900/70 text-white focus:bg-slate-900 focus:ring-blue-500/30 focus:border-blue-500/50;
+    @apply border-slate-800 bg-slate-900/70 text-white focus:bg-slate-900 focus:ring-blue-500/30 focus:border-blue-500/80;
   }
 
   /* Remove arrows/spinners from number inputs */
@@ -84,18 +127,18 @@
 
   /* Custom Scrollbar for a polished look */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
     background: transparent; 
   }
   ::-webkit-scrollbar-thumb {
-    background: #cbd5e1; 
+    background: var(--color-slate-300); 
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8; 
+    background: var(--color-slate-400); 
   }
 }
 
@@ -114,43 +157,43 @@
 }
 
 @layer components {
-  /* UI/UX Pro Max Custom Classes */
+  /* UI/UX Pro Max Custom Classes - M3 Expressive update */
   .btn-primary {
-    @apply inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-[0_8px_20px_rgb(15,23,42,0.15)] hover:shadow-[0_12px_25px_rgb(15,23,42,0.25)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] px-4 py-2 font-medium border border-slate-700;
+    @apply inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-[1px] active:translate-y-0 active:scale-[0.97] px-6 py-3 font-bold border-none ring-2 ring-transparent focus:ring-blue-300;
   }
   
   .btn-success {
-    @apply inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-[0_8px_20px_rgb(16,185,129,0.15)] hover:shadow-[0_12px_25px_rgb(16,185,129,0.25)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] px-4 py-2 font-medium border border-emerald-400/50;
+    @apply inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-[1px] active:translate-y-0 active:scale-[0.97] px-6 py-3 font-bold border-none ring-2 ring-transparent focus:ring-emerald-300;
   }
 
   .pro-card {
-    @apply bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 overflow-hidden transition-all duration-300 hover:shadow-[0_8px_40px_rgb(0,0,0,0.06)];
+    @apply bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden transition-all duration-300 hover:shadow-md;
   }
   :is(.dark .pro-card) {
     @apply bg-slate-900 border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:shadow-[0_8px_40px_rgb(0,0,0,0.3)];
   }
 
   .pro-table-container {
-    @apply bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-200/50 overflow-hidden;
+    @apply bg-white rounded-[2rem] shadow-sm border border-slate-200/50 overflow-hidden p-2;
   }
   :is(.dark .pro-table-container) {
     @apply bg-slate-900 border-slate-800 shadow-[0_4px_20px_rgb(0,0,0,0.2)];
   }
 
-  /* Table visual upgrades */
+  /* Table visual upgrades - M3 */
   table {
     @apply border-separate border-spacing-0 w-full;
   }
   
   thead th {
-    @apply bg-slate-50/80 text-slate-500 text-xs uppercase tracking-wider font-semibold py-4 px-4 border-b border-slate-200/80;
+    @apply bg-slate-50/80 text-slate-700 text-[13px] uppercase tracking-wider font-extrabold py-5 px-5 border-b-2 border-slate-200/80;
   }
   :is(.dark thead th) {
-    @apply bg-slate-800/80 text-slate-400 border-slate-700/80;
+    @apply bg-slate-800/80 text-slate-300 border-slate-700/80;
   }
   
   tbody td {
-    @apply py-3 px-4 border-b border-slate-100/80 align-middle;
+    @apply py-4 px-5 border-b border-slate-100/80 align-middle;
   }
   :is(.dark tbody td) {
     @apply border-slate-800/80;
@@ -162,18 +205,18 @@
 
   /* Add subtle hover to table rows */
   tbody tr:not(.font-bold):not(.bg-slate-50):not(.bg-slate-100):hover {
-    @apply bg-blue-50/30 transition-colors duration-200;
+    @apply bg-blue-50/50 transition-colors duration-200;
   }
   :is(.dark tbody tr:not(.font-bold):not(.bg-slate-800):not(.bg-slate-900):hover) {
     @apply bg-slate-800/50;
   }
 
   @keyframes fadeInUp {
-    from { opacity: 0; transform: translate(-50%, 1rem) scale(0.98); }
+    from { opacity: 0; transform: translate(-50%, 1.5rem) scale(0.95); }
     to { opacity: 1; transform: translate(-50%, 0) scale(1); }
   }
   .animate-fade-in-up {
-    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: fadeInUp 0.5s cubic-bezier(0.2, 1, 0.3, 1) forwards;
   }
 }
 
@@ -191,7 +234,7 @@
   .shadow-sm, .shadow-md, .shadow-lg, [class*="shadow-"] {
     box-shadow: none !important;
   }
-  .rounded-2xl, .rounded-xl {
+  .rounded-2xl, .rounded-xl, .rounded-3xl, .rounded-[2rem] {
     border-radius: 4px !important;
   }
   tr {
