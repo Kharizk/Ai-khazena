@@ -947,7 +947,7 @@ ${summaryText.substring(0, 3000)}
         <div className="bg-white dark:bg-slate-900 print:bg-white p-5 rounded-[4px] shadow-sm border border-slate-200 dark:border-slate-700/60 relative overflow-hidden group hover:border-slate-300 dark:border-slate-600 transition-all duration-300">
           
           <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-3 flex items-center gap-2">
-            <Wallet size={16} className="text-[#2b7d2b] text-brand-success"/> صافي التدفق المالي
+            <Wallet size={16} className="text-emerald-500"/> صافي التدفق المالي
           </p>
           <div className="flex items-end justify-between">
             <h3 className={`text-[26px] font-bold font-mono tracking-tight ${totalNetVal >= 0 ? 'text-slate-800 dark:text-slate-200' : 'text-slate-800 dark:text-slate-200'}`} dir="ltr">{formatCurrency(totalNetVal)}</h3>
@@ -1014,7 +1014,7 @@ ${summaryText.substring(0, 3000)}
         {/* POS Breakdown Chart */}
         <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-xl p-6 rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 dark:border-slate-700/60 flex flex-col transition-all hover:shadow-lg">
           <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-6 flex items-center gap-2 text-lg">
-            <PieChartIcon className="text-[#2b7d2b] text-brand-success" size={20} /> مساهمة نقاط البيع
+            <PieChartIcon className="text-emerald-500" size={20} /> مساهمة نقاط البيع
           </h3>
           {posChartData.length > 0 ? (
             <div className="h-[280px] w-full flex flex-col" dir="ltr">
@@ -1054,8 +1054,8 @@ ${summaryText.substring(0, 3000)}
       {/* AI Assistant Section */}
       <div className="bg-indigo-950 rounded-[4px] shadow-xl p-[2px] relative overflow-hidden mt-8 print:hidden transition-all hover:shadow-2xl">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/microbial-mat.png')] opacity-10 MixBlendMode-overlay"></div>
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600 rounded-full mix-blend-screen filter blur-[80px] opacity-20"></div>
-        <div className="bg-[#0f172a]/90 backdrop-blur-xl rounded-[1.4rem] p-6 md:p-8 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 border border-indigo-500/20">
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600 rounded-[4px] mix-blend-screen filter blur-[80px] opacity-20"></div>
+        <div className="bg-[#0f172a]/90 backdrop-blur-xl rounded-[4px] p-6 md:p-8 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 border border-indigo-500/20">
           <div className="text-right md:flex-1">
             <h3 className="text-xl md:text-2xl font-black text-white mb-2 flex items-center gap-2">
               <Sparkles className="text-indigo-400" /> تحليل مالي متقدم (AI)
@@ -1070,7 +1070,7 @@ ${summaryText.substring(0, 3000)}
             className="w-full md:w-auto shrink-0 bg-white dark:bg-slate-900 print:bg-white text-indigo-900 px-8 py-3.5 rounded-[4px] font-black hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 hover:scale-105 transition-all shadow-[0_4px_20px_rgba(255,255,255,0.15)] disabled:opacity-70 disabled:hover:scale-100 flex items-center justify-center gap-2"
           >
             {aiLoading ? (
-              <><div className="w-5 h-5 border-2 border-indigo-900 border-t-transparent rounded-full animate-spin"></div> جاري المعالجة...</>
+              <><div className="w-5 h-5 border-2 border-indigo-900 border-t-transparent rounded-[4px] animate-spin"></div> جاري المعالجة...</>
             ) : (
               <><Sparkles size={18} className="text-indigo-600" /> بدء التحليل</>
             )}
@@ -1114,7 +1114,7 @@ ${summaryText.substring(0, 3000)}
                   <th className="py-4 px-6 font-bold w-1/3 text-right">التاريخ</th>
                   <th className="py-4 px-6 font-bold text-center text-slate-800 dark:text-slate-200 font-bold">المبيعات</th>
                   <th className="py-4 px-6 font-bold text-center text-rose-600">المصروفات</th>
-                  <th className="py-4 px-6 font-bold text-center text-[#2b7d2b] text-brand-success">الصافي</th>
+                  <th className="py-4 px-6 font-bold text-center text-emerald-600">الصافي</th>
                 </tr>
               </thead>
               <tbody>
@@ -1126,7 +1126,7 @@ ${summaryText.substring(0, 3000)}
                     </td>
                     <td className="py-4 px-6 font-bold text-center text-slate-800 dark:text-slate-200 font-bold font-mono" dir="ltr">{formatCurrency(day.pureNetSales)}</td>
                     <td className="py-4 px-6 font-bold text-center text-rose-600 font-mono" dir="ltr">{formatCurrency(day.expenses)}</td>
-                    <td className="py-4 px-6 font-black text-center text-[#2b7d2b] text-brand-success font-mono bg-emerald-50/30" dir="ltr">{formatCurrency(day.pureNetSales - day.expenses)}</td>
+                    <td className="py-4 px-6 font-black text-center text-emerald-600 font-mono bg-emerald-50/30" dir="ltr">{formatCurrency(day.pureNetSales - day.expenses)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1152,7 +1152,7 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
         <table className="w-full text-right border-collapse mb-8 text-[15px] text-slate-700 dark:text-slate-300">
           <tbody>
             <tr className="border-b border-slate-100 dark:border-slate-800"><td className="py-3 font-bold cursor-default hover:text-slate-900 dark:text-white transition-colors">رصيد أول المدة</td><td className="py-3 font-bold text-slate-900 dark:text-white" dir="ltr">{formatNum(state.previousBalance)}</td></tr>
-            <tr className="border-b border-slate-100 dark:border-slate-800"><td className="py-3 font-bold text-[#2b7d2b] text-brand-success">+ إجمالي الإيرادات (الوارد)</td><td className="py-3 font-bold text-[#2b7d2b] text-brand-success" dir="ltr">{formatNum(summary.totalCashIn)}</td></tr>
+            <tr className="border-b border-slate-100 dark:border-slate-800"><td className="py-3 font-bold text-emerald-600">+ إجمالي الإيرادات (الوارد)</td><td className="py-3 font-bold text-emerald-600" dir="ltr">{formatNum(summary.totalCashIn)}</td></tr>
             <tr>
               <td colSpan={2} className="py-2 pr-4 text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                 <div className="flex justify-between mb-1"><span>صافي المبيعات</span><span dir="ltr">{formatNum(summary.netSales)}</span></div>
@@ -1195,9 +1195,9 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="pro-card overflow-hidden print:bg-white dark:bg-slate-900 print:bg-white print:text-black dark:text-white print:text-black print:border print:border-slate-300 dark:border-slate-600">
+      <div className="bg-white dark:bg-slate-900 print:bg-white/60 backdrop-blur border text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700/50 rounded-[4px] shadow-sm overflow-hidden print:bg-white dark:bg-slate-900 print:bg-white print:text-black dark:text-white print:text-black print:border print:border-slate-300 dark:border-slate-600">
         <div className="p-4 md:p-5 border-b border-slate-100 dark:border-slate-800 print:border-slate-200 dark:border-slate-700">
-          <h2 className="text-[15px] font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-900 animate-pulse"></div> ملخص التقفيل تفصيلي</h2>
+          <h2 className="text-[15px] font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><div className="w-2 h-2 rounded-[4px] bg-slate-900 animate-pulse"></div> ملخص التقفيل تفصيلي</h2>
           <div className="space-y-2 text-xs md:text-[15px]">
             <div className="flex justify-between items-center gap-2">
               <span className="text-slate-600 dark:text-slate-400 font-medium truncate">رصيد أول المدة</span>
@@ -1206,7 +1206,7 @@ const SummaryDashboard = ({ state, summary, isExport = false }: { state: AppStat
             
             {/* Inflow Breakdown */}
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800 print:border-slate-200 dark:border-slate-700">
-              <div className="flex justify-between items-center gap-2 text-[#2b7d2b] text-brand-success font-bold mb-1 pt-1">
+              <div className="flex justify-between items-center gap-2 text-emerald-600 font-bold mb-1 pt-1">
                 <span className="truncate">+ إجمالي الإيرادات (الوارد)</span>
                 <span className="shrink-0" dir="ltr">{formatNum(summary.totalCashIn)}</span>
               </div>
@@ -1290,7 +1290,7 @@ const Input = ({ value, onChange, onBlur, type = "text", className = "", dir = "
       placeholder={placeholder}
       dir={dir}
       list={list}
-      className={`w-full bg-slate-50 dark:bg-slate-800/50/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/30 border text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700/60 rounded-[4px] px-3 py-2 outline-none focus:ring-[3px] focus:ring-brand-500/5 focus:border-slate-400 focus:bg-white dark:bg-slate-900 print:bg-white transition-all text-[14px] placeholder-slate-400 ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
+      className={`w-full bg-slate-50 dark:bg-slate-800/50/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/30 border text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700/60 rounded-[4px] px-3 py-2 outline-none focus:ring-[3px] focus:ring-blue-600/5 focus:border-slate-400 focus:bg-white dark:bg-slate-900 print:bg-white transition-all text-[14px] placeholder-slate-400 ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''} ${className}`}
       {...props}
     />
   );
@@ -1321,7 +1321,7 @@ const AddNameInput = ({ onAdd }: { onAdd: (name: string) => void }) => {
             setVal('');
           }
         }} 
-        className="bg-brand-500 text-white border-none hover:bg-blue-700 text-white px-3 py-2 rounded-[4px] border border-slate-800 shadow-sm hover:shadow active:scale-95 hover:bg-slate-800 transition-all flex items-center justify-center shrink-0"
+        className="bg-blue-600 text-white border-none hover:bg-blue-700 text-white px-3 py-2 rounded-[4px] border border-slate-800 shadow-sm hover:shadow active:scale-95 hover:bg-slate-800 transition-all flex items-center justify-center shrink-0"
       >
         <Plus size={18} />
       </button>
@@ -1342,7 +1342,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
   ), [safeData, deferredSearchQuery]);
 
   return (
-    <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 transition-all">
+    <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[4px] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 transition-all">
       <datalist id={listId}>
         {savedNames?.map((name: string) => <option key={name} value={name} />)}
       </datalist>
@@ -1366,7 +1366,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالاسم أو المبلغ..."
-              className="w-full pl-3 pr-10 py-2 pro-card dark:border-slate-700/60 rounded-[4px] text-[13px] focus:outline-none focus:ring-[3px] focus:ring-brand-500/5 focus:border-slate-400 focus:bg-white dark:bg-slate-900 print:bg-white transition-all placeholder-slate-400"
+              className="w-full pl-3 pr-10 py-2 bg-slate-50 dark:bg-slate-800/50/50 border border-slate-200 dark:border-slate-700/60 rounded-[4px] text-[13px] focus:outline-none focus:ring-[3px] focus:ring-blue-600/5 focus:border-slate-400 focus:bg-white dark:bg-slate-900 print:bg-white transition-all placeholder-slate-400"
             />
           </div>
         </div>
@@ -1414,7 +1414,7 @@ key={item.id}
               <button 
                 onClick={() => onToggleSummary(item.id)} 
                 title="إظهار منفصل في الملخص"
-                className={`p-2.5 rounded-[4px] transition-all hover:scale-105 active:scale-95 ${item.showInSummary ? 'text-purple-600 bg-purple-50 shadow-sm' : 'text-white/70 hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50'}`}
+                className={`p-2.5 rounded-[4px] transition-all hover:scale-105 active:scale-95 ${item.showInSummary ? 'text-purple-600 bg-purple-50 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50'}`}
               >
                 {item.showInSummary ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
@@ -1423,13 +1423,13 @@ key={item.id}
               <button 
                 onClick={() => onTogglePin(item.id)} 
                 title="تثبيت البند ليظهر يومياً"
-                className={`p-2.5 rounded-[4px] transition-all hover:scale-105 active:scale-95 ${item.isPinned ? 'text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 shadow-sm' : 'text-white/70 hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50'}`}
+                className={`p-2.5 rounded-[4px] transition-all hover:scale-105 active:scale-95 ${item.isPinned ? 'text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50'}`}
               >
                 <Pin size={20} className={item.isPinned ? "fill-current" : ""} />
               </button>
             )}
             {onArchive && (
-              <button onClick={() => onArchive(item.id)} title="تسوية وترحيل للأرشيف" className="p-2.5 text-[#2b7d2b] text-brand-success hover:text-emerald-700 hover:bg-emerald-50 rounded-[4px] transition-all hover:scale-105 active:scale-95">
+              <button onClick={() => onArchive(item.id)} title="تسوية وترحيل للأرشيف" className="p-2.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-[4px] transition-all hover:scale-105 active:scale-95">
                 <CheckCircle2 size={20} />
               </button>
             )}
@@ -1441,7 +1441,7 @@ key={item.id}
         
         {data.length === 0 && (
           <div className="text-center py-10 px-4 flex flex-col items-center gap-3 bg-slate-50 dark:bg-slate-800/50/50 rounded-[4px] mx-5 mb-5 border border-dashed border-slate-200 dark:border-slate-700">
-            <div className="bg-white dark:bg-slate-900 print:bg-white p-4 rounded-full shadow-sm border border-slate-100 dark:border-slate-800 text-slate-300">
+            <div className="bg-white dark:bg-slate-900 print:bg-white p-4 rounded-[4px] shadow-sm border border-slate-100 dark:border-slate-800 text-slate-300">
               <Icon size={32} strokeWidth={1.5} />
             </div>
             <div className="space-y-1">
@@ -1616,13 +1616,13 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
 
   return (
     <div className="fixed inset-0 z-[150] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-      <div className="pro-card w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
           <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
             <Calculator size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
             إدارة حساب: {fund.name}
           </h3>
-          <button onClick={onClose} className="text-white/70 hover:text-white p-1">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1">
             <X size={20} />
           </button>
         </div>
@@ -1646,7 +1646,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
               />
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
-              <button onClick={handleAdd} disabled={!amount} className="flex-1 sm:flex-none btn-success text-white px-6 py-2.5 rounded-[4px] font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+              <button onClick={handleAdd} disabled={!amount} className="flex-1 sm:flex-none bg-emerald-600 text-white px-6 py-2.5 rounded-[4px] font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                 <Plus size={18} /> إضافة
               </button>
               <button onClick={handleSubtract} disabled={!amount} className="flex-1 sm:flex-none bg-rose-600 text-white px-6 py-2.5 rounded-[4px] font-bold hover:bg-rose-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
@@ -1689,13 +1689,13 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                           <select 
                             value={editType} 
                             onChange={(e: any) => setEditType(e.target.value)}
-                            className="w-full bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700 rounded-[4px] px-2 py-1 text-[15px] focus:ring-2 focus:ring-brand-500/20 outline-none"
+                            className="w-full bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700 rounded-[4px] px-2 py-1 text-[15px] focus:ring-2 focus:ring-blue-600/20 outline-none"
                           >
                             <option value="add">إضافة</option>
                             <option value="sub">خصم</option>
                           </select>
                         ) : (
-                          entry.type === 'in' ? <span className="text-[#2b7d2b] text-brand-success">إضافة</span> : 
+                          entry.type === 'in' ? <span className="text-emerald-600">إضافة</span> : 
                           entry.type === 'out' ? <span className="text-rose-600">خصم</span> :
                           <span className="text-amber-600">معلق</span>
                         )}
@@ -1707,7 +1707,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                               type="number" 
                               value={editAmount} 
                               onChange={(e: any) => setEditAmount(e.target.value)}
-                              className="w-24 bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700 rounded-[4px] px-2 py-1 text-[15px] focus:ring-2 focus:ring-brand-500/20 outline-none text-left"
+                              className="w-24 bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700 rounded-[4px] px-2 py-1 text-[15px] focus:ring-2 focus:ring-blue-600/20 outline-none text-left"
                               dir="ltr"
                             />
                             <button 
@@ -1718,13 +1718,13 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                                   showToast('تم تعديل الحركة بنجاح', 'success');
                                 }
                               }}
-                              className="text-[#2b7d2b] text-brand-success hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-[4px]"
+                              className="text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-[4px]"
                             >
                               <Check size={16} />
                             </button>
                             <button 
                               onClick={() => setEditingEntry(null)}
-                              className="text-white/70 hover:text-white bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 p-1.5 rounded-[4px]"
+                              className="text-slate-400 hover:text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 p-1.5 rounded-[4px]"
                             >
                               <X size={16} />
                             </button>
@@ -1796,7 +1796,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                       <td className="p-3 text-slate-600 dark:text-slate-400">{entry.date}</td>
                       <td className="p-3 font-medium text-slate-700 dark:text-slate-300">{entry.description}</td>
                       <td className="p-3">
-                        {entry.type === 'in' ? <span className="text-[#2b7d2b] text-brand-success bg-emerald-50 px-2 py-1 rounded-md font-bold">وارد</span> : 
+                        {entry.type === 'in' ? <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md font-bold">وارد</span> : 
                          entry.type === 'out' ? <span className="text-rose-600 bg-rose-50 px-2 py-1 rounded-md font-bold">منصرف</span> :
                          <span className="text-amber-600 bg-amber-50 px-2 py-1 rounded-md font-bold">معلق</span>}
                       </td>
@@ -2848,7 +2848,7 @@ const handleCopyDailyReport = () => {
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
             <div className="h-10 w-48 bg-slate-200 dark:bg-slate-800 rounded-[4px] animate-pulse"></div>
             <div className="flex gap-3">
-              <div className="h-10 w-10 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse"></div>
+              <div className="h-10 w-10 bg-slate-200 dark:bg-slate-800 rounded-[4px] animate-pulse"></div>
               <div className="h-10 w-32 bg-slate-200 dark:bg-slate-800 rounded-[4px] animate-pulse"></div>
             </div>
           </div>
@@ -2869,8 +2869,8 @@ const handleCopyDailyReport = () => {
                 {[1, 2, 3, 4].map(i => (
                   <div key={i} className="bg-white dark:bg-slate-900 h-28 rounded-[4px] border border-slate-200 dark:border-slate-800 shadow-sm animate-pulse">
                     <div className="p-4 flex flex-col gap-3">
-                      <div className="h-4 w-1/2 bg-slate-100 dark:bg-slate-800 rounded-[4px]"></div>
-                      <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-700 rounded-[4px] mt-2"></div>
+                      <div className="h-4 w-1/2 bg-slate-100 dark:bg-slate-800 rounded-lg"></div>
+                      <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-700 rounded-lg mt-2"></div>
                     </div>
                   </div>
                 ))}
@@ -2878,7 +2878,7 @@ const handleCopyDailyReport = () => {
 
               {/* Big Section */}
               <div className="bg-white dark:bg-slate-900 rounded-[4px] border border-slate-200 dark:border-slate-800 shadow-sm min-h-[300px] animate-pulse p-6">
-                 <div className="h-5 w-40 bg-slate-200 dark:bg-slate-800 rounded-[4px] mb-6"></div>
+                 <div className="h-5 w-40 bg-slate-200 dark:bg-slate-800 rounded-lg mb-6"></div>
                  <div className="flex flex-col gap-4">
                    {[1, 2, 3].map(i => (
                      <div key={i} className="h-16 w-full bg-slate-100 dark:bg-slate-800/50 rounded-[4px]"></div>
@@ -2890,15 +2890,15 @@ const handleCopyDailyReport = () => {
             {/* Sidebar Skeleton */}
             <div className="w-full xl:w-1/3 flex flex-col gap-4">
                <div className="bg-white dark:bg-slate-900 rounded-[4px] border border-slate-200 dark:border-slate-800 shadow-sm min-h-[500px] animate-pulse p-6">
-                 <div className="h-5 w-32 bg-slate-200 dark:bg-slate-800 rounded-[4px] mb-6"></div>
+                 <div className="h-5 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg mb-6"></div>
                  <div className="flex justify-center mb-8">
-                   <div className="h-32 w-32 bg-slate-100 dark:bg-slate-800/50 rounded-full"></div>
+                   <div className="h-32 w-32 bg-slate-100 dark:bg-slate-800/50 rounded-[4px]"></div>
                  </div>
                  <div className="flex flex-col gap-3">
                    {[1, 2, 3, 4, 5].map(i => (
                      <div key={i} className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/20 p-3 rounded-[4px]">
-                       <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded-[4px]"></div>
-                       <div className="h-4 w-16 bg-slate-200 dark:bg-slate-700 rounded-[4px]"></div>
+                       <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                       <div className="h-4 w-16 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
                      </div>
                    ))}
                  </div>
@@ -2911,9 +2911,9 @@ const handleCopyDailyReport = () => {
         <div className="fixed inset-0 flex flex-col items-center justify-center pointer-events-none z-50">
            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 rounded-[4px] shadow-xl flex flex-col items-center gap-4">
              <div className="relative">
-               <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 dark:border-slate-700"></div>
-               <div className="absolute top-0 left-0 animate-spin rounded-full h-12 w-12 border-4 border-brand-500 border-t-transparent"></div>
-               <Calculator size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-brand-500 dark:text-brand-500" />
+               <div className="animate-spin rounded-[4px] h-12 w-12 border-4 border-slate-200 dark:border-slate-700"></div>
+               <div className="absolute top-0 left-0 animate-spin rounded-[4px] h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+               <Calculator size={20} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-500" />
              </div>
              <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">جاري تحميل البيانات...</p>
            </div>
@@ -2936,7 +2936,7 @@ const handleCopyDailyReport = () => {
               <LogIn className="text-slate-900 dark:text-white tracking-tight" size={24} />
               {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
             </h3>
-            <button onClick={() => setSkipLogin(true)} className="text-white/70 hover:text-white px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-[4px] text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
+            <button onClick={() => setSkipLogin(true)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-[4px] text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
               تخطي
             </button>
           </div>
@@ -2956,7 +2956,7 @@ const handleCopyDailyReport = () => {
                   dir="ltr"
                   value={authEmail}
                   onChange={(e) => setAuthEmail(e.target.value)}
-                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 print:bg-white rounded-[4px] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-mono shadow-sm"
+                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 print:bg-white rounded-[4px] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all font-mono shadow-sm"
                 />
               </div>
               <div>
@@ -2967,12 +2967,12 @@ const handleCopyDailyReport = () => {
                   dir="ltr"
                   value={authPassword}
                   onChange={(e) => setAuthPassword(e.target.value)}
-                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 print:bg-white rounded-[4px] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-mono shadow-sm"
+                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 print:bg-white rounded-[4px] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all font-mono shadow-sm"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-brand-500 text-white border-none hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-[4px] mt-2 hover:bg-slate-800 transition-all shadow-sm active:scale-95 flex justify-center items-center gap-2"
+                className="w-full bg-blue-600 text-white border-none hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-[4px] mt-2 hover:bg-slate-800 transition-all shadow-sm active:scale-95 flex justify-center items-center gap-2"
               >
                 <LogIn size={20} /> {isSignUp ? 'إنشاء الحساب' : 'دخول'}
               </button>
@@ -3019,9 +3019,9 @@ const handleCopyDailyReport = () => {
 
   if (user && userProfile && userProfile.status === 'pending') {
     return (
-      <div className="min-h-screen bg-[#f4f4f6] dark:bg-slate-900 text-slate-800 dark:text-slate-100" dir="rtl">
+      <div className="min-h-screen bg-transparent text-[#1a1c29] p-4 sm:p-6 lg:p-8 selection:bg-slate-100 dark:bg-slate-800/500 selection:text-black dark:text-white print:text-black" dir="rtl">
         <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl p-8  rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-[4px] flex items-center justify-center mx-auto mb-4">
             <AlertCircle size={32} />
           </div>
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">حسابك قيد المراجعة</h2>
@@ -3045,7 +3045,7 @@ const handleCopyDailyReport = () => {
         }}></div>
 
         {/* Status Bar */}
-        <div className="relative z-10 shrink-0 flex justify-between items-start px-6 py-4 drop-shadow-md border-b border-white/5 bg-[#354a5f] text-white">
+        <div className="relative z-10 shrink-0 flex justify-between items-start px-6 py-4 drop-shadow-md border-b border-white/5 bg-black/10 backdrop-blur-sm">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 relative">
                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
@@ -3063,7 +3063,7 @@ const handleCopyDailyReport = () => {
              <div>
                <h1 className="text-xl font-extrabold tracking-tight flex items-center gap-2 leading-none">
                  <span className="text-white drop-shadow">ســـرب</span>
-                 <span className="text-[10px] text-brand-200 bg-white dark:bg-slate-900 print:bg-white/10 border border-white/10 px-1.5 py-0.5 rounded font-bold tracking-widest font-mono">ERP</span>
+                 <span className="text-[10px] text-blue-400 bg-white dark:bg-slate-900 print:bg-white/10 border border-white/10 px-1.5 py-0.5 rounded font-bold tracking-widest font-mono">ERP</span>
                </h1>
              </div>
           </div>
@@ -3088,7 +3088,7 @@ const handleCopyDailyReport = () => {
               <div className="w-[72px] h-[72px] bg-white dark:bg-slate-900 print:bg-white rounded-[4px] shadow-xl ring-1 ring-white/10 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:shadow-2xl group-hover:-translate-y-1 group-hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50">
                 {/* Simplified Logo icon for app */}
                 <svg viewBox="0 0 100 100" className="w-10 h-10 drop-shadow-md mb-0.5">
-                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#0a6ed1" strokeWidth="18" strokeLinecap="round" />
+                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#2563eb" strokeWidth="18" strokeLinecap="round" />
                   <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
                 </svg>
               </div>
@@ -3152,35 +3152,35 @@ const handleCopyDailyReport = () => {
   }
 
   return (
-    <div className={`min-h-screen pb-24 md:pb-0 bg-[#f4f4f6] text-slate-800 dark:bg-slate-900 dark:text-slate-200 font-sans selection:bg-brand-100 selection:text-brand-900 print:text-black ${printView !== "none" ? "print:bg-white dark:bg-slate-900" : ""} `} dir="rtl">
+    <div className={`min-h-screen pb-24 md:pb-0 bg-transparent text-slate-800 dark:text-slate-200 font-sans selection:bg-slate-100 dark:bg-slate-800/500 selection:text-black dark:text-white print:text-black  ${printView !== 'none' ? 'print:bg-white dark:bg-slate-900 print:bg-white' : ''}`} dir="rtl">
       <div style={{ zoom: uiScale }}>
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
-        <div className="sticky top-0 z-50 bg-[#354a5f] text-white print:hidden transition-all shadow-md px-4">
+        <div className="sticky top-0 z-50 bg-white dark:bg-slate-900 print:bg-white/70 backdrop-blur-2xl border-b border-slate-200 dark:border-slate-700/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)] print:hidden transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-[4.5rem]">
             {/* Logo/Name on the right side (RTL start) */}
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setCurrentAppView('launcher')}
-                className="w-10 h-10 flex items-center justify-center hover:bg-white/10 text-white rounded-[3px] transition-all"
+                className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 rounded-[4px] hover:bg-srb-main hover:text-white transition-all active:scale-95 border border-slate-200 dark:border-slate-700/50"
                 title="الرئيسية (سرب ERP)"
               >
                 <ArrowRight size={20} />
               </button>
               
-              <div className="flex items-center gap-2.5 px-3 py-1.5">
+              <div className="flex items-center gap-2.5 bg-slate-50 dark:bg-slate-800/50/50 px-3 py-1.5 rounded-[4px] border border-slate-100 dark:border-slate-800/50">
                 <div className="w-9 h-9 md:w-11 md:h-11 bg-srb-main rounded-[4px] shadow-md flex items-center justify-center ring-1 ring-black/5 overflow-hidden">
                   <svg viewBox="0 0 100 100" className="w-6 h-6 md:w-7 md:h-7 mt-0.5 drop-shadow-sm">
-                    <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#0a6ed1" strokeWidth="18" strokeLinecap="round" />
+                    <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#2563eb" strokeWidth="18" strokeLinecap="round" />
                     <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
                   </svg>
                 </div>
                 <div className="flex flex-col items-start translate-y-0.5">
                   <div className="flex items-center gap-1.5 leading-none">
-                    <h1 className="font-normal text-white text-base md:text-xl tracking-tight leading-none">سرب</h1>
-                    <span className="text-white font-normal text-xs md:text-[15px] tracking-[0.1em] font-poppins leading-none">ERP</span>
+                    <h1 className="font-extrabold text-[#000000] text-base md:text-xl tracking-tight leading-none">سرب</h1>
+                    <span className="text-srb-main font-bold text-xs md:text-[15px] tracking-[0.1em] font-poppins leading-none">ERP</span>
                   </div>
-                  <span className="text-[9px] md:text-[10px] text-brand-100 font-normal">نظام الخزينة الذكية</span>
+                  <span className="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 font-medium">نظام الخزينة الذكية</span>
                 </div>
               </div>
             </div>
@@ -3189,7 +3189,7 @@ const handleCopyDailyReport = () => {
             <div className="flex items-center gap-2 md:gap-3 justify-end">
               
               {!user ? (
-                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 btn-primary">
+                <button onClick={() => setShowAuthModal(true)} className="flex items-center gap-2 bg-gradient-to-r from-[#015941] to-[#128a63] text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-[4px] hover:from-[#014a36] hover:to-[#0f7554] transition-all font-bold shadow-lg shadow-[#015941]/20 active:scale-95">
                   <LogIn size={18} /> <span className="text-[15px] sm:text-base hidden sm:inline">تسجيل الدخول</span>
                 </button>
               ) : (
@@ -3206,7 +3206,7 @@ const handleCopyDailyReport = () => {
                             setHistory([]);
                           }
                         }}
-                        className="bg-white dark:bg-slate-900 print:bg-white/50 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[15px] rounded-[4px] focus:ring-4 focus:ring-brand-500/20/10 focus:border-brand-500 focus:ring-4 focus:ring-blue-100 focus:bg-white dark:bg-slate-900 print:bg-white block w-full px-4 py-2.5 outline-none font-bold hover:bg-white dark:bg-slate-900 print:bg-white transition-all cursor-pointer shadow-sm"
+                        className="bg-white dark:bg-slate-900 print:bg-white/50 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-[15px] rounded-[4px] focus:ring-4 focus:ring-blue-600/20/10 focus:border-blue-600 focus:ring-4 focus:ring-blue-100 focus:bg-white dark:bg-slate-900 print:bg-white block w-full px-4 py-2.5 outline-none font-bold hover:bg-white dark:bg-slate-900 print:bg-white transition-all cursor-pointer shadow-sm"
                       >
                         <option value="">-- اختر الفرع --</option>
                         {branches.map(b => (
@@ -3216,29 +3216,29 @@ const handleCopyDailyReport = () => {
                     </div>
                   )}
                   <div className="hidden md:flex items-center gap-2 text-[15px] text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 print:bg-white/60 backdrop-blur-sm px-4 py-2.5 rounded-[4px] border border-slate-200 dark:border-slate-700/60 font-medium shadow-sm">
-                    <div className="w-2.5 h-2.5 btn-success rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                    <div className="w-2.5 h-2.5 bg-emerald-500 rounded-[4px] shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     <span className="font-mono">{user.email?.split('@')[0]}</span>
                   </div>
-                  <button onClick={() => setShowCalculator(true)} className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors active:scale-95 ${showCalculator ? 'bg-slate-200 dark:bg-slate-700/80 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800'}`} title="آلة حاسبة">
+                  <button onClick={() => setShowCalculator(true)} className={`flex items-center justify-center w-10 h-10 rounded-[4px] transition-colors active:scale-95 ${showCalculator ? 'bg-slate-200 dark:bg-slate-700/80 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800'}`} title="آلة حاسبة">
                     <Calculator size={20} strokeWidth={1.5} />
                   </button>
-                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors active:scale-95" title="إعدادات">
+                  <button onClick={() => setShowSettingsModal(true)} className="flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 w-10 h-10 rounded-[4px] hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 transition-colors active:scale-95" title="إعدادات">
                     <Settings size={20} strokeWidth={1.5} />
                   </button>
-                  <button onClick={handleLogout} className="flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-rose-600 w-10 h-10 rounded-full hover:bg-rose-50 transition-colors active:scale-95" title="تسجيل الخروج">
+                  <button onClick={handleLogout} className="flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-rose-600 w-10 h-10 rounded-[4px] hover:bg-rose-50 transition-colors active:scale-95" title="تسجيل الخروج">
                     <LogOut size={20} strokeWidth={1.5} />
                   </button>
                   <div className="w-px h-8 bg-slate-200 dark:bg-slate-700/80 mx-1 hidden sm:block"></div>
-                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-4 py-2 text-[14px] rounded-full transition-all font-medium disabled:opacity-50 active:scale-95 ${saving ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700'}`}>
+                  <button onClick={handleSave} disabled={saving} className={`flex items-center gap-2 px-4 py-2 text-[14px] rounded-[4px] transition-all font-medium disabled:opacity-50 active:scale-95 ${saving ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700'}`}>
                     {saving ? <Save size={16} className="animate-pulse" strokeWidth={2} /> : <CheckCircle2 size={16} strokeWidth={2} />}
                     <span className="hidden sm:inline">{saving ? 'جاري الحفظ...' : 'حفظ'}</span>
                   </button>
                 </>
               )}
-              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-white dark:bg-slate-900 print:bg-white text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-4 py-2 text-[14px] rounded-full hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-all font-medium active:scale-95">
+              <button onClick={() => setShowExportModal(true)} className="flex items-center gap-2 bg-white dark:bg-slate-900 print:bg-white text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-4 py-2 text-[14px] rounded-[4px] hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-all font-medium active:scale-95">
                 <Printer size={16} strokeWidth={2} /> <span className="hidden sm:inline">تصدير</span>
               </button>
-              <button onClick={handleNewDay} className="flex items-center gap-2 bg-brand-500 text-white border-none hover:bg-blue-700 text-white px-4 py-2 text-[14px] rounded-full hover:bg-slate-800 transition-all font-medium active:scale-95 flex-nowrap shrink-0 max-w-fit">
+              <button onClick={handleNewDay} className="flex items-center gap-2 bg-blue-600 text-white border-none hover:bg-blue-700 text-white px-4 py-2 text-[14px] rounded-[4px] hover:bg-slate-800 transition-all font-medium active:scale-95 flex-nowrap shrink-0 max-w-fit">
                 <FilePlus size={16} strokeWidth={2} /> <span className="hidden sm:inline">يوم جديد</span>
               </button>
             </div>
@@ -3256,7 +3256,7 @@ const handleCopyDailyReport = () => {
         )}
 
         {(!isExporting || exportMode === 'detailed') && (!userProfile || userProfile.role !== 'admin' || currentBranchId) && (
-          <div className="pro-card p-5 mb-8 flex flex-wrap gap-8 items-center print:hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-md px-4 sm:px-5 py-5 rounded-[4px] sm:rounded-[4px] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200 dark:border-slate-700/60 mb-8 flex flex-wrap gap-8 items-center print:hidden">
             <div className="flex items-center gap-3">
               <label className="font-semibold text-slate-600 dark:text-slate-400">تاريخ اليوم:</label>
               <Input value={state.date} onChange={(e: any) => updateField('date', e.target.value)} className="w-44 text-center font-bold text-lg" />
@@ -3264,7 +3264,7 @@ const handleCopyDailyReport = () => {
             <div className="w-px h-8 bg-slate-200 dark:bg-slate-700/80 hidden sm:block"></div>
             <div className="flex items-center gap-3">
               <label className="font-semibold text-slate-600 dark:text-slate-400">رصيد أول المدة:</label>
-              <Input type="number" value={state.previousBalance !== undefined ? Math.round(state.previousBalance * 100) / 100 : ''} onChange={(e: any) => updateField('previousBalance', Number(e.target.value))} className="w-44 text-left font-bold text-slate-800 dark:text-slate-200 font-bold bg-slate-100 dark:bg-slate-800/80/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600/80 text-lg focus:ring-brand-500/20/20" dir="ltr" />
+              <Input type="number" value={state.previousBalance !== undefined ? Math.round(state.previousBalance * 100) / 100 : ''} onChange={(e: any) => updateField('previousBalance', Number(e.target.value))} className="w-44 text-left font-bold text-slate-800 dark:text-slate-200 font-bold bg-slate-100 dark:bg-slate-800/80/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600/80 text-lg focus:ring-blue-600/20/20" dir="ltr" />
             </div>
           </div>
         )}
@@ -3273,7 +3273,7 @@ const handleCopyDailyReport = () => {
           {(!isExporting || exportMode === 'detailed') && (
             <div className="flex-1 min-w-0 print:w-full">
               {(!isExporting && (!userProfile || userProfile.role !== 'admin' || currentBranchId)) && (
-                <div className="fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 print:bg-white/95 backdrop-blur-2xl border-t border-slate-200 dark:border-slate-700 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-1.5 print:hidden md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-2 md:gap-2 overscroll-x-contain shadow-md md:shadow-none items-center scrollbar-hide">
+                <div className="fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 print:bg-white/95 backdrop-blur-2xl border-t border-slate-200 dark:border-slate-700 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-1.5 print:hidden md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-2 md:gap-2 overscroll-x-contain shadow-[0_-10px_30px_rgba(0,0,0,0.05)] md:shadow-none items-center scrollbar-hide">
                   {[
                     { id: 'sales', label: 'المبيعات', icon: Receipt },
                     { id: 'payments', label: 'المدفوعات', icon: ArrowUpRight },
@@ -3287,13 +3287,13 @@ const handleCopyDailyReport = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id as any)}
-                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-[3px] font-normal transition-colors whitespace-nowrap min-w-[72px] sm:min-w-[80px] md:min-w-0 flex-shrink-0 ${
-                        activeTab === tab.id ? 'text-brand-500 bg-brand-50 shadow-sm border-b-[3px] border-brand-500 rounded-b-none' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/50'
+                      className={`relative flex flex-col md:flex-row items-center justify-center md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-[4px] font-medium transition-colors whitespace-nowrap min-w-[72px] sm:min-w-[80px] md:min-w-0 flex-shrink-0 ${
+                        activeTab === tab.id ? 'text-slate-900 dark:text-white bg-white dark:bg-slate-900 print:bg-white shadow-sm border border-slate-200 dark:border-slate-700/80' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/50'
                       }`}
                     >
                       <span className="relative z-10 flex flex-col md:flex-row items-center gap-1.5 md:gap-2">
                         <tab.icon size={18} strokeWidth={activeTab === tab.id ? 2.5 : 2} /> 
-                        <span className="text-[11px] md:text-[14px] mt-0.5 md:mt-0">{tab.label}</span>
+                        <span className="text-[11px] md:text-[14px] tracking-tight mt-0.5 md:mt-0">{tab.label}</span>
                       </span>
                     </button>
                   ))}
@@ -3303,7 +3303,7 @@ const handleCopyDailyReport = () => {
               <div className="print:block">
                 {userProfile?.role === 'admin' && !currentBranchId && activeTab !== 'admin' && activeTab !== 'settings' ? (
                   <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[4px] shadow-xl border border-slate-200 dark:border-slate-700/60 p-8 sm:p-12 mb-8 text-center mt-4">
-                    <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white tracking-tight rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-200 dark:border-slate-700/50">
+                    <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white tracking-tight rounded-[4px] flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-200 dark:border-slate-700/50">
                        <Database size={48} />
                     </div>
                     <h2 className="text-3xl font-black text-slate-800 dark:text-slate-200 mb-4 tracking-tight">اختر الفرع للبدء</h2>
@@ -3318,7 +3318,7 @@ const handleCopyDailyReport = () => {
                             loadBranchData(e.target.value);
                           }
                         }}
-                        className="bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-lg rounded-[4px] focus:ring-4 focus:ring-brand-500/20/20 focus:border-brand-500 block w-full sm:w-[400px] px-6 py-4 outline-none font-bold shadow-sm transition-all hover:bg-white dark:bg-slate-900 print:bg-white hover:border-slate-400 cursor-pointer"
+                        className="bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-lg rounded-[4px] focus:ring-4 focus:ring-blue-600/20/20 focus:border-blue-600 block w-full sm:w-[400px] px-6 py-4 outline-none font-bold shadow-sm transition-all hover:bg-white dark:bg-slate-900 print:bg-white hover:border-slate-400 cursor-pointer"
                       >
                         <option value="" disabled>-- الرجاء الضغط لاختيار الفرع --</option>
                         {branches.filter(b => !b.deleted).map(b => (
@@ -3387,7 +3387,7 @@ const handleCopyDailyReport = () => {
                                   newData[index].returns = Number(e.target.value);
                                   updateField('posData', newData);
                                 }} dir="ltr" className="text-left text-rose-600 bg-transparent border-transparent shadow-none hover:bg-rose-50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-rose-200 transition-colors rounded-[4px]" /></td>
-                              <td className="py-4 px-2 text-left font-bold text-[#2b7d2b] text-brand-success" dir="ltr">{formatNum(net)}</td>
+                              <td className="py-4 px-2 text-left font-bold text-emerald-600" dir="ltr">{formatNum(net)}</td>
                               <td className="py-4 px-1">
                                 <button 
                                   onClick={() => setActiveNetworkPosId(pos.id)}
@@ -3415,7 +3415,7 @@ const handleCopyDailyReport = () => {
                                     updateField('posData', newData);
                                   }} 
                                   title="تثبيت النقطة لليوم التالي"
-                                  className={`p-2 rounded-[4px] transition-all ${pos.isPinned ? 'text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600 shadow-sm' : 'text-white/70 hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800'}`}
+                                  className={`p-2 rounded-[4px] transition-all ${pos.isPinned ? 'text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800'}`}
                                 >
                                   <Pin size={18} className={pos.isPinned ? "fill-current" : ""} />
                                 </button>
@@ -3439,7 +3439,7 @@ const handleCopyDailyReport = () => {
                           <td className="py-3 px-2">الإجمالي</td>
                           <td className="py-3 px-2 text-left" dir="ltr">{formatNum(currentSummary.totalSales)}</td>
                           <td className="py-3 px-2 text-left text-rose-600" dir="ltr">{formatNum(currentSummary.totalReturns)}</td>
-                          <td className="py-3 px-2 text-left text-[#2b7d2b] text-brand-success" dir="ltr">{formatNum(currentSummary.netSales)}</td>
+                          <td className="py-3 px-2 text-left text-emerald-600" dir="ltr">{formatNum(currentSummary.netSales)}</td>
                           <td className="py-3 px-2 text-left text-amber-600" dir="ltr">{formatNum(currentSummary.totalNetworks)}</td>
                           <td className="py-3 px-2 text-left text-slate-900 dark:text-white tracking-tight" dir="ltr">{formatNum(state.posData.reduce((acc, p) => acc + (p.physicalCash || 0), 0))}</td>
                           <td className="print:hidden"></td>
@@ -3534,7 +3534,7 @@ const handleCopyDailyReport = () => {
                         {history.map(snap => (
                           <tr key={snap.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50">
                             <td className="py-3 font-bold">{snap.state.date}</td>
-                            <td className="py-3 text-[#2b7d2b] text-brand-success" dir="ltr">{formatNum(snap.summary.totalCashIn)}</td>
+                            <td className="py-3 text-emerald-600" dir="ltr">{formatNum(snap.summary.totalCashIn)}</td>
                             <td className="py-3 text-rose-600" dir="ltr">{formatNum(snap.summary.totalCashOut)}</td>
                             <td className="py-3 font-bold" dir="ltr">{formatNum(snap.summary.actualCash)}</td>
                             <td className="py-3" dir="ltr">
@@ -3576,7 +3576,7 @@ const handleCopyDailyReport = () => {
               { (activeTab === 'ledger' && !isExporting) && (<div className="print:hidden">
                 
                 {/* Filters */}
-                <div className="bg-white dark:bg-slate-900 print:bg-white p-4 rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-700/60 mb-6">
+                <div className="bg-white dark:bg-slate-900 print:bg-white p-4 rounded-[4px] shadow-sm border border-slate-200 dark:border-slate-700/60 mb-6">
                   <div className="flex flex-wrap gap-4 items-end">
                     <div className="flex-1 min-w-[200px]">
                       <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">من تاريخ</label>
@@ -3591,7 +3591,7 @@ const handleCopyDailyReport = () => {
                       <select 
                         value={ledgerFilter.category} 
                         onChange={e => setLedgerFilter(p => ({...p, category: e.target.value}))}
-                        className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-[4px] px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500/20"
+                        className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-[4px] px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600/20"
                       >
                         <option value="all">جميع الأقسام</option>
                         {Array.from(new Set(generateLedgerEntries().map(e => e.category))).map(cat => (
@@ -3807,19 +3807,19 @@ const handleCopyDailyReport = () => {
                   return (
                     <>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
+                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[4px] p-4 flex items-center justify-between shadow-sm">
                           <div>
                             <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">إجمالي الوارد (مدين)</p>
                             <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredIn)}</p>
                           </div>
                         </div>
-                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
+                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[4px] p-4 flex items-center justify-between shadow-sm">
                           <div>
                             <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">إجمالي المنصرف (دائن)</p>
                             <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredOut)}</p>
                           </div>
                         </div>
-                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
+                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[4px] p-4 flex items-center justify-between shadow-sm">
                           <div>
                             <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">إجمالي المعلق</p>
                             <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredNeutral)}</p>
@@ -3848,7 +3848,7 @@ const handleCopyDailyReport = () => {
                               <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.out} onChange={e => setLedgerPrintCols({...ledgerPrintCols, out: e.target.checked})} className="accent-rose-500" /> منصرف</label>
                               <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.bal} onChange={e => setLedgerPrintCols({...ledgerPrintCols, bal: e.target.checked})} className="accent-slate-900" /> الرصيد</label>
                             </div>
-                            <button onClick={handlePrintFilteredLedger} className="flex items-center justify-center gap-2 bg-brand-500 text-white border-none hover:bg-blue-700 text-white px-4 py-2 rounded-[4px] text-[15px] font-bold border border-slate-900 hover:bg-slate-900 transition-colors shrink-0 shadow-sm w-full sm:w-auto">
+                            <button onClick={handlePrintFilteredLedger} className="flex items-center justify-center gap-2 bg-blue-600 text-white border-none hover:bg-blue-700 text-white px-4 py-2 rounded-[4px] text-[15px] font-bold border border-slate-900 hover:bg-slate-900 transition-colors shrink-0 shadow-sm w-full sm:w-auto">
                               <Printer size={16} /> طباعة التقرير
                             </button>
                           </div>
@@ -3998,13 +3998,13 @@ key={entry.id + index}
       
       {showExportModal && (
         <div className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="pro-card w-full max-w-md overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <Download size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
                 تصدير التسوية
               </h3>
-              <button onClick={() => setShowExportModal(false)} className="text-white/70 hover:text-white p-1">
+              <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1">
                 <X size={20} />
               </button>
             </div>
@@ -4043,7 +4043,7 @@ key={entry.id + index}
                 <button 
                   onClick={() => handleExport('a4')}
                   disabled={isExporting}
-                  className="flex-1 bg-brand-500 text-white border-none hover:bg-blue-700 text-white py-3 rounded-[4px] font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 bg-blue-600 text-white border-none hover:bg-blue-700 text-white py-3 rounded-[4px] font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isExporting ? 'جاري التحضير...' : (
                     <>
@@ -4066,7 +4066,7 @@ key={entry.id + index}
               {exportMode === 'summary' && (
                   <button 
                     onClick={handleCopyDailyReport}
-                    className="w-full mt-3 btn-success text-white py-3 rounded-[4px] font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                    className="w-full mt-3 bg-emerald-600 text-white py-3 rounded-[4px] font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
                   >
                     <Copy size={20} /> نسخ التقرير النصي
                   </button>
@@ -4081,7 +4081,7 @@ key={entry.id + index}
       
       {viewSnapshot && (
         <div className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="pro-card w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 shrink-0">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <CalendarDays size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
@@ -4092,7 +4092,7 @@ key={entry.id + index}
                   <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'a4'); }} className="hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 text-[15px] font-bold transition-colors border-l border-slate-300 dark:border-slate-600 flex items-center gap-1" title="طباعة A4"><Printer size={16} /> A4</button>
                   <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'thermal'); }} className="hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 text-[15px] font-bold transition-colors" title="طباعة حراري">حراري</button>
                 </div>
-                <button onClick={() => setViewSnapshot(null)} className="text-white/70 hover:text-white p-1">
+                <button onClick={() => setViewSnapshot(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1">
                   <X size={20} />
                 </button>
               </div>
@@ -4152,7 +4152,7 @@ key={entry.id + index}
       {/* Toast Notification */}
       
       {toast && (
-        <div className={`fixed bottom-24 md:bottom-8 left-1/2 z-[200] px-6 py-3 rounded-full shadow-lg font-bold text-white flex items-center gap-2 whitespace-nowrap ${toast.type === 'success' ? 'btn-success' : 'bg-rose-600'}`}>
+        <div className={`fixed bottom-24 md:bottom-8 left-1/2 z-[200] px-6 py-3 rounded-[4px] shadow-lg font-bold text-white flex items-center gap-2 whitespace-nowrap ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
           {toast.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
           {toast.message}
         </div>
@@ -4163,13 +4163,13 @@ key={entry.id + index}
       
       {confirmDialog && (
         <div className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="pro-card w-full max-w-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
             <div className="p-6 text-center">
               <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
               <p className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-2">تأكيد الإجراء</p>
               <p className="text-slate-600 dark:text-slate-400 mb-6">{confirmDialog.message}</p>
               <div className="flex gap-3">
-                <button onClick={() => { confirmDialog.onConfirm(); setConfirmDialog(null); }} className="flex-1 bg-brand-500 text-white border-none hover:bg-blue-700 text-white py-2 rounded-[4px] font-bold hover:bg-slate-800 transition-colors">تأكيد</button>
+                <button onClick={() => { confirmDialog.onConfirm(); setConfirmDialog(null); }} className="flex-1 bg-blue-600 text-white border-none hover:bg-blue-700 text-white py-2 rounded-[4px] font-bold hover:bg-slate-800 transition-colors">تأكيد</button>
                 <button onClick={() => setConfirmDialog(null)} className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-2 rounded-[4px] font-bold hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">إلغاء</button>
               </div>
             </div>
@@ -4182,13 +4182,13 @@ key={entry.id + index}
       
       {activeNetworkPosId && activePos && (
         <div className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="pro-card w-full max-w-md overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <CreditCard size={20} className="text-amber-600" /> 
                 مبالغ الشبكات - {activePos.name}
               </h3>
-              <button onClick={() => setActiveNetworkPosId(null)} className="text-white/70 hover:text-white p-1">
+              <button onClick={() => setActiveNetworkPosId(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1">
                 <X size={20} />
               </button>
             </div>
@@ -4241,7 +4241,7 @@ key={entry.id + index}
               <span className="font-black text-amber-600 text-lg" dir="ltr">{formatNum(sumNetworks(activePos.networks))}</span>
             </div>
             <div className="p-4 pt-0 bg-slate-50 dark:bg-slate-800/50">
-              <button onClick={() => setActiveNetworkPosId(null)} className="w-full bg-brand-500 text-white border-none hover:bg-blue-700 text-white py-2 rounded-[4px] font-bold hover:bg-slate-800 transition-colors">
+              <button onClick={() => setActiveNetworkPosId(null)} className="w-full bg-blue-600 text-white border-none hover:bg-blue-700 text-white py-2 rounded-[4px] font-bold hover:bg-slate-800 transition-colors">
                 موافق
               </button>
             </div>
@@ -4254,13 +4254,13 @@ key={entry.id + index}
       
       {showAddBranchModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
-          <div className="pro-card w-full max-w-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
                 <Plus className="text-slate-900 dark:text-white tracking-tight" size={20} />
                 إضافة فرع جديد
               </h3>
-              <button disabled={loading} onClick={() => setShowAddBranchModal(false)} className="text-white/70 hover:text-white p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
+              <button disabled={loading} onClick={() => setShowAddBranchModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1 rounded-[4px] hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -4273,15 +4273,15 @@ key={entry.id + index}
                   placeholder="مثال: فرع المدينة"
                   value={newBranchName}
                   onChange={(e) => setNewBranchName(e.target.value)}
-                  className="w-full border border-slate-300 dark:border-slate-600 rounded-[4px] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-transparent transition-all"
+                  className="w-full border border-slate-300 dark:border-slate-600 rounded-[4px] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-transparent transition-all"
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading || !newBranchName.trim()}
-                className="w-full bg-brand-500 text-white border-none hover:bg-blue-700 outline-none text-white font-bold py-3 px-4 rounded-[4px] hover:bg-slate-800 transition-all shadow-sm shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
+                className="w-full bg-blue-600 text-white border-none hover:bg-blue-700 outline-none text-white font-bold py-3 px-4 rounded-[4px] hover:bg-slate-800 transition-all shadow-sm shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
               >
-                {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle2 size={20} />}
+                {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-[4px] animate-spin" /> : <CheckCircle2 size={20} />}
                 إضافة
               </button>
             </form>
@@ -4293,13 +4293,13 @@ key={entry.id + index}
       
       {showAuthModal && createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
-          <div className="pro-card w-full max-w-sm overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
                 <LogIn className="text-slate-900 dark:text-white tracking-tight" size={24} />
                 {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
               </h3>
-              <button onClick={() => setShowAuthModal(false)} className="text-white/70 hover:text-white p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
+              <button onClick={() => setShowAuthModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1 rounded-[4px] hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -4319,7 +4319,7 @@ key={entry.id + index}
                     dir="ltr"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full border border-slate-300 dark:border-slate-600 rounded-[4px] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-mono"
+                    className="w-full border border-slate-300 dark:border-slate-600 rounded-[4px] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all font-mono"
                   />
                 </div>
                 <div>
@@ -4330,12 +4330,12 @@ key={entry.id + index}
                     dir="ltr"
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full border border-slate-300 dark:border-slate-600 rounded-[4px] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-mono"
+                    className="w-full border border-slate-300 dark:border-slate-600 rounded-[4px] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition-all font-mono"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-brand-500 text-white border-none hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-[4px] mt-2 hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                  className="w-full bg-blue-600 text-white border-none hover:bg-blue-700 text-white font-bold py-3.5 px-4 rounded-[4px] mt-2 hover:bg-slate-800 transition-all shadow-sm active:scale-95"
                 >
                   {isSignUp ? 'إنشاء الحساب' : 'دخول'}
                 </button>
@@ -4366,7 +4366,7 @@ key={entry.id + index}
               <div className="mt-6 text-center">
                 <button
                   onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }}
-                  className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white tracking-tight font-bold transition-colors text-[15px] relative after:bg-brand-500 text-white border-none hover:bg-blue-700 after:absolute after:h-[2px] after:w-0 hover:after:w-full after:bottom-0 after:-right-0 after:transition-all after:duration-300"
+                  className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white tracking-tight font-bold transition-colors text-[15px] relative after:bg-blue-600 text-white border-none hover:bg-blue-700 after:absolute after:h-[2px] after:w-0 hover:after:w-full after:bottom-0 after:-right-0 after:transition-all after:duration-300"
                 >
                   {isSignUp ? 'لدي حساب بالفعل، تسجيل الدخول' : 'جديد؟ قم بإنشاء حساب'}
                 </button>
@@ -4399,7 +4399,7 @@ key={entry.id + index}
           <div className="bg-slate-100 dark:bg-slate-800 rounded-[4px] shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 print:bg-white flex justify-between items-center">
               <h2 className="font-bold text-lg">معاينة وتخصيص الإيصال الحراري</h2>
-              <button onClick={() => setThermalPreviewData(null)} className="text-white/70 hover:text-white p-1 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded-full transition-colors"><X size={20} /></button>
+              <button onClick={() => setThermalPreviewData(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-400 p-1 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded-[4px] transition-colors"><X size={20} /></button>
             </div>
             
             <div className="p-4 bg-white dark:bg-slate-900 print:bg-white border-b border-slate-200 dark:border-slate-700 flex flex-col gap-4">
@@ -4466,7 +4466,7 @@ key={entry.id + index}
                     console.error("Failed to export image", err);
                   }
                 }}
-                className="w-full btn-success text-white py-3 rounded-[4px] font-bold hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2"
+                className="w-full bg-emerald-600 text-white py-3 rounded-[4px] font-bold hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2"
               >
                 <Download size={20} /> تصدير كصورة (Image)
               </button>
@@ -4493,7 +4493,7 @@ key={entry.id + index}
                     }, 500);
                   }
                 }}
-                className="w-full bg-brand-500 text-white hover:bg-blue-700 py-3 rounded-[4px] font-bold hover:bg-slate-800 transition-colors flex justify-center items-center gap-2"
+                className="w-full bg-blue-600 text-white hover:bg-blue-700 py-3 rounded-[4px] font-bold hover:bg-slate-800 transition-colors flex justify-center items-center gap-2"
               >
                 <Printer size={20} /> طباعة حراري الآن
               </button>
