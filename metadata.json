@@ -2,5 +2,5 @@
   "name": "سرب ERP",
   "description": "نظام سرب لإدارة الخزينة والعمليات الذكية",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

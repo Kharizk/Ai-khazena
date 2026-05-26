@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useDeferredValue, useMemo, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -10,8 +10,15 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
 import CalculatorWidget from './components/Calculator';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { motion, AnimatePresence } from 'motion/react';
+
 import { SettingsModalComponent } from './components/SettingsModal';
+
+const safeLocalStorage = {
+  getItem: (key: string) => { try { return window.localStorage.getItem(key); } catch(e) { return null; } },
+  setItem: (key: string, value: string) => { try { window.localStorage.setItem(key, value); } catch(e) {} },
+  removeItem: (key: string) => { try { window.localStorage.removeItem(key); } catch(e) {} }
+};
+
 
 type FundHistoryEntry = {
   id: string;
@@ -120,31 +127,34 @@ const getInitialState = (): AppState => ({
 });
 
 const round2 = (num: number) => Math.round(num * 100) / 100;
-const sumTransactions = (arr: Transaction[]) => round2(arr.reduce((sum, item) => sum + (Number(item.amount) || 0), 0));
+const sumTransactions = (arr: Transaction[]) => round2((arr || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0));
 const sumNetworks = (networks: number[]) => round2(networks.reduce((sum, val) => sum + (Number(val) || 0), 0));
 
 const getSummary = (s: AppState) => {
-  const totalSales = round2(s.posData.reduce((sum, item) => sum + (Number(item.sales) || 0), 0));
-  const totalReturns = round2(s.posData.reduce((sum, item) => sum + (Number(item.returns) || 0), 0));
+  const safePosData = s.posData || [];
+  const safeExpenses = s.expenses || [];
+  
+  const totalSales = round2(safePosData.reduce((sum, item) => sum + (Number(item.sales) || 0), 0));
+  const totalReturns = round2(safePosData.reduce((sum, item) => sum + (Number(item.returns) || 0), 0));
   const netSales = round2(totalSales - totalReturns);
   const totalExpenseRefunds = sumTransactions(s.expenseRefunds);
   const totalCashIn = round2(netSales + totalExpenseRefunds);
 
-  const totalNetworks = round2(s.posData.reduce((sum, item) => sum + sumNetworks(item.networks), 0));
+  const totalNetworks = round2(safePosData.reduce((sum, item) => sum + sumNetworks(item.networks || []), 0));
   const totalCustomerTransfers = sumTransactions(s.customerTransfers);
   const totalCompanyPayments = sumTransactions(s.companyPayments);
   
-  const separatedExpenses = s.expenses.filter(e => e.showInSummary && e.amount > 0);
+  const separatedExpenses = safeExpenses.filter(e => e.showInSummary && e.amount > 0);
   const separatedExpensesTotal = sumTransactions(separatedExpenses);
-  const generalExpensesTotal = sumTransactions(s.expenses.filter(e => !e.showInSummary));
+  const generalExpensesTotal = sumTransactions(safeExpenses.filter(e => !e.showInSummary));
   const totalExpenses = round2(generalExpensesTotal + separatedExpensesTotal);
   
   const totalCashDeposits = sumTransactions(s.cashDeposits);
   const totalCashOut = round2(totalNetworks + totalCustomerTransfers + totalCompanyPayments + totalExpenses + totalCashDeposits);
 
-  const expectedCash = round2(s.previousBalance + totalCashIn - totalCashOut);
+  const expectedCash = round2((s.previousBalance || 0) + totalCashIn - totalCashOut);
 
-  const physicalDenominations = round2(Object.entries(s.cashDenominations).reduce((sum, [denom, count]) => sum + (Number(denom) * (Number(count) || 0)), 0));
+  const physicalDenominations = round2(Object.entries(s.cashDenominations || {}).reduce((sum, [denom, count]) => sum + (Number(denom) * (Number(count) || 0)), 0));
   const physicalCustomCash = sumTransactions(s.customCashAmounts);
   const physicalCash = round2(physicalDenominations + physicalCustomCash);
   
@@ -533,7 +543,7 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
               </tr>
             </thead>
             <tbody>
-              {state.posData.map((pos: any, i: number) => {
+              {(state.posData || []).map((pos: any, i: number) => {
                 const net = pos.sales - pos.returns;
                 const networksTotal = pos.networks.reduce((a: number, b: any) => a + (typeof b === 'number' ? b : b.amount || 0), 0);
                 return (
@@ -546,10 +556,10 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
               })}
             </tbody>
           </table>
-          {state.expenseRefunds.length > 0 && (
+          {((state.expenseRefunds) || []).length > 0 && (
              <div className="mt-4 pt-4 border-t border-gray-300">
                <p className="font-bold mb-2">إيرادات أخرى (إضافات للخزينة):</p>
-               {state.expenseRefunds.map((e: any, i: number) => (
+               {(state.expenseRefunds || []).map((e: any, i: number) => (
                   <div key={i} className="flex justify-between text-[15px] py-1">
                     <span>{e.name}</span><span dir="ltr" className="font-medium">{formatNum(e.amount)}</span>
                   </div>
@@ -565,7 +575,7 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
           <div className="space-y-4">
             <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">مصروفات متنوعة</h3>
-              {state.expenses.length > 0 ? state.expenses.map((e: any, i: number) => (
+              {((state.expenses) || []).length > 0 ? (state.expenses || []).map((e: any, i: number) => (
                   <div key={i} className="flex justify-between text-[15px] py-1 border-b border-gray-100 last:border-0">
                     <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
                   </div>
@@ -573,7 +583,7 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
             </div>
             <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">تحويلات عملاء (يخصم من الخزينة)</h3>
-              {state.customerTransfers.length > 0 ? state.customerTransfers.map((e: any, i: number) => (
+              {((state.customerTransfers) || []).length > 0 ? (state.customerTransfers || []).map((e: any, i: number) => (
                   <div key={i} className="flex justify-between text-[15px] py-1 border-b border-gray-100 last:border-0">
                     <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
                   </div>
@@ -581,7 +591,7 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
             </div>
             <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">سداد شركات / موردين</h3>
-              {state.companyPayments.length > 0 ? state.companyPayments.map((e: any, i: number) => (
+              {((state.companyPayments) || []).length > 0 ? (state.companyPayments || []).map((e: any, i: number) => (
                   <div key={i} className="flex justify-between text-[15px] py-1 border-b border-gray-100 last:border-0">
                     <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
                   </div>
@@ -594,7 +604,7 @@ const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
           <h2 className="text-xl font-bold bg-slate-50 dark:bg-slate-800/50 -mx-4 -mt-4 mb-4 p-2 text-center rounded-t-lg border-b-2 border-gray-300">ملاحظات وعهدة</h2>
            <div>
               <h3 className="font-bold underline decoration-gray-400 mb-1">إيداعات بنكية (خوارج)</h3>
-              {state.cashDeposits.length > 0 ? state.cashDeposits.map((e: any, i: number) => (
+              {((state.cashDeposits) || []).length > 0 ? (state.cashDeposits || []).map((e: any, i: number) => (
                   <div key={i} className="flex justify-between text-[15px] py-1 border-b border-gray-100 last:border-0">
                     <span>{e.name}</span><span dir="ltr">{formatNum(e.amount)}</span>
                   </div>
@@ -642,7 +652,7 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
         </div>
       </div>
 
-      {/* Side-by-Side grid layout taking exactly full width */}
+      {/* Side-by-Side grid taking exactly full width */}
       <div className="grid grid-cols-2 gap-6 items-start">
         
         {/* Us Column */}
@@ -1028,7 +1038,7 @@ ${summaryText.substring(0, 3000)}
                     formatter={(value: number) => formatNum(value)}
                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontFamily: 'Cairo', textAlign: 'right', fontSize: '14px', fontWeight: 'bold' }}
                   />
-                  <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontFamily: 'Cairo', fontSize: '12px', paddingTop: '10px' }} iconType="circle" />
+                  <Legend layout={undefined} verticalAlign="bottom" align="center" wrapperStyle={{ fontFamily: 'Cairo', fontSize: '12px', paddingTop: '10px' }} iconType="circle" />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -1321,13 +1331,15 @@ const AddNameInput = ({ onAdd }: { onAdd: (name: string) => void }) => {
 
 const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpdate, onRemove, onArchive, onTogglePin, onToggleSummary, onManage, onReorder, sumTransactions, formatNum, savedNames, onSaveName }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const total = sumTransactions(data);
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const safeData = data || [];
+  const total = sumTransactions(safeData);
   const listId = `list-${field}`;
   
-  const filteredData = data.filter((item: any) => 
-    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    item.amount?.toString().includes(searchQuery)
-  );
+  const filteredData = useMemo(() => safeData.filter((item: any) => 
+    item.name?.toString().toLowerCase().includes(deferredSearchQuery.toLowerCase()) || 
+    item.amount?.toString().includes(deferredSearchQuery)
+  ), [safeData, deferredSearchQuery]);
 
   return (
     <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 transition-all">
@@ -1361,16 +1373,12 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
       )}
 
       <div className="p-5 pt-2">
-        <AnimatePresence initial={false}>
+        
         {filteredData.map((item: any, index: number) => {
-          const actualIndex = data.findIndex((d: any) => d.id === item.id);
+          const actualIndex = safeData.findIndex((d: any) => d.id === item.id);
           return (
-          <motion.div 
-            initial={{ opacity: 0, y: -10, height: 0, overflow: 'hidden' }}
-            animate={{ opacity: 1, y: 0, height: 'auto', overflow: 'visible' }}
-            exit={{ opacity: 0, scale: 0.95, height: 0, overflow: 'hidden' }}
-            transition={{ duration: 0.2 }}
-            key={item.id} 
+          <div
+key={item.id} 
             className="flex gap-2.5 mb-2.5 items-center group/row"
           >
             {onReorder && searchQuery === '' && (
@@ -1378,7 +1386,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
                 <button onClick={() => onReorder(item.id, 'up')} disabled={actualIndex === 0} className="text-slate-400 hover:text-slate-900 dark:text-white tracking-tight disabled:opacity-0 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded">
                   <ChevronUp size={14} />
                 </button>
-                <button onClick={() => onReorder(item.id, 'down')} disabled={actualIndex === data.length - 1} className="text-slate-400 hover:text-slate-900 dark:text-white tracking-tight disabled:opacity-0 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded">
+                <button onClick={() => onReorder(item.id, 'down')} disabled={actualIndex === safeData.length - 1} className="text-slate-400 hover:text-slate-900 dark:text-white tracking-tight disabled:opacity-0 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded">
                   <ChevronDown size={14} />
                 </button>
               </div>
@@ -1428,11 +1436,11 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
             <button onClick={() => onRemove(item.id)} title={onArchive ? "حذف بالخطأ (بدون أرشفة)" : "حذف البند"} className="p-2.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-[1.25rem] transition-all hover:scale-105 active:scale-95 opacity-50 group-hover/row:opacity-100">
               <Trash2 size={20} />
             </button>
-          </motion.div>
+          </div>
         )})}
-        </AnimatePresence>
+        
         {data.length === 0 && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-10 px-4 flex flex-col items-center gap-3 bg-slate-50 dark:bg-slate-800/50/50 rounded-3xl mx-5 mb-5 border border-dashed border-slate-200 dark:border-slate-700">
+          <div className="text-center py-10 px-4 flex flex-col items-center gap-3 bg-slate-50 dark:bg-slate-800/50/50 rounded-3xl mx-5 mb-5 border border-dashed border-slate-200 dark:border-slate-700">
             <div className="bg-white dark:bg-slate-900 print:bg-white p-4 rounded-full shadow-sm border border-slate-100 dark:border-slate-800 text-slate-300">
               <Icon size={32} strokeWidth={1.5} />
             </div>
@@ -1443,7 +1451,7 @@ const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpd
             <button onClick={onAdd} className="mt-2 text-[15px] font-bold text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded-[1.25rem] transition-colors flex items-center gap-2">
               <Plus size={16} /> أضف أول بند
             </button>
-          </motion.div>
+          </div>
         )}
         {data.length > 0 && (
           <div className="px-5 pb-5">
@@ -1607,8 +1615,8 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[150] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+      <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
           <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
             <Calculator size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
@@ -1810,8 +1818,8 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
             </div>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 
@@ -1883,11 +1891,11 @@ export default function App() {
   const [currentAppView, setCurrentAppView] = useState<'launcher' | 'treasury'>('launcher');
 
   const [theme, setTheme] = useState<'system'|'light'|'dark'>(() => {
-    return (localStorage.getItem('smart_safe_theme') as any) || 'system';
+    return (safeLocalStorage.getItem('smart_safe_theme') as any) || 'system';
   });
 
   useEffect(() => {
-    localStorage.setItem('smart_safe_theme', theme);
+    safeLocalStorage.setItem('smart_safe_theme', theme);
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
 
@@ -1900,16 +1908,16 @@ export default function App() {
   }, [theme]);
 
   const [uiScale, setUiScale] = useState<number>(() => {
-    return Number(localStorage.getItem('smart_safe_ui_scale') || 1);
+    return Number(safeLocalStorage.getItem('smart_safe_ui_scale') || 1);
   });
   
   const [companyName, setCompanyName] = useState<string>(() => {
-    return localStorage.getItem('smart_safe_company_name') || 'اسم شركتك هنا';
+    return safeLocalStorage.getItem('smart_safe_company_name') || 'اسم شركتك هنا';
   });
 
   const [ledgerPrintCols, setLedgerPrintCols] = useState(() => {
     try {
-      const stored = localStorage.getItem('smart_safe_ledger_cols');
+      const stored = safeLocalStorage.getItem('smart_safe_ledger_cols');
       return stored ? JSON.parse(stored) : { date: true, desc: true, category: true, in: true, out: true, bal: true };
     } catch {
       return { date: true, desc: true, category: true, in: true, out: true, bal: true };
@@ -1918,7 +1926,7 @@ export default function App() {
   
   const [thermalMargins, setThermalMargins] = useState<{ right: number, left: number, top: number }>(() => {
     try {
-      const stored = localStorage.getItem('smart_safe_thermal_margins');
+      const stored = safeLocalStorage.getItem('smart_safe_thermal_margins');
       return stored ? { top: 0, ...JSON.parse(stored) } : { right: 24, left: 24, top: 0 };
     } catch {
       return { right: 24, left: 24, top: 0 };
@@ -1926,19 +1934,19 @@ export default function App() {
   });
 
   useEffect(() => {
-    localStorage.setItem('smart_safe_ui_scale', uiScale.toString());
+    safeLocalStorage.setItem('smart_safe_ui_scale', uiScale.toString());
   }, [uiScale]);
 
   useEffect(() => {
-    localStorage.setItem('smart_safe_company_name', companyName);
+    safeLocalStorage.setItem('smart_safe_company_name', companyName);
   }, [companyName]);
 
   useEffect(() => {
-    localStorage.setItem('smart_safe_ledger_cols', JSON.stringify(ledgerPrintCols));
+    safeLocalStorage.setItem('smart_safe_ledger_cols', JSON.stringify(ledgerPrintCols));
   }, [ledgerPrintCols]);
 
   useEffect(() => {
-    localStorage.setItem('smart_safe_thermal_margins', JSON.stringify(thermalMargins));
+    safeLocalStorage.setItem('smart_safe_thermal_margins', JSON.stringify(thermalMargins));
   }, [thermalMargins]);
 
   const showToast = (message: string, type: 'success'|'error' = 'success') => {
@@ -2041,7 +2049,7 @@ export default function App() {
       if (isMounted) {
         setLoading(false);
         // If it hangs, we can try to fall back to local data gracefully
-        const saved = localStorage.getItem('treasury_app_data');
+        const saved = safeLocalStorage.getItem('treasury_app_data');
         if (saved && isMounted) {
             try { setState(JSON.parse(saved)); } catch(e) {}
         }
@@ -2317,7 +2325,7 @@ const handleCopyDailyReport = () => {
 
   const saveStateToFirebase = async (newState: AppState, isAutoSave = false) => {
     if (!user || userProfile?.status !== 'active' || !currentBranchId) {
-      localStorage.setItem('treasury_app_data', JSON.stringify(newState));
+      safeLocalStorage.setItem('treasury_app_data', JSON.stringify(newState));
       if (!isAutoSave) {
          if (!user) showToast('تم الحفظ محلياً (يرجى تسجيل الدخول للحفظ السحابي)', 'success');
          else showToast('تم الحفظ محلياً (ليس لديك فرع محدد أو الصلاحيات لم تكتمل)', 'success');
@@ -2449,12 +2457,12 @@ const handleCopyDailyReport = () => {
           savedNames: state.savedNames,
           archivedPendingFunds: state.archivedPendingFunds,
           
-          expenseRefunds: keepPinned(state.expenseRefunds),
-          companyPayments: keepPinned(state.companyPayments),
-          expenses: keepPinned(state.expenses),
-          customerTransfers: keepPinned(state.customerTransfers),
-          cashDeposits: keepPinned(state.cashDeposits),
-          customCashAmounts: keepPinned(state.customCashAmounts),
+          expenseRefunds: keepPinned(state.expenseRefunds || []),
+          companyPayments: keepPinned(state.companyPayments || []),
+          expenses: keepPinned(state.expenses || []),
+          customerTransfers: keepPinned(state.customerTransfers || []),
+          cashDeposits: keepPinned(state.cashDeposits || []),
+          customCashAmounts: keepPinned(state.customCashAmounts || []),
           
           pendingFundsOwedToUs: state.pendingFundsOwedToUs,
           pendingFundsOwedByUs: state.pendingFundsOwedByUs,
@@ -2495,8 +2503,8 @@ const handleCopyDailyReport = () => {
           const newSnap = { id: generateId(), ...snapshot };
           const newHistory = [newSnap, ...history];
           setHistory(newHistory);
-          localStorage.setItem('treasury_history', JSON.stringify(newHistory));
-          localStorage.setItem('treasury_app_data', JSON.stringify(nextState));
+          safeLocalStorage.setItem('treasury_history', JSON.stringify(newHistory));
+          safeLocalStorage.setItem('treasury_app_data', JSON.stringify(nextState));
           showToast('تم التقفيل محلياً بنجاح!', 'success');
         }
       }
@@ -2800,7 +2808,7 @@ const handleCopyDailyReport = () => {
         try {
           setState(prev => ({ ...prev, archivedPendingFunds: [] }));
           setHistory([]);
-          localStorage.removeItem('treasury_history');
+          safeLocalStorage.removeItem('treasury_history');
           showToast('تم مسح جميع السجلات بنجاح', 'success');
         } catch (error) {
           console.error(error);
@@ -2827,7 +2835,7 @@ const handleCopyDailyReport = () => {
       onManage={isPending ? (item: Transaction) => setManagingFund({ item, field: field as any }) : undefined}
       sumTransactions={sumTransactions}
       formatNum={formatNum}
-      savedNames={state.savedNames[field as keyof AppState['savedNames']]}
+      savedNames={state.savedNames?.[field as keyof AppState['savedNames']] || []}
       onSaveName={addSavedName}
     />
   );
@@ -2917,7 +2925,7 @@ const handleCopyDailyReport = () => {
   
   if (!user && !skipLogin) {
     return (
-      <div className="fixed inset-0 bg-[#f4f5f7] text-white flex flex-col justify-center items-center p-4 selection:bg-slate-100 dark:bg-slate-800/500 selection:text-black dark:text-white print:text-black" dir="rtl">
+      <div className="fixed inset-0 bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 flex flex-col justify-center items-center p-4 selection:bg-slate-200 dark:selection:bg-slate-800/500 selection:text-black dark:text-white print:text-black" dir="rtl">
         <div className="absolute inset-0 opacity-10" style={{
           backgroundImage: 'radial-gradient(circle at 50% 50%, #1A1A1A 0%, transparent 60%), linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .1) 25%, rgba(255, 255, 255, .1) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .1) 75%, rgba(255, 255, 255, .1) 76%, transparent 77%, transparent)',
           backgroundSize: '100% 100%, 50px 50px, 50px 50px'
@@ -3329,13 +3337,13 @@ const handleCopyDailyReport = () => {
                 ) : (
                 <>
                 {/* Sales Tab */}
-                <div className={`${activeTab === 'sales' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
+                { (activeTab === 'sales' || (isExporting && exportMode === 'detailed')) && (<div className="print:block mb-6">
                 <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 flex flex-col">
                   <div className="bg-transparent text-slate-800 dark:text-slate-200 px-5 flex items-center gap-2 font-semibold text-[15px] pt-4 pb-2">
                     <Receipt size={20} /> مبيعات نقاط البيع
                   </div>
                   <datalist id="list-posData">
-                    {(state.savedNames.posData || []).map(name => <option key={name} value={name} />)}
+                    {(state.savedNames?.posData || []).map(name => <option key={name} value={name} />)}
                   </datalist>
                   <div className="p-4 overflow-x-auto">
                     <table className="w-full text-[15px] text-right">
@@ -3351,7 +3359,7 @@ const handleCopyDailyReport = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {state.posData.map((pos, index) => {
+                        {(state.posData || []).map((pos, index) => {
                           const net = pos.sales - pos.returns;
                           const posNetworksTotal = sumNetworks(pos.networks);
                           return (
@@ -3445,18 +3453,20 @@ const handleCopyDailyReport = () => {
                 </div>
                 {renderTable('مردود مصروف (يضاف للخزينة)', 'expenseRefunds', Undo2, '')}
               </div>
+              )}
 
               {/* Payments Tab */}
-              <div className={`${activeTab === 'payments' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
+              { (activeTab === 'payments' || (isExporting && exportMode === 'detailed')) && (<div className="print:block mb-6">
                 {renderTable('تحويلات العملاء (شبكة/بنكي تخصم من الخزينة)', 'customerTransfers', CreditCard, '')}
                 {renderTable('سداد شركات وموردين', 'companyPayments', ArrowUpRight, '')}
                 {/* Expenses table with showInSummary toggle */}
                 {renderTable('مصروفات متنوعة (رواتب، نثريات...)', 'expenses', ArrowUpRight, '', false, true)}
                 {renderTable('إيداعات بنكية', 'cashDeposits', Wallet, '')}
               </div>
+              )}
 
               {/* Pending Funds Tab */}
-              <div className={`${activeTab === 'pending' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
+              { (activeTab === 'pending' || (isExporting && exportMode === 'detailed')) && (<div className="print:block mb-6">
                 {!isExporting && (
                   <div className="flex flex-col sm:flex-row justify-between mb-6 gap-4">
                     <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-[1.25rem] text-[15px] flex gap-3 items-start flex-1">
@@ -3475,9 +3485,10 @@ const handleCopyDailyReport = () => {
                 {renderTable('أموال معلقة لنا (تُحسب ككاش بالخزينة)', 'pendingFundsOwedToUs', ArrowDownRight, '', true)}
                 {renderTable('أموال معلقة علينا (تُخصم من الخزينة)', 'pendingFundsOwedByUs', ArrowUpRight, '', true)}
               </div>
+              )}
 
               {/* Cash Count Tab */}
-              <div className={`${activeTab === 'cash' || (isExporting && exportMode === 'detailed') ? 'block' : 'hidden'} print:block mb-6`}>
+              { (activeTab === 'cash' || (isExporting && exportMode === 'detailed')) && (<div className="print:block mb-6">
                 <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 flex flex-col">
                   <div className="bg-transparent text-slate-800 dark:text-slate-200 px-5 pt-4 pb-2 flex items-center justify-between font-semibold text-[15px]">
                     <div className="flex items-center gap-2"><Wallet size={20} /> جرد الخزينة (الفئات النقدية)</div>
@@ -3499,9 +3510,10 @@ const handleCopyDailyReport = () => {
                 </div>
                 {renderTable('مبالغ نقدية مجمعة (رزم أو مبالغ معدودة مسبقاً)', 'customCashAmounts', Layers, '')}
               </div>
+              )}
 
               {/* History Tab */}
-              <div className={`${activeTab === 'history' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
+              { (activeTab === 'history' && !isExporting) && (<div className="print:hidden">
                 <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 flex flex-col">
                   <div className="bg-transparent text-slate-800 dark:text-slate-200 p-4 flex items-center gap-2 font-bold border-b border-slate-100 dark:border-slate-800">
                     <CalendarDays size={20} /> سجل الأيام السابقة
@@ -3558,9 +3570,10 @@ const handleCopyDailyReport = () => {
                   </div>
                 </div>
               </div>
+)}
 
               {/* Ledger Tab */}
-              <div className={`${activeTab === 'ledger' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
+              { (activeTab === 'ledger' && !isExporting) && (<div className="print:hidden">
                 
                 {/* Filters */}
                 <div className="bg-white dark:bg-slate-900 print:bg-white p-4 rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-700/60 mb-6">
@@ -3853,14 +3866,10 @@ const handleCopyDailyReport = () => {
                               </tr>
                             </thead>
                             <tbody>
-                              <AnimatePresence>
+                              
                               {filteredLedger.map((entry: any, index: number) => (
-                                <motion.tr 
-                                  initial={{ opacity: 0, x: -10 }} 
-                                  animate={{ opacity: 1, x: 0 }} 
-                                  exit={{ opacity: 0, scale: 0.95 }}
-                                  transition={{ duration: 0.15 }}
-                                  key={entry.id + index} 
+                                <tr
+key={entry.id + index} 
                                   className="border-b border-slate-200 dark:border-slate-700 hover:bg-amber-50/50 transition-colors"
                                 >
                                   <td className="p-3 font-medium text-slate-700 dark:text-slate-300 border-l border-slate-200 dark:border-slate-700">{entry.date}</td>
@@ -3877,9 +3886,9 @@ const handleCopyDailyReport = () => {
                                   <td className="p-3 font-mono text-slate-800 dark:text-slate-200 font-bold font-black bg-slate-100 dark:bg-slate-800/80/30" dir="ltr">
                                     {formatNum(entry.balance)}
                                   </td>
-                                </motion.tr>
+                                </tr>
                               ))}
-                              </AnimatePresence>
+                              
                               {filteredLedger.length === 0 && (
                                 <tr>
                                   <td colSpan={6}>
@@ -3898,9 +3907,10 @@ const handleCopyDailyReport = () => {
                   );
                 })()}
               </div>
+              )}
 
               {/* Archive Tab */}
-              <div className={`${activeTab === 'archive' && !isExporting ? 'block' : 'hidden'} print:block`}>
+              { (activeTab === 'archive' && !isExporting) && (<div className="print:block">
                 <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[1.2rem] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 flex flex-col">
                   <div className="bg-transparent text-slate-800 dark:text-slate-200 p-4 flex items-center gap-2 font-bold border-b border-slate-100 dark:border-slate-800">
                     <History size={20} /> أرشيف الأموال المعلقة (المسددة)
@@ -3917,7 +3927,7 @@ const handleCopyDailyReport = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {state.archivedPendingFunds.map(item => (
+                        {(state.archivedPendingFunds || []).map(item => (
                           <tr key={item.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50">
                             <td className="py-3">{item.dateSettled}</td>
                             <td className="py-3 font-medium">{item.name}</td>
@@ -3932,7 +3942,7 @@ const handleCopyDailyReport = () => {
                                 setConfirmDialog({
                                   message: 'حذف نهائي من الأرشيف؟',
                                   onConfirm: () => {
-                                    setState(prev => ({...prev, archivedPendingFunds: prev.archivedPendingFunds.filter(t => t.id !== item.id)}));
+                                    setState(prev => ({...prev, archivedPendingFunds: (prev.archivedPendingFunds || []).filter(t => t.id !== item.id)}));
                                     showToast('تم الحذف من الأرشيف', 'success');
                                   }
                                 });
@@ -3942,7 +3952,7 @@ const handleCopyDailyReport = () => {
                             </td>
                           </tr>
                         ))}
-                        {state.archivedPendingFunds.length === 0 && (
+                        {((state.archivedPendingFunds) || []).length === 0 && (
                           <tr>
                             <td colSpan={5}>
                               <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 dark:bg-slate-800/50/50 rounded-[1.25rem] my-4 border border-dashed border-slate-200 dark:border-slate-700">
@@ -3958,11 +3968,13 @@ const handleCopyDailyReport = () => {
                   </div>
                 </div>
               </div>
+              )}
               
               {/* Analytics Tab */}
-              <div className={`${activeTab === 'analytics' && !isExporting ? 'block' : 'hidden'} print:hidden`}>
+              { (activeTab === 'analytics' && !isExporting) && (<div className="print:hidden">
                 <AnalyticsView history={history} currentState={state} formatNum={formatNum} onUpdate={setState} />
               </div>
+              )}
               </>
               )}
             </div>
@@ -3983,10 +3995,10 @@ const handleCopyDailyReport = () => {
       </div>
 
       {/* Export Modal */}
-      <AnimatePresence>
+      
       {showExportModal && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <Download size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
@@ -4060,16 +4072,16 @@ const handleCopyDailyReport = () => {
                   </button>
               )}
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-      </AnimatePresence>
+      
 
       {/* View Snapshot Modal */}
-      <AnimatePresence>
+      
       {viewSnapshot && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 shrink-0">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <CalendarDays size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
@@ -4088,13 +4100,13 @@ const handleCopyDailyReport = () => {
             <div className="p-4 overflow-y-auto bg-slate-100 dark:bg-slate-800">
               <SummaryDashboard state={viewSnapshot.state} summary={viewSnapshot.summary} />
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-      </AnimatePresence>
+      
 
       {/* Fund Manager Modal */}
-      <AnimatePresence>
+      
       {managingFund && state[managingFund.field].find(f => f.id === managingFund.item.id) && (
         <FundManagerModal 
           fund={state[managingFund.field].find(f => f.id === managingFund.item.id)}
@@ -4110,7 +4122,7 @@ const handleCopyDailyReport = () => {
           showToast={showToast}
         />
       )}
-      </AnimatePresence>
+      
 
             <SettingsModalComponent
         show={showSettingsModal}
@@ -4138,20 +4150,20 @@ const handleCopyDailyReport = () => {
       />
 
       {/* Toast Notification */}
-      <AnimatePresence>
+      
       {toast && (
-        <motion.div initial={{ opacity: 0, y: 50, x: '-50%' }} animate={{ opacity: 1, y: 0, x: '-50%' }} exit={{ opacity: 0, y: 20, x: '-50%' }} className={`fixed bottom-24 md:bottom-8 left-1/2 z-[200] px-6 py-3 rounded-full shadow-lg font-bold text-white flex items-center gap-2 whitespace-nowrap ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
+        <div className={`fixed bottom-24 md:bottom-8 left-1/2 z-[200] px-6 py-3 rounded-full shadow-lg font-bold text-white flex items-center gap-2 whitespace-nowrap ${toast.type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'}`}>
           {toast.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
           {toast.message}
-        </motion.div>
+        </div>
       )}
-      </AnimatePresence>
+      
 
       {/* Confirm Dialog */}
-      <AnimatePresence>
+      
       {confirmDialog && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
+        <div className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
             <div className="p-6 text-center">
               <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
               <p className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-2">تأكيد الإجراء</p>
@@ -4161,16 +4173,16 @@ const handleCopyDailyReport = () => {
                 <button onClick={() => setConfirmDialog(null)} className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-2 rounded-[1.25rem] font-bold hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">إلغاء</button>
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-      </AnimatePresence>
+      
 
       {/* Networks Modal */}
-      <AnimatePresence>
+      
       {activeNetworkPosId && activePos && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-md overflow-hidden">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <CreditCard size={20} className="text-amber-600" /> 
@@ -4233,16 +4245,16 @@ const handleCopyDailyReport = () => {
                 موافق
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-      </AnimatePresence>
+      
 
       {/* Add Branch Modal */}
-      <AnimatePresence>
+      
       {showAddBranchModal && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
                 <Plus className="text-slate-900 dark:text-white tracking-tight" size={20} />
@@ -4273,15 +4285,15 @@ const handleCopyDailyReport = () => {
                 إضافة
               </button>
             </form>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-      </AnimatePresence>
+      
 
-      <AnimatePresence>
+      
       {showAuthModal && createPortal(
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden" dir="rtl">
+          <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-2xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/80 ring-1 ring-slate-900/5 w-full max-w-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
                 <LogIn className="text-slate-900 dark:text-white tracking-tight" size={24} />
@@ -4360,11 +4372,11 @@ const handleCopyDailyReport = () => {
                 </button>
               </div>
             </div>
-          </motion.div>
-        </motion.div>,
+          </div>
+        </div>,
         document.body
       )}
-      </AnimatePresence>
+      
       </div>
 
       {printView === 'comprehensive_a4' && <ComprehensivePrintView state={state} summary={currentSummary} formatNum={formatNum} />}
@@ -4490,11 +4502,8 @@ const handleCopyDailyReport = () => {
         </div>
       )}
 
-      {/* Hidden containers for PDF export calculation */}
-      <div className="absolute top-0 left-0 -z-50 opacity-0 pointer-events-none">
-        <DailyPrintView id="daily-print-container" isPdfMode={true} companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} />
-        <PendingPrintView id="pending-print-container" isPdfMode={true} companyName={companyName} pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />
-      </div>
+      /* removed */
+      /* removed */
 
       {/* Signature */}
       <div className="py-6 text-center text-slate-400 text-xs font-medium print:hidden">
