@@ -185,7 +185,7 @@ const formatNum = (num: number) => num.toLocaleString('en-US', { minimumFraction
 const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = false, id, printFormat = 'a4', thermalMargins = { right: 24, left: 24, top: 0 }, isPreviewMode = false }: any) => {
   if (printFormat === 'thermal') {
     return (
-      <div id={id} className={`${isPreviewMode ? 'flex flex-col bg-white dark:bg-slate-900 print:bg-white' : 'hidden print:flex print:flex-col print:bg-white dark:bg-slate-900 print:bg-white'} rtl text-black dark:text-white print:text-black font-sans box-border ${isPreviewMode && 'rounded-[4px] shadow-sm border border-slate-200 dark:border-slate-700'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
+      <div id={id} dir="rtl" className={`${isPreviewMode ? 'flex flex-col bg-white dark:bg-slate-900 print:bg-white' : 'hidden print:flex print:flex-col print:bg-white dark:bg-slate-900 print:bg-white'} rtl text-black dark:text-white print:text-black font-sans box-border ${isPreviewMode && 'rounded-[4px] shadow-sm border border-slate-200 dark:border-slate-700'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
         {!isPreviewMode && <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page { margin: 0; padding: 0; size: 79mm auto; }
@@ -281,7 +281,7 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
   }
 
   return (
-    <div id={id} className={isPdfMode ? "rtl p-8 bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans"}>
+    <div id={id} dir="rtl" className={isPdfMode ? "rtl p-8 bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans"}>
     <div className="text-center mb-6 pb-4 border-b-2 border-gray-300">
       <h2 className="text-2xl font-bold mb-1">{companyName}</h2>
       <h1 className="text-3xl font-bold mb-2">تقرير التقفيل اليومي</h1>
@@ -368,7 +368,7 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
   
   if (printFormat === 'thermal') {
     return (
-      <div className={`${isPreviewMode ? 'flex flex-col bg-white dark:bg-slate-900 print:bg-white' : 'hidden print:flex print:flex-col print:bg-white dark:bg-slate-900 print:bg-white'} rtl text-black dark:text-white print:text-black font-sans box-border ${isPreviewMode && 'rounded-[4px] shadow-sm border border-slate-200 dark:border-slate-700'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
+      <div dir="rtl"  className={`${isPreviewMode ? 'flex flex-col bg-white dark:bg-slate-900 print:bg-white' : 'hidden print:flex print:flex-col print:bg-white dark:bg-slate-900 print:bg-white'} rtl text-black dark:text-white print:text-black font-sans box-border ${isPreviewMode && 'rounded-[4px] shadow-sm border border-slate-200 dark:border-slate-700'}`} style={{ width: '100%', margin: 0, padding: `${thermalMargins.top}px ${thermalMargins.left}px 10px ${thermalMargins.right}px`, fontSize: '20px', lineHeight: '1.6' }}>
         {!isPreviewMode && <style dangerouslySetInnerHTML={{__html: `
           @media print {
             @page { margin: 0; padding: 0; size: 79mm auto; }
@@ -435,7 +435,7 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
   }
 
   return (
-    <div className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans mx-auto">
+    <div dir="rtl" className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans mx-auto">
       <div className="text-center mb-8 pb-6 border-b-2 border-gray-400">
         <h2 className="text-2xl font-bold mb-2">{companyName}</h2>
         <h1 className="text-4xl font-black mb-3 text-gray-900 border-2 border-slate-800 inline-block px-8 py-3 rounded-[4px] shadow-[4px_4px_0_0_rgba(17,24,39,1)]">
@@ -507,7 +507,7 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
 
 const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
   return (
-    <div className="hidden print:block rtl w-full min-h-screen bg-white dark:bg-slate-900 print:bg-white text-black font-sans p-8 box-border print:!m-0">
+    <div dir="rtl" className="hidden print:block rtl w-full min-h-screen bg-white dark:bg-slate-900 print:bg-white text-black font-sans p-8 box-border print:!m-0">
       <div className="text-center mb-6 pb-4 border-b-4 border-double border-gray-400">
         <h1 className="text-3xl font-black mb-2 text-gray-900">ملخص الخزينة اليومي للمبيعات والمصروفات</h1>
         <div className="flex justify-between items-center px-4">
@@ -640,7 +640,7 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
   const sumOwedByUs = pendingOwedByUs.reduce((a: number, b: any) => a + b.amount, 0);
 
   return (
-    <div id={id} className={isPdfMode ? "rtl bg-white text-black font-sans w-[800px] mx-auto p-10 box-border" : "hidden print:block rtl w-full bg-white text-black font-sans py-8 px-6 box-border print:!m-0"}>
+    <div id={id} dir="rtl" className={isPdfMode ? "rtl bg-white text-black font-sans w-[800px] mx-auto p-10 box-border" : "hidden print:block rtl w-full bg-white text-black font-sans py-8 px-6 box-border print:!m-0"}>
       
       {/* Header aligned perfectly */}
       <div className="text-center mb-6 pb-4 border-b-4 border-double border-slate-300">
@@ -655,7 +655,7 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
       <div className="columns-1 print:columns-2 gap-8 items-start" style={{ columnRule: '1px solid #cbd5e1' }}>
         
         {/* Us Column */}
-        <div className="flex flex-col border border-slate-300 rounded-[4px] overflow-hidden mb-8 break-inside-avoid-page">
+        <div className="flex flex-col border border-slate-300 rounded-[4px] mb-8">
           <div className="bg-slate-100 p-3 flex justify-between items-center border-b border-slate-300 break-inside-avoid">
              <h3 className="text-lg font-bold text-slate-800">لنا (سلف / عهد)</h3>
              <span dir="ltr" className="font-mono font-black text-lg text-slate-900">{formatNum(sumOwedToUs)}</span>
@@ -687,7 +687,7 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
         </div>
 
         {/* Them Column */}
-        <div className="flex flex-col border border-slate-300 rounded-[4px] overflow-hidden mb-8 break-inside-avoid-page">
+        <div className="flex flex-col border border-slate-300 rounded-[4px] mb-8">
           <div className="bg-slate-100 p-3 flex justify-between items-center border-b border-slate-300 break-inside-avoid">
              <h3 className="text-lg font-bold text-slate-800">علينا (أمانات / مستحقات)</h3>
              <span dir="ltr" className="font-mono font-black text-lg text-slate-900">{formatNum(sumOwedByUs)}</span>
@@ -4501,8 +4501,8 @@ key={entry.id + index}
         </div>
       )}
 
-      /* removed */
-      /* removed */
+      
+      
 
       {/* Signature */}
       <div className="py-6 text-center text-slate-400 text-xs font-medium print:hidden">
