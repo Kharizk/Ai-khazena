@@ -507,7 +507,7 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
 
 const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
   return (
-    <div className="hidden print:block rtl w-[210mm] min-h-[297mm] mx-auto bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans p-8 box-border">
+    <div className="hidden print:block rtl w-full min-h-screen bg-white dark:bg-slate-900 print:bg-white text-black font-sans p-8 box-border print:!m-0">
       <div className="text-center mb-6 pb-4 border-b-4 border-double border-gray-400">
         <h1 className="text-3xl font-black mb-2 text-gray-900">ملخص الخزينة اليومي للمبيعات والمصروفات</h1>
         <div className="flex justify-between items-center px-4">
@@ -640,7 +640,7 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
   const sumOwedByUs = pendingOwedByUs.reduce((a: number, b: any) => a + b.amount, 0);
 
   return (
-    <div id={id} className={isPdfMode ? "rtl bg-white text-black font-sans w-[800px] mx-auto p-10 box-border" : "hidden print:block rtl w-[210mm] mx-auto bg-white text-black font-sans py-8 px-6 box-border"}>
+    <div id={id} className={isPdfMode ? "rtl bg-white text-black font-sans w-[800px] mx-auto p-10 box-border" : "hidden print:block rtl w-full bg-white text-black font-sans py-8 px-6 box-border print:!m-0"}>
       
       {/* Header aligned perfectly */}
       <div className="text-center mb-6 pb-4 border-b-4 border-double border-slate-300">
@@ -652,18 +652,17 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
         </div>
       </div>
 
-      {/* Side-by-Side grid taking exactly full width */}
-      <div className="grid grid-cols-2 gap-6 items-start">
+      <div className="columns-1 print:columns-2 gap-8 items-start" style={{ columnRule: '1px solid #cbd5e1' }}>
         
         {/* Us Column */}
-        <div className="flex flex-col border border-slate-300 rounded-[4px] overflow-hidden shrink-0">
-          <div className="bg-slate-100 p-3 flex justify-between items-center border-b border-slate-300">
+        <div className="flex flex-col border border-slate-300 rounded-[4px] overflow-hidden mb-8 break-inside-avoid-page">
+          <div className="bg-slate-100 p-3 flex justify-between items-center border-b border-slate-300 break-inside-avoid">
              <h3 className="text-lg font-bold text-slate-800">لنا (سلف / عهد)</h3>
              <span dir="ltr" className="font-mono font-black text-lg text-slate-900">{formatNum(sumOwedToUs)}</span>
           </div>
-          <div className="bg-white min-h-[500px]">
+          <div className="bg-white">
             <table className="w-full text-right border-collapse">
-              <thead>
+              <thead className="break-inside-avoid">
                 <tr className="bg-slate-50 border-b border-slate-200">
                   <th className="p-2 font-bold text-slate-600 text-xs w-10 text-center">#</th>
                   <th className="p-2 font-bold text-slate-600 text-[13px]">الاسم</th>
@@ -672,13 +671,13 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
               </thead>
               <tbody>
                 {pendingOwedToUs.length > 0 ? pendingOwedToUs.map((item: any, idx: number) => (
-                  <tr key={item.id} className="border-b border-slate-100 last:border-0">
+                  <tr key={item.id} className="border-b border-slate-100 last:border-0 break-inside-avoid">
                     <td className="p-2 text-center text-slate-500 font-bold text-sm">{idx + 1}</td>
                     <td className="p-2 font-bold text-slate-800 text-[15px]">{item.name}</td>
                     <td className="p-2 font-mono font-bold text-slate-900 text-[15px] text-left" dir="ltr">{formatNum(item.amount)}</td>
                   </tr>
                 )) : (
-                  <tr>
+                  <tr className="break-inside-avoid">
                     <td colSpan={3} className="p-6 text-center text-slate-400 font-bold text-sm">لا توجد أموال معلقة لنا</td>
                   </tr>
                 )}
@@ -688,14 +687,14 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
         </div>
 
         {/* Them Column */}
-        <div className="flex flex-col border border-slate-300 rounded-[4px] overflow-hidden shrink-0">
-          <div className="bg-slate-100 p-3 flex justify-between items-center border-b border-slate-300">
+        <div className="flex flex-col border border-slate-300 rounded-[4px] overflow-hidden mb-8 break-inside-avoid-page">
+          <div className="bg-slate-100 p-3 flex justify-between items-center border-b border-slate-300 break-inside-avoid">
              <h3 className="text-lg font-bold text-slate-800">علينا (أمانات / مستحقات)</h3>
              <span dir="ltr" className="font-mono font-black text-lg text-slate-900">{formatNum(sumOwedByUs)}</span>
           </div>
-          <div className="bg-white min-h-[500px]">
+          <div className="bg-white">
             <table className="w-full text-right border-collapse">
-              <thead>
+              <thead className="break-inside-avoid">
                 <tr className="bg-slate-50 border-b border-slate-200">
                   <th className="p-2 font-bold text-slate-600 text-xs w-10 text-center">#</th>
                   <th className="p-2 font-bold text-slate-600 text-[13px]">الاسم</th>
@@ -704,13 +703,13 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
               </thead>
               <tbody>
                 {pendingOwedByUs.length > 0 ? pendingOwedByUs.map((item: any, idx: number) => (
-                  <tr key={item.id} className="border-b border-slate-100 last:border-0">
+                  <tr key={item.id} className="border-b border-slate-100 last:border-0 break-inside-avoid">
                     <td className="p-2 text-center text-slate-500 font-bold text-sm">{idx + 1}</td>
                     <td className="p-2 font-bold text-slate-800 text-[15px]">{item.name}</td>
                     <td className="p-2 font-mono font-bold text-slate-900 text-[15px] text-left" dir="ltr">{formatNum(item.amount)}</td>
                   </tr>
                 )) : (
-                  <tr>
+                  <tr className="break-inside-avoid">
                     <td colSpan={3} className="p-6 text-center text-slate-400 font-bold text-sm">لا توجد أموال معلقة علينا</td>
                   </tr>
                 )}
@@ -718,8 +717,8 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
             </table>
           </div>
         </div>
-
       </div>
+
 
       <div className="mt-8 p-4 border-2 border-slate-300 bg-slate-50 rounded-[4px] flex justify-between items-center">
          <div className="text-lg font-bold text-slate-800">صافي فرق المعلق: 
