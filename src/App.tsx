@@ -674,13 +674,6 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
            <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">الوقت: <span dir="ltr" className="font-mono">{new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
         </div>
       </div>
-      <div className="mb-6 p-4 border-2 border-slate-300 bg-slate-50 rounded-[4px] flex justify-center items-center break-inside-avoid">
-         <div className="text-lg font-bold text-slate-800">صافي فرق المعلق: 
-            <span dir="ltr" className="mx-3 font-mono text-xl text-black">{formatNum(Math.abs(sumOwedToUs - sumOwedByUs))}</span>
-            <span className="text-[15px] text-slate-600">({sumOwedToUs - sumOwedByUs >= 0 ? 'صافي لنا' : 'صافي علينا'})</span>
-         </div>
-         
-      </div>
 
       <div className="columns-1 print:columns-2 gap-8 items-start" style={{ columnRule: '1px solid #cbd5e1' }}>
         
@@ -747,6 +740,17 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
             </table>
           </div>
         </div>
+      </div>
+
+
+      <div className="mt-8 p-4 border-2 border-slate-300 bg-slate-50 rounded-[4px] flex justify-between items-center">
+         <div className="text-lg font-bold text-slate-800">صافي فرق المعلق: 
+            <span dir="ltr" className="mx-3 font-mono text-xl text-black">{formatNum(Math.abs(sumOwedToUs - sumOwedByUs))}</span>
+            <span className="text-[15px] text-slate-600">({sumOwedToUs - sumOwedByUs >= 0 ? 'صافي لنا' : 'صافي علينا'})</span>
+         </div>
+         <div className="text-[15px] font-bold text-slate-500">
+            توقيع المراجع: ..............................
+         </div>
       </div>
       
     </div>
