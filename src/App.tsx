@@ -193,12 +193,16 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
             * { box-shadow: none !important; box-sizing: border-box !important; }
           }
         `}} />}
-        <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#475569' }}>{companyName}</h2>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تقرير التقفيل اليومي</h1>
-          <div style={{ fontSize: '18px' }}>
-            <div style={{ marginBottom: '4px' }}>التاريخ: <span dir="ltr" style={{ fontWeight: 'bold' }}>{state.date}</span></div>
-            <div>طباعة: <span dir="ltr">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px', borderBottom: '2px dashed #000', paddingBottom: '10px' }}>
+          <div style={{ flex: 1, textAlign: 'right' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0', color: '#1e293b' }}>{companyName}</h2>
+          </div>
+          <div style={{ flex: 1.5, textAlign: 'center' }}>
+            <h1 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0' }}>تقرير التقفيل اليومي</h1>
+          </div>
+          <div style={{ flex: 1, textAlign: 'left', fontSize: '14px', fontWeight: 'bold', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+            <div><span dir="ltr">{state.date}</span></div>
+            <div><span dir="ltr">{new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
           </div>
         </div>
 
@@ -282,10 +286,17 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
 
   return (
     <div id={id} dir="rtl" className={isPdfMode ? "rtl p-8 bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans"}>
-    <div className="text-center mb-4 pb-3 border-b-2 border-gray-300">
-      <h2 className="text-lg font-bold mb-0.5 text-slate-700">{companyName}</h2>
-      <h1 className="text-2xl font-black mb-1">تقرير التقفيل اليومي</h1>
-      <p className="text-base font-bold">تاريخ: <span dir="ltr" className="font-mono">{state.date}</span></p>
+    <div className="flex justify-between items-start mb-4 pb-3 border-b-2 border-gray-300">
+      <div className="flex-1 text-right">
+        <h2 className="text-xl font-bold text-slate-800">{companyName}</h2>
+      </div>
+      <div className="flex-1 text-center">
+        <h1 className="text-2xl font-black">تقرير التقفيل اليومي</h1>
+      </div>
+      <div className="flex-1 text-left flex flex-col items-end gap-1">
+        <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{state.date}</span></p>
+        <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">الوقت: <span dir="ltr" className="font-mono">{new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
+      </div>
     </div>
     
     <div className="mb-6">
@@ -376,13 +387,16 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
             * { box-shadow: none !important; box-sizing: border-box !important; }
           }
         `}} />}
-        <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px dashed #000', paddingBottom: '15px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#475569' }}>{companyName}</h2>
-          <h1 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0' }}>تسوية نقطة بيع</h1>
-          <h2 style={{ fontSize: '26px', fontWeight: 'bold', margin: '0 0 8px 0' }}>{pos.name || 'بدون اسم'}</h2>
-          <div style={{ fontSize: '18px' }}>
-            <div style={{ marginBottom: '4px' }}>التاريخ: <span dir="ltr" style={{ fontWeight: 'bold' }}>{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span></div>
-            <div>طباعة: <span dir="ltr">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px', borderBottom: '2px dashed #000', paddingBottom: '10px' }}>
+          <div style={{ flex: 1, textAlign: 'right' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0', color: '#1e293b' }}>{companyName}</h2>
+          </div>
+          <div style={{ flex: 2, textAlign: 'center' }}>
+            <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0' }}>تسوية {pos.name || 'مبيعات'}</h1>
+          </div>
+          <div style={{ flex: 1, textAlign: 'left', fontSize: '14px', fontWeight: 'bold', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+            <div><span dir="ltr">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span></div>
+            <div><span dir="ltr">{new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
           </div>
         </div>
         
@@ -436,18 +450,18 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
 
   return (
     <div dir="rtl" className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans mx-auto">
-      <div className="text-center mb-4 pb-4 border-b-2 border-gray-400">
-        <h2 className="text-lg font-bold mb-1 text-slate-700">{companyName}</h2>
-        <h1 className="text-2xl font-black mb-2 text-gray-900 border-2 border-slate-800 inline-block px-6 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)]">
-          تسوية نقطة بيع: {pos.name || 'بدون اسم'}
-        </h1>
-        <div className="flex justify-center gap-4 mt-3">
-          <p className="text-sm font-bold bg-slate-50 dark:bg-slate-800/50 px-3 py-1 rounded-[4px] border border-gray-300">
-            تاريخ الإعداد: <span dir="ltr" className="font-mono text-slate-800 dark:text-slate-200 font-bold">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span>
-          </p>
-          <p className="text-sm font-bold bg-slate-50 dark:bg-slate-800/50 px-3 py-1 rounded-[4px] border border-gray-300">
-            تاريخ الطباعة: <span dir="ltr" className="font-mono text-gray-700">{new Date().toLocaleDateString('en-GB')}</span>
-          </p>
+      <div className="flex justify-between items-start mb-4 pb-3 border-b-2 border-gray-300">
+        <div className="flex-1 text-right">
+          <h2 className="text-xl font-bold text-slate-800">{companyName}</h2>
+        </div>
+        <div className="flex-[2] text-center">
+          <h1 className="text-2xl font-black text-gray-900 border-2 border-slate-800 inline-block px-5 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)]">
+            تسوية نقطة بيع: {pos.name || 'بدون اسم'}
+          </h1>
+        </div>
+        <div className="flex-1 text-left flex flex-col items-end gap-1">
+          <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span></p>
+          <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">الطباعة: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
         </div>
       </div>
       
@@ -505,14 +519,19 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
   );
 };
 
-const ComprehensivePrintView = ({ state, summary, formatNum }: any) => {
+const ComprehensivePrintView = ({ companyName, state, summary, formatNum }: any) => {
   return (
     <div dir="rtl" className="hidden print:block rtl w-full min-h-screen bg-white dark:bg-slate-900 print:bg-white text-black font-sans p-8 box-border print:!m-0">
-      <div className="text-center mb-4 pb-3 border-b-4 border-double border-gray-400">
-        <h1 className="text-2xl font-black mb-1 text-gray-900 border-2 border-slate-800 inline-block px-5 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)]">ملخص الخزينة اليومي للمبيعات والمصروفات</h1>
-        <div className="flex justify-center gap-4 mt-2">
-          <p className="text-sm font-bold text-gray-800 bg-slate-50 border border-slate-200 px-3 py-1 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{state.date}</span></p>
-          <p className="text-sm font-bold text-gray-800 bg-slate-50 border border-slate-200 px-3 py-1 rounded-[4px]">تاريخ الطباعة: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
+      <div className="flex justify-between items-start mb-4 pb-3 border-b-4 border-double border-gray-400">
+        <div className="flex-1 text-right">
+          <h2 className="text-xl font-bold text-slate-800">{companyName}</h2>
+        </div>
+        <div className="flex-[2] text-center">
+          <h1 className="text-2xl font-black text-gray-900 border-2 border-slate-800 inline-block px-4 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)]">ملخص الخزينة اليومي</h1>
+        </div>
+        <div className="flex-1 text-left flex flex-col items-end gap-1">
+          <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{state.date}</span></p>
+          <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">الطباعة: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
         </div>
       </div>
 
@@ -643,12 +662,16 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
     <div id={id} dir="rtl" className={isPdfMode ? "rtl bg-white text-black font-sans w-[800px] mx-auto p-10 box-border" : "hidden print:block rtl w-full bg-white text-black font-sans py-8 px-6 box-border print:!m-0"}>
       
       {/* Header aligned perfectly */}
-      <div className="text-center mb-4 pb-3 border-b-4 border-double border-slate-300">
-        <h2 className="text-base font-bold mb-0.5 text-slate-700">{companyName}</h2>
-        <h1 className="text-2xl font-black mb-2 text-black border-2 border-slate-800 inline-block px-5 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)]">تقرير الأموال المعلقة</h1>
-        <div className="flex justify-center items-center gap-4 mt-2">
-           <p className="text-sm font-bold text-gray-800 bg-slate-50 border border-slate-200 px-3 py-1 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
-           <p className="text-sm font-bold text-gray-800 bg-slate-50 border border-slate-200 px-3 py-1 rounded-[4px]">الوقت: <span dir="ltr" className="font-mono">{new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
+      <div className="flex justify-between items-start mb-4 pb-3 border-b-4 border-double border-gray-400">
+        <div className="flex-[1.5] text-right">
+          <h2 className="text-xl font-bold text-slate-800">{companyName}</h2>
+        </div>
+        <div className="flex-[2] text-center">
+          <h1 className="text-2xl font-black text-gray-900 border-2 border-slate-800 inline-block px-5 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)]">تقرير الأموال المعلقة</h1>
+        </div>
+        <div className="flex-1 text-left flex flex-col items-end gap-1">
+           <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
+           <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">الوقت: <span dir="ltr" className="font-mono">{new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
         </div>
       </div>
 
@@ -3724,18 +3747,19 @@ const handleCopyDailyReport = () => {
                             </style>
                           </head>
                           <body>
-                            <div class="report-header">
-                              <div>
-                                <h2 style="font-size: 16px; margin-bottom: 2px; color: #475569;">${companyName}</h2>
-                                <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 8px; background: #f8fafc; display: inline-block; padding: 4px 12px; border: 2px solid #1e293b; border-radius: 4px; box-shadow: 2px 2px 0 0 #1e293b;">تقرير دفتر الأستاذ</h2>
-                                <div class="filters-info">
-                                  ${ledgerFilter.startDate || ledgerFilter.endDate ? `<div><strong>الفترة:</strong> ${ledgerFilter.startDate || 'البداية'} إلى ${ledgerFilter.endDate || 'النهاية'}</div>` : ''}
-                                  ${ledgerFilter.category !== 'all' ? `<div><strong>القسم:</strong> ${ledgerFilter.category}</div>` : ''}
-                                  ${ledgerFilter.search ? `<div><strong>بحث:</strong> ${ledgerFilter.search}</div>` : ''}
-                                  <div><strong>تاريخ الطباعة:</strong> ${new Date().toLocaleString('ar-EG')}</div>
+                            <div class="report-header" style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 2px solid #cbd5e1; margin-bottom: 20px;">
+                                <div style="flex: 1; text-align: right;">
+                                  <h2 style="font-size: 20px; font-weight: bold; color: #1e293b; margin: 0;">${companyName}</h2>
+                                </div>
+                                <div style="flex: 2; text-align: center;">
+                                  <h2 style="font-size: 20px; font-weight: 800; margin: 0; display: inline-block; padding: 4px 16px; border: 2px solid #1e293b; border-radius: 4px; box-shadow: 2px 2px 0 0 #1e293b; background: white;">تقرير دفتر الأستاذ</h2>
+                                </div>
+                                <div style="flex: 1; text-align: left; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                                  ${(ledgerFilter.startDate || ledgerFilter.endDate) ? `<div style="font-size: 13px; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 6px; border-radius: 4px;">الفترة: <span dir="ltr">${ledgerFilter.startDate || '-'} / ${ledgerFilter.endDate || '-'}</span></div>` : ''}
+                                  ${ledgerFilter.category !== 'all' ? `<div style="font-size: 13px; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 6px; border-radius: 4px;">القسم: ${ledgerFilter.category}</div>` : ''}
+                                  <div style="font-size: 13px; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 6px; border-radius: 4px;">الطباعة: <span dir="ltr">${new Date().toLocaleString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
                                 </div>
                               </div>
-                            </div>
                             
                             <div class="summary-grid no-print">
                               <div class="summary-card">
@@ -4378,7 +4402,7 @@ key={entry.id + index}
       
       </div>
 
-      {printView === 'comprehensive_a4' && <ComprehensivePrintView state={state} summary={currentSummary} formatNum={formatNum} />}
+      {printView === 'comprehensive_a4' && <ComprehensivePrintView companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} />}
       {printView === 'daily' && <DailyPrintView companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} />}
       {printView === 'daily_thermal' && <DailyPrintView companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} printFormat="thermal" thermalMargins={thermalMargins} />}
       {printView === 'history' && printSnapshot && <DailyPrintView companyName={companyName} state={printSnapshot.state} summary={printSnapshot.summary} formatNum={formatNum} />}
