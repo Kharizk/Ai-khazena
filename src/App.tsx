@@ -195,7 +195,7 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
         `}} />}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px', borderBottom: '2px dashed #000', paddingBottom: '10px' }}>
           <div style={{ flex: 1, textAlign: 'right' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0', color: '#1e293b' }}>{companyName}</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0', color: '#000' }}>{companyName}</h2>
           </div>
           <div style={{ flex: 1.5, textAlign: 'center' }}>
             <h1 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0' }}>تقرير التقفيل اليومي</h1>
@@ -288,14 +288,14 @@ const DailyPrintView = ({ companyName, state, summary, formatNum, isPdfMode = fa
     <div id={id} dir="rtl" className={isPdfMode ? "rtl p-8 bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans w-[800px]" : "hidden print:block rtl p-8 w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans"}>
     <div className="flex justify-between items-start mb-4 pb-3 border-b-2 border-gray-300">
       <div className="flex-1 text-right">
-        <h2 className="text-xl font-bold text-slate-800">{companyName}</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white print:text-black">{companyName}</h2>
       </div>
       <div className="flex-1 text-center">
-        <h1 className="text-2xl font-black">تقرير التقفيل اليومي</h1>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white print:text-black">تقرير التقفيل اليومي</h1>
       </div>
       <div className="flex-1 text-left flex flex-col items-end gap-1">
-        <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{state.date}</span></p>
-        <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">الوقت: <span dir="ltr" className="font-mono">{new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
+        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 print:text-slate-700 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 print:border-slate-200 print:bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{state.date}</span></p>
+        <p className="text-sm font-bold text-slate-700 dark:text-slate-300 print:text-slate-700 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 print:border-slate-200 print:bg-slate-50 px-2 rounded-[4px]">الوقت: <span dir="ltr" className="font-mono">{new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
       </div>
     </div>
     
@@ -389,7 +389,7 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
         `}} />}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px', borderBottom: '2px dashed #000', paddingBottom: '10px' }}>
           <div style={{ flex: 1, textAlign: 'right' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0', color: '#1e293b' }}>{companyName}</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 'bold', margin: '0', color: '#000' }}>{companyName}</h2>
           </div>
           <div style={{ flex: 2, textAlign: 'center' }}>
             <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0' }}>تسوية {pos.name || 'مبيعات'}</h1>
@@ -452,16 +452,16 @@ const PosPrintView = ({ companyName, pos, summary, formatNum, date, printFormat 
     <div dir="rtl" className="hidden print:block rtl p-8 w-[800px] print:w-full print:bg-white dark:bg-slate-900 print:bg-white text-black dark:text-white print:text-black font-sans mx-auto">
       <div className="flex justify-between items-start mb-4 pb-3 border-b-2 border-gray-300">
         <div className="flex-1 text-right">
-          <h2 className="text-xl font-bold text-slate-800">{companyName}</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white print:text-black">{companyName}</h2>
         </div>
         <div className="flex-[2] text-center">
-          <h1 className="text-2xl font-black text-gray-900 border-2 border-slate-800 inline-block px-5 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)]">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white print:text-black border-2 border-slate-900 dark:border-white print:border-slate-800 inline-block px-5 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)] print:shadow-[2px_2px_0_0_rgba(17,24,39,1)]">
             تسوية نقطة بيع: {pos.name || 'بدون اسم'}
           </h1>
         </div>
         <div className="flex-1 text-left flex flex-col items-end gap-1">
-          <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span></p>
-          <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">الطباعة: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
+          <p className="text-sm font-bold text-slate-700 dark:text-slate-300 print:text-slate-700 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 print:border-slate-200 print:bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{date || summary?.date || new Date().toLocaleDateString('en-GB')}</span></p>
+          <p className="text-sm font-bold text-slate-700 dark:text-slate-300 print:text-slate-700 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 print:border-slate-200 print:bg-slate-50 px-2 rounded-[4px]">الطباعة: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
         </div>
       </div>
       
@@ -524,14 +524,14 @@ const ComprehensivePrintView = ({ companyName, state, summary, formatNum }: any)
     <div dir="rtl" className="hidden print:block rtl w-full min-h-screen bg-white dark:bg-slate-900 print:bg-white text-black font-sans p-8 box-border print:!m-0">
       <div className="flex justify-between items-start mb-4 pb-3 border-b-4 border-double border-gray-400">
         <div className="flex-1 text-right">
-          <h2 className="text-xl font-bold text-slate-800">{companyName}</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white print:text-black">{companyName}</h2>
         </div>
         <div className="flex-[2] text-center">
-          <h1 className="text-2xl font-black text-gray-900 border-2 border-slate-800 inline-block px-4 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)]">ملخص الخزينة اليومي</h1>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white print:text-black border-2 border-slate-900 dark:border-white print:border-slate-800 inline-block px-4 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)] print:shadow-[2px_2px_0_0_rgba(17,24,39,1)]">ملخص الخزينة اليومي</h1>
         </div>
         <div className="flex-1 text-left flex flex-col items-end gap-1">
-          <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{state.date}</span></p>
-          <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">الطباعة: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
+          <p className="text-sm font-bold text-slate-700 dark:text-slate-300 print:text-slate-700 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 print:border-slate-200 print:bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{state.date}</span></p>
+          <p className="text-sm font-bold text-slate-700 dark:text-slate-300 print:text-slate-700 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 print:border-slate-200 print:bg-slate-50 px-2 rounded-[4px]">الطباعة: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
         </div>
       </div>
 
@@ -664,14 +664,14 @@ const PendingPrintView = ({ companyName, pendingOwedToUs, pendingOwedByUs, forma
       {/* Header aligned perfectly */}
       <div className="flex justify-between items-start mb-4 pb-3 border-b-4 border-double border-gray-400">
         <div className="flex-[1.5] text-right">
-          <h2 className="text-xl font-bold text-slate-800">{companyName}</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white print:text-black">{companyName}</h2>
         </div>
         <div className="flex-[2] text-center">
-          <h1 className="text-2xl font-black text-gray-900 border-2 border-slate-800 inline-block px-5 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)]">تقرير الأموال المعلقة</h1>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white print:text-black border-2 border-slate-900 dark:border-white print:border-slate-800 inline-block px-5 py-1.5 rounded-[4px] shadow-[2px_2px_0_0_rgba(17,24,39,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)] print:shadow-[2px_2px_0_0_rgba(17,24,39,1)]">تقرير الأموال المعلقة</h1>
         </div>
         <div className="flex-1 text-left flex flex-col items-end gap-1">
-           <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
-           <p className="text-sm font-bold text-slate-600 border border-slate-200 bg-slate-50 px-2 rounded-[4px]">الوقت: <span dir="ltr" className="font-mono">{new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
+           <p className="text-sm font-bold text-slate-700 dark:text-slate-300 print:text-slate-700 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 print:border-slate-200 print:bg-slate-50 px-2 rounded-[4px]">التاريخ: <span dir="ltr" className="font-mono">{new Date().toLocaleDateString('en-GB')}</span></p>
+           <p className="text-sm font-bold text-slate-700 dark:text-slate-300 print:text-slate-700 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 print:border-slate-200 print:bg-slate-50 px-2 rounded-[4px]">الوقت: <span dir="ltr" className="font-mono">{new Date().toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></p>
         </div>
       </div>
 
@@ -1644,9 +1644,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
             <Calculator size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
             إدارة حساب: {fund.name}
           </h3>
-          <button onClick={onClose} className="text-white/70 hover:text-white p-1">
-            <X size={20} />
-          </button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors flex items-center gap-1 text-[15px] font-bold"><ArrowRight size={18} /> رجوع</button>
         </div>
         
         <div className="p-6 overflow-y-auto">
@@ -2958,7 +2956,7 @@ const handleCopyDailyReport = () => {
               <LogIn className="text-slate-900 dark:text-white tracking-tight" size={24} />
               {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
             </h3>
-            <button onClick={() => setSkipLogin(true)} className="text-white/70 hover:text-white px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-[4px] text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
+            <button onClick={() => setSkipLogin(true)} className="text-slate-700 dark:text-slate-300 px-3 py-1.5 bg-slate-200 dark:bg-slate-800 rounded-[4px] text-sm font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
               تخطي
             </button>
           </div>
@@ -3749,7 +3747,7 @@ const handleCopyDailyReport = () => {
                           <body>
                             <div class="report-header" style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 2px solid #cbd5e1; margin-bottom: 20px;">
                                 <div style="flex: 1; text-align: right;">
-                                  <h2 style="font-size: 20px; font-weight: bold; color: #1e293b; margin: 0;">${companyName}</h2>
+                                  <h2 style="font-size: 20px; font-weight: bold; color: #000; margin: 0;">${companyName}</h2>
                                 </div>
                                 <div style="flex: 2; text-align: center;">
                                   <h2 style="font-size: 20px; font-weight: 800; margin: 0; display: inline-block; padding: 4px 16px; border: 2px solid #1e293b; border-radius: 4px; box-shadow: 2px 2px 0 0 #1e293b; background: white;">تقرير دفتر الأستاذ</h2>
@@ -4027,9 +4025,7 @@ key={entry.id + index}
                 <Download size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
                 تصدير التسوية
               </h3>
-              <button onClick={() => setShowExportModal(false)} className="text-white/70 hover:text-white p-1">
-                <X size={20} />
-              </button>
+              <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors"><X size={20} /></button>
             </div>
             <div className="p-6">
               <div className="mb-6">
@@ -4115,9 +4111,7 @@ key={entry.id + index}
                   <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'a4'); }} className="hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 text-[15px] font-bold transition-colors border-l border-slate-300 dark:border-slate-600 flex items-center gap-1" title="طباعة A4"><Printer size={16} /> A4</button>
                   <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'thermal'); }} className="hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 text-[15px] font-bold transition-colors" title="طباعة حراري">حراري</button>
                 </div>
-                <button onClick={() => setViewSnapshot(null)} className="text-white/70 hover:text-white p-1">
-                  <X size={20} />
-                </button>
+                <button onClick={() => setViewSnapshot(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors"><X size={20} /></button>
               </div>
             </div>
             <div className="p-4 overflow-y-auto bg-slate-100 dark:bg-slate-800">
@@ -4211,9 +4205,7 @@ key={entry.id + index}
                 <CreditCard size={20} className="text-amber-600" /> 
                 مبالغ الشبكات - {activePos.name}
               </h3>
-              <button onClick={() => setActiveNetworkPosId(null)} className="text-white/70 hover:text-white p-1">
-                <X size={20} />
-              </button>
+              <button onClick={() => setActiveNetworkPosId(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors flex items-center gap-1 text-[15px] font-bold"><ArrowRight size={18} /> رجوع</button>
             </div>
             <div className="p-4 max-h-[60vh] overflow-y-auto">
               {activePos.networks.map((amount, idx) => (
@@ -4283,9 +4275,7 @@ key={entry.id + index}
                 <Plus className="text-slate-900 dark:text-white tracking-tight" size={20} />
                 إضافة فرع جديد
               </h3>
-              <button disabled={loading} onClick={() => setShowAddBranchModal(false)} className="text-white/70 hover:text-white p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
-                <X size={20} />
-              </button>
+              <button disabled={loading} onClick={() => setShowAddBranchModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors flex items-center gap-1 text-[15px] font-bold"><ArrowRight size={18} /> رجوع</button>
             </div>
             <form onSubmit={handleAddBranchSubmit} className="p-6">
               <div className="mb-4">
@@ -4322,9 +4312,7 @@ key={entry.id + index}
                 <LogIn className="text-slate-900 dark:text-white tracking-tight" size={24} />
                 {isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
               </h3>
-              <button onClick={() => setShowAuthModal(false)} className="text-white/70 hover:text-white p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 transition-colors">
-                <X size={20} />
-              </button>
+              <button onClick={() => setShowAuthModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors"><X size={20} /></button>
             </div>
             <div className="p-6">
               {authError && (
@@ -4422,7 +4410,7 @@ key={entry.id + index}
           <div className="bg-slate-100 dark:bg-slate-800 rounded-[4px] shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 print:bg-white flex justify-between items-center">
               <h2 className="font-bold text-lg">معاينة وتخصيص الإيصال الحراري</h2>
-              <button onClick={() => setThermalPreviewData(null)} className="text-white/70 hover:text-white p-1 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded-full transition-colors"><X size={20} /></button>
+              <button onClick={() => setThermalPreviewData(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors flex items-center gap-1 text-[15px] font-bold"><ArrowRight size={18} /> رجوع</button>
             </div>
             
             <div className="p-4 bg-white dark:bg-slate-900 print:bg-white border-b border-slate-200 dark:border-slate-700 flex flex-col gap-4">
