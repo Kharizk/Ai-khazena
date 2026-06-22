@@ -1489,28 +1489,63 @@ key={item.id}
 
 const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, onEditHistory, onDeleteHistory, onArchive, onClose, formatNum, showToast }: any) => {
   const [amount, setAmount] = useState<number | ''>('');
+  const [note, setNote] = useState<string>('');
+  const [customDate, setCustomDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  
   const [editingEntry, setEditingEntry] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState<number | ''>('');
   const [editType, setEditType] = useState<'add' | 'sub'>('add');
+  const [editNote, setEditNote] = useState<string>('');
+  const [editDate, setEditDate] = useState<string>('');
+  
+  const [historySearchQuery, setHistorySearchQuery] = useState<string>('');
+  const [historyTypeFilter, setHistoryTypeFilter] = useState<'all' | 'in' | 'out'>('all');
+
+  const isToUs = field === 'pendingFundsOwedToUs';
+
+  // Quick preset notes
+  const presetNotes = [
+    "سداد دفعة نقداً",
+    "تحويل بنكي / بنك الراجحي",
+    "تحويل بنكي / بنك الأهلي",
+    "دفع عبر الشبكة مدى",
+    "خصم خاص / تسوية مالية",
+    "مرتجع مبيعات وبضائع",
+    "تعديل وتصحيح رصيد",
+    "دفعة تحت الحساب"
+  ];
 
   const handleAdd = () => {
     if (amount && Number(amount) > 0) {
-      onAdjustFund(field, fund.id, Number(amount), 'add');
+      // Create date format that matches EG system but supports the backdated day
+      const dateStr = customDate 
+        ? new Date(customDate + 'T' + new Date().toTimeString().split(' ')[0]).toLocaleString('ar-EG')
+        : new Date().toLocaleString('ar-EG');
+        
+      onAdjustFund(field, fund.id, Number(amount), 'add', note, dateStr);
       setAmount('');
-      showToast('تمت إضافة المبلغ بنجاح', 'success');
+      setNote('');
+      showToast('تم تسجيل إضافة المبلغ للحساب بنجاح', 'success');
     }
   };
 
   const handleSubtract = () => {
     if (amount && Number(amount) > 0) {
       const newAmount = Number(fund.amount) - Number(amount);
+      const dateStr = customDate 
+        ? new Date(customDate + 'T' + new Date().toTimeString().split(' ')[0]).toLocaleString('ar-EG')
+        : new Date().toLocaleString('ar-EG');
+
       if (newAmount <= 0) {
+        // If settlement reduces balance to 0, ask user or archive it directly
         onClose();
         onArchive(field, fund.id);
+        showToast('تم سداد الحساب بالكامل ونقله للأرشيف التفصيلي', 'success');
       } else {
-        onAdjustFund(field, fund.id, Number(amount), 'sub');
+        onAdjustFund(field, fund.id, Number(amount), 'sub', note, dateStr);
         setAmount('');
-        showToast('تم خصم المبلغ بنجاح', 'success');
+        setNote('');
+        showToast('تم تسجيل سداد/خصم المبلغ وتخفيض المديونية الحالية', 'success');
       }
     }
   };
@@ -1523,9 +1558,10 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
   ).map((pe: any) => ({
     id: pe.id,
     date: pe.date,
-    description: pe.description + ' (سجل قديم)',
+    description: pe.description + ' (سجل مجمع للدفتر)',
     type: pe.type,
     amount: pe.amount,
+    note: '',
     isLegacy: true
   }));
 
@@ -1537,97 +1573,167 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
       description: h.type === 'add' ? 'إضافة مبلغ' : h.type === 'sub' ? 'خصم مبلغ' : 'رصيد افتتاحي',
       type: h.type === 'add' ? 'in' : h.type === 'sub' ? 'out' : 'neutral',
       amount: h.amount,
+      note: h.note || '',
       isLegacy: false
     }))
-  ].sort((a, b) => {
-    // Sort logic to handle both simple dates (legacy) and timestamps (new)
-    // Legacy format is usually DD/MM/YYYY, new is DD/MM/YYYY HH:MM:SS
-    // Simple fallback: sort by ID or keep original order as fallback
-    if (a.date.length > 10 && b.date.length > 10) {
-       // Both new format, standard string compare usually works for YYYY-MM-DD, 
-       // but ours is DD/MM/YYYY. For now, keep them in order of concatenation 
-       // since old entries are likely older than new entries.
-       return 0; // Maintain insertion order
+  ];
+
+  // Calculate Running Balance line-by-line dynamically
+  // For 'toUs' (money owed to us): add (+) increases, sub (-) decreases.
+  // For 'byUs' (money we owe): add (+) increases liability, sub (-) decreases liability.
+  let runningBal = 0;
+  const historyWithRunningBalance = historyEntries.map((e: any) => {
+    let effect = 0;
+    if (e.type === 'in' || e.type === 'add') {
+      effect = e.amount;
+    } else if (e.type === 'out' || e.type === 'sub') {
+      effect = -e.amount;
+    } else {
+      effect = e.amount; // neutral fallback
     }
-    return 0;
+    runningBal = round2(runningBal + effect);
+    return {
+      ...e,
+      runningBalance: runningBal
+    };
+  });
+
+  // Calculate stats
+  const legacySum = round2(legacyEntries.reduce((acc: number, item: any) => acc + item.amount, 0));
+  const totalIn = round2((fund.history || []).filter((h: any) => h.type === 'add').reduce((acc: number, h: any) => acc + h.amount, 0));
+  const totalOut = round2((fund.history || []).filter((h: any) => h.type === 'sub').reduce((acc: number, h: any) => acc + h.amount, 0));
+
+  // Perform search & filters on detailed records
+  const filteredHistory = historyWithRunningBalance.filter((e: any) => {
+    const matchesSearch = 
+      e.description.toLowerCase().includes(historySearchQuery.toLowerCase()) || 
+      e.note.toLowerCase().includes(historySearchQuery.toLowerCase()) || 
+      e.amount.toString().includes(historySearchQuery);
+      
+    const matchesFilter = 
+      historyTypeFilter === 'all' || 
+      (historyTypeFilter === 'in' && e.type === 'in') || 
+      (historyTypeFilter === 'out' && e.type === 'out');
+      
+    return matchesSearch && matchesFilter;
   });
 
   const handleCopy = () => {
-    const text = `كشف حساب: ${fund.name}\nالرصيد الحالي: ${formatNum(fund.amount)}\n\nسجل الحركات التفصيلية:\n` +
-      historyEntries.map((e: any) => `${e.date} | ${e.type === 'in' ? 'إضافة' : e.type === 'out' ? 'خصم' : 'معلق'} | ${formatNum(e.amount)}`).join('\n') +
-      `\n\nملخص الأيام السابقة:\n` +
-      personEntries.map((e: any) => `${e.date} | ${e.description} | ${formatNum(e.amount)}`).join('\n');
+    const text = `كشف حساب مالي تفصيلي: ${fund.name}\n` +
+      `نوع الحساب: ${isToUs ? 'ذمم مدينة (أموال لنا في السوق)' : 'ذمم دائنة (أموال معلقة علينا للغير)'}\n` +
+      `الرصيد النهائي الحالي: ${formatNum(fund.amount)}\n` +
+      `إجمالي الحركات - المضاف: ${formatNum(totalIn)} | المسدد/المخصوم: ${formatNum(totalOut)}\n\n` +
+      `سجل الحركات التفصيلية:\n` +
+      historyWithRunningBalance.map((e: any) => `${e.date} | ${e.type === 'in' ? 'إضافة (+)' : e.type === 'out' ? 'خصم (-)' : 'معلق'} | الحركة: ${e.description} | الملاحظات: ${e.note || 'بلا'} | الرصيد: ${formatNum(e.amount)} | التراكمي: ${formatNum(e.runningBalance)}`).join('\n');
+      
     navigator.clipboard.writeText(text);
-    showToast('تم نسخ التقرير للحافظة', 'success');
+    showToast('تم نسخ كشف الحساب والتقرير للحافظة بنجاح', 'success');
   };
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
+      const headingTitle = isToUs ? 'كشف حساب مالي - ديون مستحقة لنا (مدين)' : 'كشف حساب مالي - ديون مستحقة علينا للغير (دائن)';
+      const statsBlock = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px; font-family: sans-serif;">
+          <div style="border: 1px solid #ddd; padding: 12px; border-radius: 4px; text-align: center; background-color: #fcfcfc;">
+            <div style="font-size: 13px; color: #666; margin-bottom: 4px;">الرصيد الافتتاحي السابق</div>
+            <div style="font-size: 18px; font-weight: bold; color: #333;">${formatNum(legacySum)}</div>
+          </div>
+          <div style="border: 1px solid #ddd; padding: 12px; border-radius: 4px; text-align: center; background-color: #f6fff6; border-color: #c2ecc2;">
+            <div style="font-size: 13px; color: #2e7d32; margin-bottom: 4px;">إجمالي المضاف (+)</div>
+            <div style="font-size: 18px; font-weight: bold; color: #2e7d32;">${formatNum(totalIn)}</div>
+          </div>
+          <div style="border: 1px solid #ddd; padding: 12px; border-radius: 4px; text-align: center; background-color: #fff6f6; border-color: #fcc2c2;">
+            <div style="font-size: 13px; color: #c62828; margin-bottom: 4px;">إجمالي المقبوض/المسدد (-)</div>
+            <div style="font-size: 18px; font-weight: bold; color: #c62828;">${formatNum(totalOut)}</div>
+          </div>
+        </div>
+      `;
+      
       printWindow.document.write(`
         <html dir="rtl">
           <head>
-            <title>كشف حساب - ${fund.name}</title>
+            <title>كشف حساب مالي تفصيلي - ${fund.name}</title>
             <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-              th { background-color: #f4f4f4; }
-              .header { margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-              .text-left { text-align: left; }
+              body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #333; line-height: 1.5; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+              th, td { border: 1px solid #eee; padding: 10px 12px; text-align: right; }
+              th { background-color: #f7f9fa; color: #495057; font-weight: bold; }
+              .header-section { display: flex; justify-content: space-between; border-bottom: 3px double #000; padding-bottom: 15px; margin-bottom: 25px; }
+              .header-title { font-size: 20px; font-weight: bold; margin: 0; color: #111; }
+              .header-meta { font-size: 13px; color: #666; text-align: left; }
+              .running-bal { font-weight: bold; color: #0056b3; }
+              .badge { display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: bold; border-radius: 3px; }
+              .badge-in { background-color: #e8f5e9; color: #2e7d32; }
+              .badge-out { background-color: #ffebee; color: #c62828; }
+              .footer-signature { display: flex; justify-content: space-between; margin-top: 60px; border-top: 1px solid #eee; padding-top: 20px; }
+              .signature-box { text-align: center; width: 40%; }
+              .signature-line { height: 1px; width: 150px; border-bottom: 1px dashed #aaa; margin: 25px auto 5px auto; }
+              @media print {
+                body { padding: 0; }
+                .no-print { display: none; }
+              }
             </style>
           </head>
           <body>
-            <div class="header">
-              <h2>كشف حساب: ${fund.name}</h2>
-              <h3>الرصيد الحالي: <span dir="ltr">${formatNum(fund.amount)}</span></h3>
+            <div class="header-section">
+              <div>
+                <div class="header-title">${headingTitle}</div>
+                <div style="font-size: 16px; font-weight: 600; margin-top: 5px; color: #444;">صاحب الحساب: ${fund.name}</div>
+              </div>
+              <div class="header-meta">
+                <div>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG')}</div>
+                <div style="font-size: 16px; font-weight: bold; color: #111; margin-top: 5px; text-align: left;">الرصيد المهائي الحالي: <span dir="ltr">${formatNum(fund.amount)}</span></div>
+              </div>
             </div>
-            
-            ${historyEntries.length > 0 ? `
-            <h3>سجل الحركات التفصيلية (الجديدة)</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>التاريخ والوقت</th>
-                  <th>البيان</th>
-                  <th>النوع</th>
-                  <th>المبلغ</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${historyEntries.map((e: any) => `
-                  <tr>
-                    <td>${e.date}</td>
-                    <td>${e.description}</td>
-                    <td>${e.type === 'in' ? 'إضافة' : e.type === 'out' ? 'خصم' : 'معلق'}</td>
-                    <td dir="ltr" class="text-left">${formatNum(e.amount)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-            ` : ''}
 
-            <h3>ملخص الأيام السابقة</h3>
+            ${statsBlock}
+            
+            <h3 style="border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 25px; font-size: 16px;">سجل حركة الحساب والمدفوعات</h3>
             <table>
               <thead>
                 <tr>
-                  <th>التاريخ</th>
-                  <th>البيان</th>
-                  <th>النوع</th>
-                  <th>المبلغ</th>
+                  <th style="width: 5%;">#</th>
+                  <th style="width: 25%;">التاريخ والوقت</th>
+                  <th>الحركة والبيان المالي الموثق</th>
+                  <th style="width: 12%;">النوع</th>
+                  <th style="width: 15%; text-align: left;">المبلغ</th>
+                  <th style="width: 18%; text-align: left;">الرصيد التراكمي</th>
                 </tr>
               </thead>
               <tbody>
-                ${personEntries.map((e: any) => `
+                ${historyWithRunningBalance.map((e: any, idx: number) => `
                   <tr>
+                    <td>${idx + 1}</td>
                     <td>${e.date}</td>
-                    <td>${e.description}</td>
-                    <td>${e.type === 'in' ? 'وارد' : e.type === 'out' ? 'منصرف' : 'معلق'}</td>
-                    <td dir="ltr" class="text-left">${formatNum(e.amount)}</td>
+                    <td>
+                      <div><strong>${e.description}</strong></div>
+                      ${e.note ? `<div style="font-size: 12px; color: #666; margin-top: 2px;">• ملاحظة: ${e.note}</div>` : ''}
+                    </td>
+                    <td>
+                      ${e.type === 'in' || e.type === 'add' ? '<span class="badge badge-in">إضافة</span>' : 
+                        e.type === 'out' || e.type === 'sub' ? '<span class="badge badge-out">خصم / سداد</span>' :
+                        '<span class="badge" style="background: #efefef; color: #333;">افتتاحي</span>'}
+                    </td>
+                    <td dir="ltr" style="text-align: left; font-weight: 500; font-family: monospace;">${formatNum(e.amount)}</td>
+                    <td dir="ltr" class="running-bal" style="text-align: left; font-family: monospace;">${formatNum(e.runningBalance)}</td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
+
+            <div class="footer-signature">
+              <div class="signature-box">
+                <div>توقيع مراجع الحسابات ومسؤول الخزينة</div>
+                <div class="signature-line"></div>
+              </div>
+              <div class="signature-box">
+                <div>توقيع صاحب المديونية / الطرف الآخر</div>
+                <div class="signature-line"></div>
+              </div>
+            </div>
+
             <script>window.print();</script>
           </body>
         </html>
@@ -1637,157 +1743,336 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
   };
 
   return (
-    <div className="fixed inset-0 z-[150] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-      <div className="pro-card w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-          <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-            <Calculator size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
-            إدارة حساب: {fund.name}
-          </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors flex items-center gap-1 text-[15px] font-bold"><ArrowRight size={18} /> رجوع</button>
+    <div className="fixed inset-0 z-[150] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-[12px] w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh] shadow-2xl border border-slate-200 dark:border-slate-800 transition-all">
+        {/* Header Modal */}
+        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-md">
+          <div className="flex flex-col gap-1">
+            <h3 className="font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 text-lg">
+              <Calculator size={22} className="text-amber-600" /> 
+              إدارة كشف حساب: {fund.name}
+            </h3>
+            <span className={`text-xs font-bold inline-block max-w-fit px-2.5 py-1 rounded-[4px] ${isToUs ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40'}`}>
+              {isToUs ? 'ذمم مدينة (أموال لنا بالخارج)' : 'ذمم دائنة (أموال معلقة مستحقة للغير)'}
+            </span>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[8px] transition-colors flex items-center gap-1.5 text-sm font-bold">
+            <ArrowRight size={18} /> رجوع
+          </button>
         </div>
         
-        <div className="p-6 overflow-y-auto">
-          <div className="bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-[4px] p-6 text-center mb-6">
-            <p className="text-slate-900 dark:text-white tracking-tight font-medium mb-1">الرصيد الحالي</p>
-            <p className="text-4xl font-black text-slate-900 dark:text-white" dir="ltr">{formatNum(fund.amount)}</p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 mb-8 items-end">
-            <div className="flex-1 w-full">
-              <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">المبلغ (إضافة أو خصم)</label>
-              <Input 
-                type="number" 
-                value={amount} 
-                onChange={(e: any) => setAmount(e.target.value)} 
-                placeholder="أدخل المبلغ..." 
-                className="text-center text-lg font-bold"
-                dir="ltr"
-              />
+        {/* Body content scrollable */}
+        <div className="p-6 overflow-y-auto space-y-6">
+          
+          {/* Section: Advanced Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-[8px] border border-slate-200 dark:border-slate-800/80 text-center flex flex-col justify-between">
+              <span className="text-[13px] text-slate-500 dark:text-slate-400 font-bold mb-1 block">الرصيد الافتتاحي</span>
+              <span className="text-lg font-black text-slate-700 dark:text-slate-200" dir="ltr">{formatNum(legacySum)}</span>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <button onClick={handleAdd} disabled={!amount} className="flex-1 sm:flex-none btn-success text-white px-6 py-2.5 rounded-[4px] font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                <Plus size={18} /> إضافة
-              </button>
-              <button onClick={handleSubtract} disabled={!amount} className="flex-1 sm:flex-none bg-rose-600 text-white px-6 py-2.5 rounded-[4px] font-bold hover:bg-rose-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                <Trash2 size={18} /> خصم / تسديد
-              </button>
+            
+            <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3.5 rounded-[8px] border border-emerald-100 dark:border-emerald-950/40 text-center flex flex-col justify-between">
+              <span className="text-[13px] text-emerald-700 dark:text-emerald-400 font-bold mb-1 block">إجمالي الإضافات (+)</span>
+              <span className="text-lg font-black text-emerald-600 dark:text-emerald-400" dir="ltr">{formatNum(totalIn)}</span>
+            </div>
+            
+            <div className="bg-rose-50/50 dark:bg-rose-950/20 p-3.5 rounded-[8px] border border-rose-100 dark:border-rose-950/40 text-center flex flex-col justify-between">
+              <span className="text-[13px] text-rose-700 dark:text-rose-400 font-bold mb-1 block">إجمالي المسدد (-)</span>
+              <span className="text-lg font-black text-rose-600 dark:text-rose-400" dir="ltr">{formatNum(totalOut)}</span>
+            </div>
+
+            <div className="bg-blue-50 dark:bg-blue-950/30 p-3.5 rounded-[10px] border border-blue-200 dark:border-blue-900/40 text-center flex flex-col justify-between shadow-sm">
+              <span className="text-[13px] text-blue-700 dark:text-blue-300 font-bold mb-1 block">الرصيد المهائي الحالي</span>
+              <span className="text-xl font-bold text-blue-800 dark:text-blue-200" dir="ltr">{formatNum(fund.amount)}</span>
             </div>
           </div>
 
-          <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-bold text-slate-800 dark:text-slate-200">كشف الحساب (من دفتر الأستاذ)</h4>
-              <div className="flex gap-2">
-                <button onClick={handleCopy} className="text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 px-3 py-1.5 rounded-[4px] text-[15px] font-medium transition-colors flex items-center gap-1">
-                  <Copy size={16} /> نسخ
+          {/* Section: Save/Update Form */}
+          <div className="bg-slate-50 dark:bg-slate-800/30 rounded-[10px] p-4 border border-slate-200 dark:border-slate-800">
+            <h4 className="font-bold text-sm text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-1.5">
+              <Activity size={16} className="text-indigo-500" />
+              تسجيل عملية حركة مالية جديدة على الحساب
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+              {/* Field: Amount */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">المبلغ المطلوب</label>
+                <Input 
+                  type="number" 
+                  value={amount} 
+                  onChange={(e: any) => setAmount(e.target.value === '' ? '' : Number(e.target.value))} 
+                  placeholder="0.00" 
+                  className="text-center font-bold text-base w-full rounded-[6px]"
+                  dir="ltr"
+                />
+              </div>
+
+              {/* Field: Date Picker */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5 flex items-center gap-1 justify-between">
+                  <span>تاريخ الحركة المالي</span>
+                  <span className="text-[10px] text-slate-400 font-normal">(اختياري للرجعي)</span>
+                </label>
+                <input 
+                  type="date" 
+                  value={customDate} 
+                  onChange={(e) => setCustomDate(e.target.value)} 
+                  className="pro-card w-full rounded-[6px] border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                />
+              </div>
+
+              {/* Field: Notes */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">البيان / تفصيل السداد</label>
+                <div className="relative">
+                  <Input 
+                    type="text" 
+                    value={note} 
+                    onChange={(e: any) => setNote(e.target.value)} 
+                    placeholder="سبب الحركة أو الملاحظة..." 
+                    className="w-full text-xs rounded-[6px]"
+                    list="modal-notes-presets"
+                  />
+                  <datalist id="modal-notes-presets">
+                    {presetNotes.map((preset, idx) => <option key={preset} value={preset} />)}
+                  </datalist>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Presets Buttons row */}
+            <div className="mt-3 flex flex-wrap gap-1 items-center">
+              <span className="text-[10px] text-slate-400 font-bold ml-1.5">مقترحات شائعة:</span>
+              {presetNotes.slice(0, 4).map((preset) => (
+                <button
+                  key={preset}
+                  onClick={() => setNote(preset)}
+                  className="text-[10px] px-2 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 transition-colors"
+                >
+                  {preset}
                 </button>
-                <button onClick={handlePrint} className="text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 rounded-[4px] text-[15px] font-medium transition-colors flex items-center gap-1">
-                  <Printer size={16} /> طباعة
+              ))}
+            </div>
+
+            {/* Form Submit buttons */}
+            <div className="mt-4 flex gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <button 
+                onClick={handleAdd} 
+                disabled={!amount} 
+                className="flex-1 btn-success text-white py-2 px-4 rounded-[6px] font-bold text-sm hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                <Plus size={16} /> إضافة للحساب (زيادة الدين)
+              </button>
+              <button 
+                onClick={handleSubtract} 
+                disabled={!amount} 
+                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-[6px] font-bold text-sm hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 size={16} /> خصم / استلام سداد عميل (-)
+              </button>
+            </div>
+          </div>
+
+          {/* Section: Interactive Search & Search Filter table */}
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-base">
+                <BookOpen size={18} className="text-slate-600 dark:text-slate-400" />
+                سجل كافة الحركات المالية المفصلة
+              </h4>
+              
+              <div className="flex items-center gap-2">
+                <button onClick={handleCopy} className="text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 px-3 py-1.5 rounded-[6px] text-sm font-bold transition-colors flex items-center gap-1">
+                  <Copy size={15} /> نسخ التقرير
+                </button>
+                <button onClick={handlePrint} className="text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/30 px-3 py-1.5 rounded-[6px] text-sm font-bold transition-colors flex items-center gap-1 border border-blue-100 dark:border-blue-900/10">
+                  <Printer size={15} /> طباعة كشف منسق
                 </button>
               </div>
             </div>
-            
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[4px] border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
-              <div className="bg-slate-100 dark:bg-slate-800 p-3 font-bold text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">سجل الحركات التفصيلية (الجديدة)</div>
-              <table className="w-full text-[15px] text-right">
-                <thead>
-                  <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50">
-                    <th className="p-3 font-medium">التاريخ والوقت</th>
-                    <th className="p-3 font-medium">البيان</th>
-                    <th className="p-3 font-medium">النوع</th>
-                    <th className="p-3 font-medium">المبلغ</th>
+
+            {/* Interactive Filters and Inline Search */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none opacity-50">
+                  <Search size={14} className="text-slate-500" />
+                </div>
+                <Input 
+                  type="text" 
+                  value={historySearchQuery} 
+                  onChange={(e) => setHistorySearchQuery(e.target.value)} 
+                  placeholder="ابحث بالحركة، ملاحظات، أو مبلغ محدد..." 
+                  className="w-full pl-3 pr-8 py-1.5 rounded-[6px] text-xs"
+                />
+              </div>
+
+              <div className="flex rounded-[6px] overflow-hidden border border-slate-200 dark:border-slate-800 self-start text-xs font-bold leading-normal shrink-0">
+                <button 
+                  onClick={() => setHistoryTypeFilter('all')} 
+                  className={`px-3 py-1.5 transition-colors ${historyTypeFilter === 'all' ? 'bg-indigo-650 text-white bg-indigo-600' : 'bg-white dark:bg-slate-900 hover:bg-slate-100 text-slate-600 dark:text-slate-400'}`}
+                >
+                  الكل
+                </button>
+                <button 
+                  onClick={() => setHistoryTypeFilter('in')} 
+                  className={`px-3 py-1.5 transition-colors border-r border-l border-slate-200 dark:border-slate-800 ${historyTypeFilter === 'in' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-900 hover:bg-slate-100 text-slate-600 dark:text-slate-400'}`}
+                >
+                  الزيادات (+)
+                </button>
+                <button 
+                  onClick={() => setHistoryTypeFilter('out')} 
+                  className={`px-3 py-1.5 transition-colors ${historyTypeFilter === 'out' ? 'bg-red-600 text-white' : 'bg-white dark:bg-slate-900 hover:bg-slate-100 text-slate-600 dark:text-slate-400'}`}
+                >
+                  الخصومات (-)
+                </button>
+              </div>
+            </div>
+
+            {/* Table Container structured scrollable */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-[10px] overflow-hidden bg-white dark:bg-slate-900 shadow-sm max-h-[35vh] overflow-y-auto">
+              <table className="w-full text-sm text-right">
+                <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
+                  <tr>
+                    <th className="p-3 font-semibold text-center w-12">#</th>
+                    <th className="p-3 font-semibold w-36">التاريخ والوقت</th>
+                    <th className="p-3 font-semibold">تفاصيل الكشف المالي</th>
+                    <th className="p-3 font-semibold text-center w-24">النوع</th>
+                    <th className="p-3 font-semibold text-left w-24">المبلغ</th>
+                    <th className="p-3 font-semibold text-left w-32">الرصيد التراكمي</th>
+                    <th className="p-3 font-semibold text-center w-20">تعديل</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {historyEntries.map((entry: any) => (
-                    <tr key={entry.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-white dark:bg-slate-900 print:bg-white">
-                      <td className="p-3">{entry.date}</td>
-                      <td className="p-3">{entry.description}</td>
-                      <td className="p-3">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {filteredHistory.map((entry: any, idx: number) => (
+                    <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 last:border-0 transition-colors">
+                      <td className="p-3 text-center text-xs font-semibold text-slate-400 select-none">
+                        {idx + 1}
+                      </td>
+                      <td className="p-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        {entry.date}
+                      </td>
+                      <td className="p-3 text-xs">
+                        <div className="font-bold text-slate-800 dark:text-slate-200">{entry.description}</div>
+                        {entry.note ? (
+                          <span className="text-slate-500 dark:text-slate-400 mt-1 block px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-[4px] max-w-fit font-medium">
+                            • {entry.note}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="p-3 text-center text-xs">
                         {editingEntry === entry.id ? (
                           <select 
                             value={editType} 
                             onChange={(e: any) => setEditType(e.target.value)}
-                            className="w-full bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700 rounded-[4px] px-2 py-1 text-[15px] focus:ring-2 focus:ring-brand-500/20 outline-none"
+                            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[4px] px-2 py-1 text-xs outline-none"
                           >
                             <option value="add">إضافة</option>
                             <option value="sub">خصم</option>
                           </select>
                         ) : (
-                          entry.type === 'in' ? <span className="text-[#2b7d2b] text-brand-success">إضافة</span> : 
-                          entry.type === 'out' ? <span className="text-rose-600">خصم</span> :
-                          <span className="text-amber-600">معلق</span>
+                          entry.type === 'in' || entry.type === 'add' ? (
+                            <span className="px-2 py-0.5 rounded-[4px] font-bold text-[11px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">وارد (+)</span>
+                          ) : entry.type === 'out' || entry.type === 'sub' ? (
+                            <span className="px-2 py-0.5 rounded-[4px] font-bold text-[11px] bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400">سداد (-)</span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-[4px] font-bold text-[11px] bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400">افتتاحي</span>
+                          )
                         )}
                       </td>
-                      <td className="p-3 font-bold" dir="ltr">
+                      
+                      {/* Amount column */}
+                      <td className="p-3 font-semibold text-left whitespace-nowrap" dir="ltr">
                         {editingEntry === entry.id ? (
-                          <div className="flex items-center gap-2 justify-end">
-                            <input 
-                              type="number" 
-                              value={editAmount} 
-                              onChange={(e: any) => setEditAmount(e.target.value)}
-                              className="w-24 bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700 rounded-[4px] px-2 py-1 text-[15px] focus:ring-2 focus:ring-brand-500/20 outline-none text-left"
-                              dir="ltr"
-                            />
+                          <input 
+                            type="number" 
+                            value={editAmount} 
+                            onChange={(e: any) => setEditAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                            className="w-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[4px] px-1.5 py-1 text-xs outline-none text-left font-bold"
+                          />
+                        ) : (
+                          <span className={entry.type === 'in' || entry.type === 'add' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : entry.type === 'out' || entry.type === 'sub' ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-slate-600 dark:text-slate-400 font-bold'}>
+                            {formatNum(entry.amount)}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Running Balance Column */}
+                      <td className="p-3 font-bold text-left text-xs whitespace-nowrap text-blue-600 dark:text-blue-400" dir="ltr">
+                        {editingEntry === entry.id ? (
+                          <span className="text-slate-400">-</span>
+                        ) : (
+                          formatNum(entry.runningBalance)
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="p-3 text-center whitespace-nowrap">
+                        {editingEntry === entry.id ? (
+                          <div className="flex items-center gap-1.5 justify-center">
                             <button 
                               onClick={() => {
                                 if (editAmount && Number(editAmount) > 0) {
-                                  onEditHistory(field, fund.id, entry.id, Number(editAmount), editType);
+                                  onEditHistory(field, fund.id, entry.id, Number(editAmount), editType, editNote);
                                   setEditingEntry(null);
-                                  showToast('تم تعديل الحركة بنجاح', 'success');
+                                  showToast('تم تعديل الحركة وحفظ البيانات المحدثة', 'success');
                                 }
                               }}
-                              className="text-[#2b7d2b] text-brand-success hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1.5 rounded-[4px]"
+                              className="text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1 rounded-[4px] transition-colors"
+                              title="حفظ"
                             >
-                              <Check size={16} />
+                              <Check size={14} />
                             </button>
                             <button 
                               onClick={() => setEditingEntry(null)}
-                              className="text-white/70 hover:text-white bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 p-1.5 rounded-[4px]"
+                              className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-1 rounded-[4px] transition-colors"
+                              title="إلغاء التعديل"
                             >
-                              <X size={16} />
+                              <X size={14} />
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-3 justify-end">
-                            <span>{formatNum(entry.amount)}</span>
-                            {!entry.isLegacy && (
-                              <div className="flex items-center gap-1">
-                                <button 
-                                  onClick={() => {
-                                    setEditingEntry(entry.id);
-                                    setEditAmount(entry.amount);
-                                    setEditType(entry.type === 'in' ? 'add' : 'sub');
-                                  }}
-                                  className="text-slate-900 dark:text-white hover:text-slate-800 dark:text-slate-200 font-bold p-1 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 rounded"
-                                >
-                                  <Edit2 size={14} />
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                    if(window.confirm('هل أنت متأكد من حذف هذه الحركة؟')) {
-                                      onDeleteHistory(field, fund.id, entry.id);
-                                      showToast('تم حذف الحركة بنجاح', 'success');
-                                    }
-                                  }}
-                                  className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                          !entry.isLegacy ? (
+                            <div className="flex items-center gap-1.5 justify-center opacity-40 group-hover:opacity-100 hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => {
+                                  setEditingEntry(entry.id);
+                                  setEditAmount(entry.amount);
+                                  setEditType(entry.type === 'in' ? 'add' : 'sub');
+                                  setEditNote(entry.note || '');
+                                }}
+                                className="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
+                                title="تعديل هذا القيد"
+                              >
+                                <Edit2 size={13} />
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  if(window.confirm('هل أنت متأكد من حذف هذه الحركة؟')) {
+                                    onDeleteHistory(field, fund.id, entry.id);
+                                    showToast('تمت إزالة الحركة بالكامل بنجاح', 'success');
+                                  }
+                                }}
+                                className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded"
+                                title="حذف القيد"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-bold">-</span>
+                          )
                         )}
                       </td>
                     </tr>
                   ))}
-                  {historyEntries.length === 0 && (
+                  
+                  {filteredHistory.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="text-center p-8 bg-white dark:bg-slate-900 print:bg-white">
+                      <td colSpan={7} className="text-center p-8 bg-slate-50/50 dark:bg-slate-900">
                         <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
-                          <History size={32} className="opacity-50" />
-                          <span className="font-medium">لا توجد حركات تفصيلية جديدة</span>
+                          <History size={36} className="opacity-40" />
+                          <span className="font-bold text-slate-500">لم يتم العثور على أي حركات متطابقة للبحث بالتفصيل</span>
                         </div>
                       </td>
                     </tr>
@@ -1796,47 +2081,8 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
               </table>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[4px] border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
-              <div className="bg-slate-100 dark:bg-slate-800 p-4 font-bold text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <span>ملخص الأيام السابقة (من دفتر الأستاذ)</span>
-                <span className="text-xs bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded-md font-medium">سجل قديم مجمع</span>
-              </div>
-              <table className="w-full text-[15px] text-right">
-                <thead>
-                  <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50">
-                    <th className="p-3 font-semibold pb-4">التاريخ</th>
-                    <th className="p-3 font-semibold pb-4">البيان</th>
-                    <th className="p-3 font-semibold pb-4">النوع</th>
-                    <th className="p-3 font-semibold pb-4">المبلغ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {personEntries.map((entry: any) => (
-                    <tr key={entry.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-white dark:bg-slate-900 print:bg-white transition-colors duration-200 group">
-                      <td className="p-3 text-slate-600 dark:text-slate-400">{entry.date}</td>
-                      <td className="p-3 font-medium text-slate-700 dark:text-slate-300">{entry.description}</td>
-                      <td className="p-3">
-                        {entry.type === 'in' ? <span className="text-[#2b7d2b] text-brand-success bg-emerald-50 px-2 py-1 rounded-md font-bold">وارد</span> : 
-                         entry.type === 'out' ? <span className="text-rose-600 bg-rose-50 px-2 py-1 rounded-md font-bold">منصرف</span> :
-                         <span className="text-amber-600 bg-amber-50 px-2 py-1 rounded-md font-bold">معلق</span>}
-                      </td>
-                      <td className="p-3 font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(entry.amount)}</td>
-                    </tr>
-                  ))}
-                  {personEntries.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="text-center p-8 bg-white dark:bg-slate-900 print:bg-white">
-                        <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
-                          <BookOpen size={32} className="opacity-50" />
-                          <span className="font-medium">لا توجد حركات سابقة مسجلة بهذا الاسم</span>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -2562,7 +2808,7 @@ const handleCopyDailyReport = () => {
     });
   };
 
-  const adjustFundAmount = (field: keyof AppState, id: string, amountChange: number, actionType: 'add' | 'sub') => {
+  const adjustFundAmount = (field: keyof AppState, id: string, amountChange: number, actionType: 'add' | 'sub', note?: string, customDate?: string) => {
     setState(prev => {
       const list = prev[field] as Transaction[];
       return {
@@ -2572,9 +2818,10 @@ const handleCopyDailyReport = () => {
             const newHistory = [...(t.history || [])];
             newHistory.push({
               id: generateId(),
-              date: new Date().toLocaleString('ar-EG'),
+              date: customDate || new Date().toLocaleString('ar-EG'),
               amount: amountChange,
-              type: actionType
+              type: actionType,
+              note: note || ''
             });
             return { 
               ...t, 
@@ -2588,7 +2835,7 @@ const handleCopyDailyReport = () => {
     });
   };
 
-  const editFundHistoryEntry = (field: keyof AppState, fundId: string, entryId: string, newAmount: number, newType: 'add' | 'sub') => {
+  const editFundHistoryEntry = (field: keyof AppState, fundId: string, entryId: string, newAmount: number, newType: 'add' | 'sub', note?: string, customDate?: string) => {
     setState(prev => {
       const list = prev[field] as Transaction[];
       return {
@@ -2599,7 +2846,13 @@ const handleCopyDailyReport = () => {
             if (entryIndex > -1) {
               const oldEntry = t.history[entryIndex];
               const newHistory = [...t.history];
-              newHistory[entryIndex] = { ...oldEntry, amount: newAmount, type: newType };
+              newHistory[entryIndex] = { 
+                ...oldEntry, 
+                amount: newAmount, 
+                type: newType, 
+                note: note !== undefined ? note : oldEntry.note,
+                date: customDate || oldEntry.date
+              };
               
               let currentAmount = Number(t.amount);
               if (oldEntry.type === 'add') currentAmount -= oldEntry.amount;
