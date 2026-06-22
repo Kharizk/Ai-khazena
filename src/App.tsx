@@ -2953,6 +2953,31 @@ const handleCopyDailyReport = () => {
     const prevPendingByUs: Record<string, number> = {};
     const processedHistoryIds = new Set<string>();
 
+    // Process chronological snapshots
+    const chronologicalHistory = [...history].reverse();
+
+    // 1. Determine and insert the oldest initial/opening balance (رصيد أول المدة) as the first entry
+    let openingBalance = 0;
+    let openingDate = '';
+    if (chronologicalHistory.length > 0) {
+      openingBalance = chronologicalHistory[0].state.previousBalance || 0;
+      openingDate = chronologicalHistory[0].state.date;
+    } else {
+      openingBalance = state.previousBalance || 0;
+      openingDate = state.date;
+    }
+
+    if (openingBalance >= 0) {
+      entries.push({
+        id: 'opening-balance-initial',
+        date: openingDate,
+        description: 'رصيد أول المدة (الرصيد الافتتاحي للخزينة)',
+        type: 'in', // Debit entry representing initial company cash asset
+        amount: openingBalance,
+        category: 'رصيد أول المدة'
+      });
+    }
+
     const processState = (s: AppState, dateStr: string) => {
       s.posData.forEach(pos => {
         if (pos.sales > 0) entries.push({ id: generateId(), date: dateStr, description: `مبيعات - ${pos.name}`, type: 'in', amount: pos.sales, category: 'مبيعات' });
@@ -2977,11 +3002,13 @@ const handleCopyDailyReport = () => {
             if (!processedHistoryIds.has(h.id)) {
               processedHistoryIds.add(h.id);
               historyNetEffect += (h.type === 'add' ? h.amount : -h.amount);
+              
+              // Owed to Us (Receivables): add increases receivable Asset (Debit), sub decreases Asset (Credit)
               entries.push({
                 id: h.id,
                 date: h.date,
                 description: `${t.name || 'معلق لنا'} - ${h.type === 'add' ? 'إضافة' : h.type === 'sub' ? 'خصم' : 'رصيد افتتاحي'}`,
-                type: 'neutral',
+                type: h.type === 'add' ? 'in' : h.type === 'sub' ? 'out' : 'in',
                 amount: h.amount,
                 category: 'أموال معلقة لنا'
               });
@@ -2992,7 +3019,14 @@ const handleCopyDailyReport = () => {
         const remainingDelta = delta - historyNetEffect;
         if (remainingDelta !== 0) {
           const descSuffix = prevAmount === 0 ? '' : (remainingDelta > 0 ? ' (إضافة)' : ' (خصم)');
-          entries.push({ id: generateId(), date: dateStr, description: `${t.name || 'معلق لنا'}${descSuffix}`, type: 'neutral', amount: Math.abs(remainingDelta), category: 'أموال معلقة لنا' });
+          entries.push({ 
+            id: generateId(), 
+            date: dateStr, 
+            description: `${t.name || 'معلق لنا'}${descSuffix}`, 
+            type: remainingDelta > 0 ? 'in' : 'out', 
+            amount: Math.abs(remainingDelta), 
+            category: 'أموال معلقة لنا' 
+          });
         }
         prevPendingToUs[t.id] = t.amount;
       });
@@ -3007,11 +3041,13 @@ const handleCopyDailyReport = () => {
             if (!processedHistoryIds.has(h.id)) {
               processedHistoryIds.add(h.id);
               historyNetEffect += (h.type === 'add' ? h.amount : -h.amount);
+              
+              // Owed by Us (Supplier Payables): add increases Payable liability (Credit), sub decreases Payable liability (Debit)
               entries.push({
                 id: h.id,
                 date: h.date,
                 description: `${t.name || 'معلق علينا'} - ${h.type === 'add' ? 'إضافة' : h.type === 'sub' ? 'خصم' : 'رصيد افتتاحي'}`,
-                type: 'neutral',
+                type: h.type === 'add' ? 'out' : h.type === 'sub' ? 'in' : 'out',
                 amount: h.amount,
                 category: 'أموال معلقة علينا'
               });
@@ -3022,7 +3058,14 @@ const handleCopyDailyReport = () => {
         const remainingDelta = delta - historyNetEffect;
         if (remainingDelta !== 0) {
           const descSuffix = prevAmount === 0 ? '' : (remainingDelta > 0 ? ' (إضافة)' : ' (خصم)');
-          entries.push({ id: generateId(), date: dateStr, description: `${t.name || 'معلق علينا'}${descSuffix}`, type: 'neutral', amount: Math.abs(remainingDelta), category: 'أموال معلقة علينا' });
+          entries.push({ 
+            id: generateId(), 
+            date: dateStr, 
+            description: `${t.name || 'معلق علينا'}${descSuffix}`, 
+            type: remainingDelta > 0 ? 'out' : 'in', 
+            amount: Math.abs(remainingDelta), 
+            category: 'أموال معلقة علينا' 
+          });
         }
         prevPendingByUs[t.id] = t.amount;
       });
@@ -3039,7 +3082,9 @@ const handleCopyDailyReport = () => {
                    id: h.id,
                    date: h.date,
                    description: `${t.name || (t.type === 'toUs' ? 'معلق لنا' : 'معلق علينا')} - ${h.type === 'add' ? 'إضافة' : h.type === 'sub' ? 'خصم' : 'رصيد افتتاحي'}`,
-                   type: 'neutral',
+                   type: t.type === 'toUs'
+                     ? (h.type === 'add' ? 'in' : h.type === 'sub' ? 'out' : 'in')
+                     : (h.type === 'add' ? 'out' : h.type === 'sub' ? 'in' : 'out'),
                    amount: h.amount,
                    category: t.type === 'toUs' ? 'أموال معلقة لنا' : 'أموال معلقة علينا'
                  });
@@ -3051,7 +3096,14 @@ const handleCopyDailyReport = () => {
            if (prevToUs !== undefined && prevToUs > 0 && t.type === 'toUs') {
              const remainingDelta = 0 - prevToUs - historyNetEffect;
              if (remainingDelta !== 0) {
-                entries.push({ id: generateId(), date: dateStr, description: `${t.name || 'معلق لنا'} (تسوية/أرشيف)`, type: 'neutral', amount: Math.abs(remainingDelta), category: 'أموال معلقة لنا' });
+                entries.push({ 
+                  id: generateId(), 
+                  date: dateStr, 
+                  description: `${t.name || 'معلق لنا'} (تسوية/أرشيف)`, 
+                  type: remainingDelta > 0 ? 'in' : 'out', 
+                  amount: Math.abs(remainingDelta), 
+                  category: 'أموال معلقة لنا' 
+                });
              }
              prevPendingToUs[t.id] = 0;
            }
@@ -3059,7 +3111,14 @@ const handleCopyDailyReport = () => {
            if (prevByUs !== undefined && prevByUs > 0 && t.type === 'byUs') {
              const remainingDelta = 0 - prevByUs - historyNetEffect;
              if (remainingDelta !== 0) {
-                entries.push({ id: generateId(), date: dateStr, description: `${t.name || 'معلق علينا'} (تسوية/أرشيف)`, type: 'neutral', amount: Math.abs(remainingDelta), category: 'أموال معلقة علينا' });
+                entries.push({ 
+                  id: generateId(), 
+                  date: dateStr, 
+                  description: `${t.name || 'معلق علينا'} (تسوية/أرشيف)`, 
+                  type: remainingDelta > 0 ? 'out' : 'in', 
+                  amount: Math.abs(remainingDelta), 
+                  category: 'أموال معلقة علينا' 
+                });
              }
              prevPendingByUs[t.id] = 0;
            }
@@ -3067,10 +3126,7 @@ const handleCopyDailyReport = () => {
       });
     };
 
-    // Process history chronologically
-    const chronologicalHistory = [...history].reverse();
     chronologicalHistory.forEach(snap => processState(snap.state, snap.state.date));
-    // Process current state
     processState(state, state.date);
 
     return entries;
@@ -3088,7 +3144,12 @@ const handleCopyDailyReport = () => {
     const allEntries = generateLedgerEntries();
     const sortedEntries = allEntries.sort((a, b) => {
       try {
-        return parseReportDate(a.date).getTime() - parseReportDate(b.date).getTime();
+        const timeA = parseReportDate(a.date).getTime();
+        const timeB = parseReportDate(b.date).getTime();
+        if (timeA !== timeB) return timeA - timeB;
+        if (a.category === 'رصيد أول المدة') return -1;
+        if (b.category === 'رصيد أول المدة') return 1;
+        return 0;
       } catch (err) {
         return 0;
       }
@@ -3122,7 +3183,7 @@ const handleCopyDailyReport = () => {
 
     const filteredIn = filteredLedger.filter(e => e.type === 'in').reduce((sum, e) => sum + e.amount, 0);
     const filteredOut = filteredLedger.filter(e => e.type === 'out').reduce((sum, e) => sum + e.amount, 0);
-    const filteredNeutral = filteredLedger.filter(e => e.type === 'neutral').reduce((sum, e) => sum + e.amount, 0);
+    const filteredNeutral = filteredLedger.filter(e => e.category === 'أموال معلقة لنا' || e.category === 'أموال معلقة علينا').reduce((sum, e) => sum + e.amount, 0);
 
     return { filteredLedger, filteredIn, filteredOut, filteredNeutral };
   };
