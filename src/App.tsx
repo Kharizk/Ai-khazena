@@ -2125,6 +2125,8 @@ export default function App() {
   
   const [history, setHistory] = useState<DailySnapshot[]>([]);
   const [activeTab, setActiveTab] = useState<'sales' | 'payments' | 'pending' | 'cash' | 'archive' | 'history' | 'ledger' | 'analytics' | 'settings' | 'admin'>('sales');
+  const [reportSubTab, setReportSubTab] = useState<'ledger' | 'trial' | 'pl' | 'cashflow' | 'visuals'>('ledger');
+  const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -3074,6 +3076,569 @@ const handleCopyDailyReport = () => {
     return entries;
   };
 
+  // =========================================================================
+  // FINANCIAL REPORTS CALCULATIONS & HANDLERS (LEDGER, TRIAL, P&L, CASHFLOW)
+  // =========================================================================
+  const parseReportDate = (dateStr: string) => {
+    const [day, month, year] = dateStr.split('/');
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  };
+
+  const getFilteredLedger = () => {
+    const allEntries = generateLedgerEntries();
+    const sortedEntries = allEntries.sort((a, b) => {
+      try {
+        return parseReportDate(a.date).getTime() - parseReportDate(b.date).getTime();
+      } catch (err) {
+        return 0;
+      }
+    });
+
+    let runningBalance = 0;
+    const balanceEntries = sortedEntries.map(e => {
+      if (e.type === 'in') runningBalance += e.amount;
+      if (e.type === 'out') runningBalance -= e.amount;
+      return { ...e, balance: runningBalance };
+    });
+
+    const filteredLedger = balanceEntries.filter(entry => {
+      try {
+        const entryDate = parseReportDate(entry.date);
+        const start = ledgerFilter.startDate ? new Date(ledgerFilter.startDate) : null;
+        const end = ledgerFilter.endDate ? new Date(ledgerFilter.endDate) : null;
+        
+        let dateMatch = true;
+        if (start) { start.setHours(0,0,0,0); dateMatch = dateMatch && entryDate >= start; }
+        if (end) { end.setHours(23,59,59,999); dateMatch = dateMatch && entryDate <= end; }
+
+        const categoryMatch = ledgerFilter.category === 'all' || entry.category === ledgerFilter.category;
+        const searchMatch = !ledgerFilter.search || entry.description.toLowerCase().includes(ledgerFilter.search.toLowerCase());
+
+        return dateMatch && categoryMatch && searchMatch;
+      } catch (err) {
+        return true;
+      }
+    });
+
+    const filteredIn = filteredLedger.filter(e => e.type === 'in').reduce((sum, e) => sum + e.amount, 0);
+    const filteredOut = filteredLedger.filter(e => e.type === 'out').reduce((sum, e) => sum + e.amount, 0);
+    const filteredNeutral = filteredLedger.filter(e => e.type === 'neutral').reduce((sum, e) => sum + e.amount, 0);
+
+    return { filteredLedger, filteredIn, filteredOut, filteredNeutral };
+  };
+
+  const generateTrialBalance = () => {
+    const { filteredLedger } = getFilteredLedger();
+    const categoryBalances: Record<string, { inAmount: number; outAmount: number; netEffect: number }> = {};
+    filteredLedger.forEach(e => {
+      if (!categoryBalances[e.category]) {
+        categoryBalances[e.category] = { inAmount: 0, outAmount: 0, netEffect: 0 };
+      }
+      if (e.type === 'in') {
+        categoryBalances[e.category].inAmount += e.amount;
+        categoryBalances[e.category].netEffect += e.amount;
+      } else if (e.type === 'out') {
+        categoryBalances[e.category].outAmount += e.amount;
+        categoryBalances[e.category].netEffect -= e.amount;
+      } else {
+        categoryBalances[e.category].inAmount += e.amount;
+        categoryBalances[e.category].netEffect += e.amount;
+      }
+    });
+    return Object.entries(categoryBalances).map(([category, stats]) => ({
+      category,
+      debit: stats.inAmount,
+      credit: stats.outAmount,
+      balance: stats.netEffect
+    }));
+  };
+
+  const generateProfitAndLoss = () => {
+    const { filteredLedger } = getFilteredLedger();
+    const revenuesList = filteredLedger.filter(e => e.category === 'مبيعات' || e.category === 'مردود مصروفات');
+    const expensesList = filteredLedger.filter(e => e.category === 'مصروفات' || e.category === 'مرتجعات' || e.category === 'سداد شركات');
+    const otherList = filteredLedger.filter(e => e.category !== 'مبيعات' && e.category !== 'مردود مصروفات' && e.category !== 'مصروفات' && e.category !== 'مرتجعات' && e.category !== 'سداد شركات');
+
+    const totalRevenues = revenuesList.reduce((sum, e) => sum + e.amount, 0);
+    const totalExpenses = expensesList.reduce((sum, e) => sum + e.amount, 0);
+    
+    let otherInflow = 0;
+    let otherOutflow = 0;
+    otherList.forEach(e => {
+      if (e.type === 'in') otherInflow += e.amount;
+      if (e.type === 'out') otherOutflow += e.amount;
+    });
+
+    const grossProfit = totalRevenues - totalExpenses;
+    const netProfit = grossProfit + otherInflow - otherOutflow;
+
+    return {
+      totalRevenues,
+      revenuesList,
+      totalExpenses,
+      expensesList,
+      grossProfit,
+      otherInflow,
+      otherOutflow,
+      netProfit
+    };
+  };
+
+  const generateCashFlowTimeline = () => {
+    const { filteredLedger } = getFilteredLedger();
+    const dailyFlows: Record<string, { date: string; inflows: number; outflows: number; net: number; count: number; transactions: any[] }> = {};
+    filteredLedger.forEach(e => {
+      const key = e.date.split(' ')[0];
+      if (!dailyFlows[key]) {
+        dailyFlows[key] = { date: key, inflows: 0, outflows: 0, net: 0, count: 0, transactions: [] };
+      }
+      dailyFlows[key].count++;
+      dailyFlows[key].transactions.push(e);
+      if (e.type === 'in') {
+        dailyFlows[key].inflows += e.amount;
+        dailyFlows[key].net += e.amount;
+      } else if (e.type === 'out') {
+        dailyFlows[key].outflows += e.amount;
+        dailyFlows[key].net -= e.amount;
+      } else {
+        dailyFlows[key].inflows += e.amount;
+        dailyFlows[key].net += e.amount;
+      }
+    });
+    return Object.values(dailyFlows).sort((a, b) => {
+      try {
+        return parseReportDate(a.date).getTime() - parseReportDate(b.date).getTime();
+      } catch (err) {
+        return 0;
+      }
+    });
+  };
+
+  const reportDownloadCSV = (headers: string[], rows: any[][], filename: string) => {
+    const csvContent = "\ufeff" + [headers.join(","), ...rows.map(r => r.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${filename}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportLedgerCSV = () => {
+    const { filteredLedger } = getFilteredLedger();
+    const headers = ['التاريخ', 'البيان', 'التصنيف', 'مدين (وارد)', 'دائن (منصرف)', 'الرصيد التراكمي'];
+    const rows = filteredLedger.map(e => [
+      e.date,
+      e.description,
+      e.category,
+      e.type === 'in' ? e.amount : 0,
+      e.type === 'out' ? e.amount : 0,
+      e.balance
+    ]);
+    reportDownloadCSV(headers, rows, `تقرير_دفتر_الأستاذ_${ledgerFilter.startDate || 'البداية'}_إلى_${ledgerFilter.endDate || 'النهاية'}`);
+  };
+
+  const exportTrialBalanceCSV = () => {
+    const tbData = generateTrialBalance();
+    const headers = ['الحساب_التصنيف', 'إجمالي_المدين_الوارد', 'إجمالي_الدائن_المنصرف', 'صافي_الرصيد'];
+    const rows = tbData.map(e => [e.category, e.debit, e.credit, e.balance]);
+    reportDownloadCSV(headers, rows, `ميزان_المراجعة_${ledgerFilter.startDate || 'البداية'}_إلى_${ledgerFilter.endDate || 'النهاية'}`);
+  };
+
+  const exportPLCSV = () => {
+    const pl = generateProfitAndLoss();
+    const headers = ['البند', 'القيمة', 'النوع_التصنيف'];
+    const rows = [
+      ['مبيعات وإيرادات تشغيلية', pl.totalRevenues, 'إيرادات'],
+      ['مصاريف وتكاليف تشغيلية', -pl.totalExpenses, 'تكاليف ومصروفات'],
+      ['الربح التشغيلي الإجمالي', pl.grossProfit, 'إجمالي'],
+      ['تحويلات وتتدفقات أخرى واردة', pl.otherInflow, 'أخرى واردة'],
+      ['تحويلات وتتدفقات أخرى صادرة', -pl.otherOutflow, 'أخرى صادرة'],
+      ['صافي الأرباح والخسائر التقديرية', pl.netProfit, 'صافي نهائي']
+    ];
+    reportDownloadCSV(headers, rows, `تقرير_الأرباح_والخسائر_${ledgerFilter.startDate || 'البداية'}_إلى_${ledgerFilter.endDate || 'النهاية'}`);
+  };
+
+  const exportCashFlowCSV = () => {
+    const flows = generateCashFlowTimeline();
+    const headers = ['التاريخ_اليومي', 'عدد_العمليات', 'التدفقات_الواردة', 'التدفقات_الصادرة', 'صافي_التدفق'];
+    const rows = flows.map(e => [e.date, e.count, e.inflows, e.outflows, e.net]);
+    reportDownloadCSV(headers, rows, `تدفقات_السيولة_اليومية_${ledgerFilter.startDate || 'البداية'}_إلى_${ledgerFilter.endDate || 'النهاية'}`);
+  };
+
+  const handlePrintFilteredLedger = () => {
+    const { filteredLedger, filteredIn, filteredOut, filteredNeutral } = getFilteredLedger();
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html dir="rtl">
+          <head>
+            <title>تقرير دفتر الأستاذ</title>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap');
+              body { 
+                font-family: 'Cairo', sans-serif; 
+                padding: 30px; 
+                color: #1e293b;
+                background: #fff;
+              }
+              .report-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                border-bottom: 2px solid #0f172a;
+                padding-bottom: 15px;
+                margin-bottom: 30px;
+              }
+              .report-header h2 {
+                margin: 0 0 10px 0;
+                font-size: 28px;
+                color: #0f172a;
+              }
+              table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                font-size: 14px;
+              }
+              th, td { 
+                border: 1px solid #e2e8f0; 
+                padding: 12px 10px; 
+                text-align: right; 
+              }
+              th { 
+                background-color: #f8fafc; 
+                color: #475569;
+                font-weight: 800;
+              }
+              .text-left { text-align: left; font-family: monospace; font-size: 15px; }
+              .summary-grid { 
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 15px; 
+                margin-bottom: 30px; 
+              }
+              .summary-card { 
+                padding: 15px; 
+                border: 1px solid #e2e8f0; 
+                border-radius: 8px; 
+                text-align: center;
+                background: #f8fafc;
+              }
+              .summary-card span {
+                display: block;
+                font-size: 20px;
+                font-weight: 800;
+                font-family: monospace;
+                margin-top: 5px;
+              }
+              .val-in { color: #059669; }
+              .val-out { color: #e11d48; }
+              .val-net { color: #2563eb; }
+              
+              @media print {
+                body { padding: 0; }
+                .no-print { display: none; }
+                .summary-grid { display: none !important; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="report-header" style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 2px solid #cbd5e1; margin-bottom: 20px;">
+                <div style="flex: 1; text-align: right;">
+                  <h2 style="font-size: 20px; font-weight: bold; color: #000; margin: 0;">${companyName}</h2>
+                </div>
+                <div style="flex: 2; text-align: center;">
+                  <h2 style="font-size: 20px; font-weight: 800; margin: 0; display: inline-block; padding: 4px 16px; border: 2px solid #1e293b; border-radius: 4px; box-shadow: 2px 2px 0 0 #1e293b; background: white;">تقرير دفتر الأستاذ</h2>
+                </div>
+                <div style="flex: 1; text-align: left; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                  ${(ledgerFilter.startDate || ledgerFilter.endDate) ? `<div style="font-size: 13px; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 6px; border-radius: 4px;">الفترة: <span dir="ltr">${ledgerFilter.startDate || '-'} / ${ledgerFilter.endDate || '-'}</span></div>` : ''}
+                  ${ledgerFilter.category !== 'all' ? `<div style="font-size: 13px; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 6px; border-radius: 4px;">القسم: ${ledgerFilter.category}</div>` : ''}
+                  <div style="font-size: 13px; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 6px; border-radius: 4px;">الطباعة: <span dir="ltr">${new Date().toLocaleString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
+                </div>
+              </div>
+            
+            <div class="summary-grid no-print">
+              <div class="summary-card">
+                <strong>إجمالي الوارد (مدين)</strong>
+                <span class="val-in" dir="ltr">${formatNum(filteredIn)}</span>
+              </div>
+              <div class="summary-card">
+                <strong>إجمالي المنصرف (دائن)</strong>
+                <span class="val-out" dir="ltr">${formatNum(filteredOut)}</span>
+              </div>
+              <div class="summary-card">
+                <strong>إجمالي المعلق</strong>
+                <span dir="ltr" style="color: #d97706;">${formatNum(filteredNeutral)}</span>
+              </div>
+              <div class="summary-card">
+                <strong>صافي الرصيد</strong>
+                <span class="val-net" dir="ltr">${formatNum(filteredIn - filteredOut)}</span>
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  ${ledgerPrintCols.date ? `<th>التاريخ</th>` : ''}
+                  ${ledgerPrintCols.desc ? `<th style="width: 35%">البيان</th>` : ''}
+                  ${ledgerPrintCols.category ? `<th>التصنيف</th>` : ''}
+                  ${ledgerPrintCols.in ? `<th>مدين (وارد)</th>` : ''}
+                  ${ledgerPrintCols.out ? `<th>دائن (منصرف)</th>` : ''}
+                  ${ledgerPrintCols.bal ? `<th>الرصيد التراكمي</th>` : ''}
+                </tr>
+              </thead>
+              <tbody>
+                ${filteredLedger.map((e: any) => `
+                  <tr>
+                    ${ledgerPrintCols.date ? `<td>${e.date}</td>` : ''}
+                    ${ledgerPrintCols.desc ? `<td><strong>${e.description}</strong></td>` : ''}
+                    ${ledgerPrintCols.category ? `<td style="color: #64748b; font-size: 12px;">${e.category}</td>` : ''}
+                    ${ledgerPrintCols.in ? `<td class="text-left val-in" dir="ltr">${e.type === 'in' ? formatNum(e.amount) : '-'}</td>` : ''}
+                    ${ledgerPrintCols.out ? `<td class="text-left val-out" dir="ltr">${e.type === 'out' ? formatNum(e.amount) : '-'}</td>` : ''}
+                    ${ledgerPrintCols.bal ? `<td class="text-left val-net font-bold" dir="ltr" style="background:#f8fafc;">${formatNum(e.balance)}</td>` : ''}
+                  </tr>
+                `).join('')}
+                ${filteredLedger.length === 0 ? `<tr><td colspan="6" style="text-align:center; padding: 30px; color: #94a3b8;">لا توجد حركات مسجلة تطابق البحث</td></tr>` : ''}
+              </tbody>
+              ${filteredLedger.length > 0 ? `
+              <tfoot style="background: #f1f5f9; font-weight: bold;">
+                <tr>
+                  <td colspan="${(ledgerPrintCols.date?1:0)+(ledgerPrintCols.desc?1:0)+(ledgerPrintCols.category?1:0)}" style="text-align: center;">الإجمالي النهائي</td>
+                  ${ledgerPrintCols.in ? `<td class="text-left val-in" dir="ltr">${formatNum(filteredIn)}</td>` : ''}
+                  ${ledgerPrintCols.out ? `<td class="text-left val-out" dir="ltr">${formatNum(filteredOut)}</td>` : ''}
+                  ${ledgerPrintCols.bal ? `<td class="text-left val-net" dir="ltr">${formatNum(filteredIn - filteredOut)}</td>` : ''}
+                </tr>
+              </tfoot>
+              ` : ''}
+            </table>
+            <script>
+              window.onload = () => {
+                setTimeout(() => window.print(), 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
+  const handlePrintTrialBalance = () => {
+    const tbData = generateTrialBalance();
+    const totalDebit = tbData.reduce((sum, e) => sum + e.debit, 0);
+    const goldTotalCredit = tbData.reduce((sum, e) => sum + e.credit, 0);
+    const totalBal = totalDebit - goldTotalCredit;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html dir="rtl">
+          <head>
+            <title>ميزان المراجعة</title>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap');
+              body { font-family: 'Cairo', sans-serif; padding: 30px; color: #1e293b; background: #fff; }
+              .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 30px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+              th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: right; }
+              th { background-color: #f1f5f9; font-weight: 800; }
+              .mono { font-family: monospace; font-size: 15px; text-align: left; }
+              .pos { color: #059669; }
+              .neg { color: #e11d48; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div>
+                <h2 style="margin:0;">${companyName}</h2>
+                <p style="color:#64748b; margin:5px 0 0 0;">ميزان المراجعة والمطابقة</p>
+              </div>
+              <div style="text-align:left;">
+                <p style="margin:0; font-weight:bold;">التاريخ: ${new Date().toLocaleDateString('ar-EG')}</p>
+                ${(ledgerFilter.startDate || ledgerFilter.endDate) ? `<p style="margin:5px 0 0 0;">الفترة: ${ledgerFilter.startDate || '-'} إلى ${ledgerFilter.endDate || '-'}</p>` : ''}
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>اسم الحساب / التصنيف</th>
+                  <th style="text-align:left;">إجمالي المدين (وارد)</th>
+                  <th style="text-align:left;">إجمالي الدائن (منصرف)</th>
+                  <th style="text-align:left;">صافي الرصيد</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tbData.map(e => `
+                  <tr>
+                    <td><strong>${e.category}</strong></td>
+                    <td class="mono">${formatNum(e.debit)}</td>
+                    <td class="mono">${formatNum(e.credit)}</td>
+                    <td class="mono ${e.balance >= 0 ? 'pos' : 'neg'} font-bold">${formatNum(e.balance)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot style="background:#f8fafc; font-weight:bold;">
+                <tr>
+                  <td>الإجمالي النهائي للأوزان</td>
+                    <td class="mono">${formatNum(totalDebit)}</td>
+                    <td class="mono">${formatNum(goldTotalCredit)}</td>
+                    <td class="mono ${totalBal >= 0 ? 'pos' : 'neg'} font-bold">${formatNum(totalBal)}</td>
+                </tr>
+              </tfoot>
+            </table>
+            <script>window.onload = () => setTimeout(() => window.print(), 500);</script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
+  const handlePrintPL = () => {
+    const pl = generateProfitAndLoss();
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html dir="rtl">
+          <head>
+            <title>قائمة الأرباح والخسائر التقديرية</title>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap');
+              body { font-family: 'Cairo', sans-serif; padding: 30px; color: #1e293b; background: #fff; }
+              .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 30px; }
+              .section-title { font-weight:800; background:#f1f5f9; padding:8px 12px; margin:20px 0 10px 0; border-right:4px solid #4f46e5; }
+              .row { display:flex; justify-content:space-between; padding:10px 12px; border-bottom:1px dashed #e2e8f0; font-size:15px; }
+              .total-row { display:flex; justify-content:space-between; padding:12px 12px; background:#f8fafc; font-weight:bold; border-top:2px solid #1e293b; border-bottom:2px solid #1e293b; margin-top:10px; font-size:16px; }
+              .mono { font-family: monospace; font-size: 15px; }
+              .pos { color: #059669; }
+              .neg { color: #e11d48; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div>
+                <h2 style="margin:0;">${companyName}</h2>
+                <p style="color:#64748b; margin:5px 0 0 0;">الحسابات الختامية - قائمة الدخل التقديرية</p>
+              </div>
+              <div style="text-align:left;">
+                <p style="margin:0; font-weight:bold;">التاريخ: ${new Date().toLocaleDateString('ar-EG')}</p>
+                ${(ledgerFilter.startDate || ledgerFilter.endDate) ? `<p style="margin:5px 0 0 0;">الفترة: ${ledgerFilter.startDate || '-'} إلى ${ledgerFilter.endDate || '-'}</p>` : ''}
+              </div>
+            </div>
+
+            <div class="section-title">إيرادات النشاط التشغيلي</div>
+            ${pl.revenuesList.length === 0 ? `<div class="row" style="color:#94a3b8;">لا توجد إيرادات مسجلة</div>` : pl.revenuesList.map(e => `
+              <div class="row">
+                <span>${e.description} (${e.category})</span>
+                <span class="mono">${formatNum(e.amount)}</span>
+              </div>
+            `).join('')}
+            <div class="total-row">
+              <span>إجمالي الإيرادات التشغيلية</span>
+              <span class="mono">${formatNum(pl.totalRevenues)}</span>
+            </div>
+
+            <div class="section-title">مصروفات وتكاليف المبيعات والتشغيل</div>
+            ${pl.expensesList.length === 0 ? `<div class="row" style="color:#94a3b8;">لا توجد مصروفات أو تسويات مسجلة</div>` : pl.expensesList.map(e => `
+              <div class="row">
+                <span>${e.description} (${e.category})</span>
+                <span class="mono" style="color:#e11d48;">- ${formatNum(e.amount)}</span>
+              </div>
+            `).join('')}
+            <div class="total-row">
+              <span>إجمالي المصاريف وتكاليف التشغيل</span>
+              <span class="mono" style="color:#e11d48;">- ${formatNum(pl.totalExpenses)}</span>
+            </div>
+
+            <div class="section-title">أرباح ومجمل وفارق الهوامش</div>
+            <div class="row">
+              <span>الربح الإجمالي من العمليات التشغيلية (Revenues - Expenses)</span>
+              <span class="mono ${pl.grossProfit >= 0 ? 'pos' : 'neg'} font-bold">${formatNum(pl.grossProfit)}</span>
+            </div>
+            <div class="row">
+              <span>عمليات وتحويلات السيولة الأخرى الواردة</span>
+              <span class="mono pos">+ ${formatNum(pl.otherInflow)}</span>
+            </div>
+            <div class="row">
+              <span>عمليات وتحويلات السيولة الأخرى الصادرة</span>
+              <span class="mono neg">- ${formatNum(pl.otherOutflow)}</span>
+            </div>
+
+            <div class="total-row" style="background:#4f46e5; color:#fff; border:none; margin-top:30px; font-size:18px; border-radius:4px;">
+              <span>صافي الربح / (الخسارة) التقديرية</span>
+              <span class="mono font-bold">${formatNum(pl.netProfit)}</span>
+            </div>
+
+            <script>window.onload = () => setTimeout(() => window.print(), 500);</script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
+  const handlePrintCashFlow = () => {
+    const flows = generateCashFlowTimeline();
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html dir="rtl">
+          <head>
+            <title>كشف تدفقات السيولة اليومية</title>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap');
+              body { font-family: 'Cairo', sans-serif; padding: 30px; color: #1e293b; background: #fff; }
+              .header { display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 30px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+              th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: right; }
+              th { background-color: #f1f5f9; font-weight: 800; }
+              .mono { font-family: monospace; font-size: 15px; }
+              .pos { color: #059669; }
+              .neg { color: #e11d48; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div>
+                <h2 style="margin:0;">${companyName}</h2>
+                <p style="color:#64748b; margin:5px 0 0 0;">كشف وتدفقات السيولة اليومية للمطابقة</p>
+              </div>
+              <div style="text-align:left;">
+                <p style="margin:0; font-weight:bold;">التاريخ: ${new Date().toLocaleDateString('ar-EG')}</p>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th style="text-align:center;">عدد العمليات</th>
+                  <th style="text-align:left;">إجمالي الوارد (مدين)</th>
+                  <th style="text-align:left;">إجمالي المنصرف (دائن)</th>
+                  <th style="text-align:left;">صافي تدفق السيولة</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${flows.map(e => `
+                  <tr>
+                    <td><strong>${e.date}</strong></td>
+                    <td style="text-align:center;">${e.count}</td>
+                    <td class="mono pos">${formatNum(e.inflows)}</td>
+                    <td class="mono neg">${formatNum(e.outflows)}</td>
+                    <td class="mono font-bold ${e.net >= 0 ? 'pos' : 'neg'}">${formatNum(e.net)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <script>window.onload = () => setTimeout(() => window.print(), 500);</script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
+
   const clearHistory = async () => {
     setConfirmDialog({
       message: 'هل أنت متأكد من مسح جميع السجلات بأرشيف الأيام السابقة والأموال المعلقة؟ لن يتأثر تقفيل اليوم الحالي المفتوح.',
@@ -3553,7 +4118,7 @@ const handleCopyDailyReport = () => {
                     { id: 'pending', label: 'معلقة', icon: AlertCircle },
                     { id: 'cash', label: 'جرد', icon: Wallet },
                     { id: 'history', label: 'السجل', icon: CalendarDays },
-                    { id: 'ledger', label: 'الأستاذ', icon: BookOpen },
+                    { id: 'ledger', label: 'التقارير', icon: BarChart3 },
                     { id: 'archive', label: 'أرشيف', icon: History },
                     { id: 'analytics', label: 'تحليلات', icon: BarChart3 }
                   ].map(tab => (
@@ -3845,344 +4410,653 @@ const handleCopyDailyReport = () => {
               </div>
 )}
 
-              {/* Ledger Tab */}
-              { (activeTab === 'ledger' && !isExporting) && (<div className="print:hidden">
-                
-                {/* Filters */}
-                <div className="bg-white dark:bg-slate-900 print:bg-white p-4 rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-700/60 mb-6">
-                  <div className="flex flex-wrap gap-4 items-end">
-                    <div className="flex-1 min-w-[200px]">
-                      <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">من تاريخ</label>
-                      <Input type="date" value={ledgerFilter.startDate} onChange={(e: any) => setLedgerFilter(p => ({...p, startDate: e.target.value}))} dir="ltr" />
-                    </div>
-                    <div className="flex-1 min-w-[200px]">
-                      <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">إلى تاريخ</label>
-                      <Input type="date" value={ledgerFilter.endDate} onChange={(e: any) => setLedgerFilter(p => ({...p, endDate: e.target.value}))} dir="ltr" />
-                    </div>
-                    <div className="flex-1 min-w-[200px]">
-                      <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">القسم / التصنيف</label>
-                      <select 
-                        value={ledgerFilter.category} 
-                        onChange={e => setLedgerFilter(p => ({...p, category: e.target.value}))}
-                        className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-[4px] px-3 py-2 outline-none focus:ring-2 focus:ring-brand-500/20"
-                      >
-                        <option value="all">جميع الأقسام</option>
-                        {Array.from(new Set(generateLedgerEntries().map(e => e.category))).map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex-1 min-w-[200px]">
-                      <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-2">بحث بالبند / الاسم</label>
-                      <Input type="text" value={ledgerFilter.search} onChange={(e: any) => setLedgerFilter(p => ({...p, search: e.target.value}))} placeholder="اكتب للبحث..." />
-                    </div>
-                    <button onClick={() => setLedgerFilter({startDate: '', endDate: '', category: 'all', search: ''})} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-[4px] hover:bg-slate-200 dark:hover:bg-slate-700 dark:bg-slate-700 font-bold transition-colors shrink-0">
-                      إعادة ضبط
-                    </button>
-                  </div>
-                </div>
+                            {/* Reports & Financial Ledger Tab */}
+              { (activeTab === 'ledger' && !isExporting) && (() => {
+                const { filteredLedger, filteredIn, filteredOut, filteredNeutral } = getFilteredLedger();
+                const tbData = generateTrialBalance();
+                const totalDebit = tbData.reduce((sum, e) => sum + e.debit, 0);
+                const totalCredit = tbData.reduce((sum, e) => sum + e.credit, 0);
+                const totalBal = totalDebit - totalCredit;
+                const pl = generateProfitAndLoss();
+                const flows = generateCashFlowTimeline();
 
-                {/* Filtered Summary */}
-                {(() => {
-                  const allEntries = generateLedgerEntries();
-                  const parseDate = (dateStr: string) => {
-                    const [day, month, year] = dateStr.split('/');
-                    return new Date(Number(year), Number(month) - 1, Number(day));
-                  };
+                // Compute safety margin and analytics indicators
+                const revenueToCostRatio = pl.totalRevenues > 0 ? (pl.totalExpenses / pl.totalRevenues) * 100 : 0;
+                const profitMargin = pl.totalRevenues > 0 ? (pl.netProfit / pl.totalRevenues) * 100 : 0;
 
-                  const sortedEntries = allEntries.sort((a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime());
-                  let runningBalance = 0;
-                  const balanceEntries = sortedEntries.map(e => {
-                    if (e.type === 'in') runningBalance += e.amount;
-                    if (e.type === 'out') runningBalance -= e.amount;
-                    return { ...e, balance: runningBalance };
-                  });
+                // Category distribution for expenses
+                const expenseChartData = tbData
+                  .filter(item => item.credit > 0 && item.category !== 'مبيعات')
+                  .map(item => ({
+                    name: item.category,
+                    value: item.credit
+                  }));
 
-                  const filteredLedger = balanceEntries.filter(entry => {
-                    const entryDate = parseDate(entry.date);
-                    const start = ledgerFilter.startDate ? new Date(ledgerFilter.startDate) : null;
-                    const end = ledgerFilter.endDate ? new Date(ledgerFilter.endDate) : null;
+                return (
+                  <div className="print:hidden w-full">
                     
-                    let dateMatch = true;
-                    if (start) { start.setHours(0,0,0,0); dateMatch = dateMatch && entryDate >= start; }
-                    if (end) { end.setHours(23,59,59,999); dateMatch = dateMatch && entryDate <= end; }
+                    {/* Unified Reports Header */}
+                    <div className="bg-gradient-to-l from-indigo-900 via-slate-800 to-slate-900 text-white rounded-[1rem] p-6 mb-6 shadow-md relative overflow-hidden">
+                      <div className="absolute top-0 left-0 bg-indigo-500/10 w-64 h-64 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+                      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <h2 className="text-2xl font-black mb-1.5 flex items-center gap-2">
+                            <BarChart3 size={28} className="text-indigo-400" />
+                            مركز التقارير الحسابية والقوائم المالية الشاملة
+                          </h2>
+                          <p className="text-slate-300 text-[14px]">استخراج موازين المراجعة، دفاتر الأستاذ، قوائم الأرباح والخسائر، ومطابقة أرصدة الفروع وتحليل السيولة والتدفقات النقدية.</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 shrink-0">
+                          <button 
+                            onClick={() => {
+                              if (reportSubTab === 'ledger') handlePrintFilteredLedger();
+                              if (reportSubTab === 'trial') handlePrintTrialBalance();
+                              if (reportSubTab === 'pl') handlePrintPL();
+                              if (reportSubTab === 'cashflow') handlePrintCashFlow();
+                              if (reportSubTab === 'visuals') window.print();
+                            }}
+                            className="flex items-center gap-2 bg-indigo-650 hover:bg-indigo-700 px-4 py-2.5 border-none rounded-[6px] text-sm text-white font-bold cursor-pointer transition-colors shadow-sm animate-pulse-once"
+                          >
+                            <Printer size={16} />
+                            طباعة التقرير الحالي
+                          </button>
+                        </div>
+                      </div>
+                    </div>
 
-                    const categoryMatch = ledgerFilter.category === 'all' || entry.category === ledgerFilter.category;
-                    const searchMatch = !ledgerFilter.search || entry.description.toLowerCase().includes(ledgerFilter.search.toLowerCase());
+                    {/* General Filters Box */}
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
+                      <div className="text-xs font-extrabold text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.55">
+                        <Search size={14} className="text-indigo-500" />
+                        تصفية ومطابقة الحسابات العامة (تسري على جميع الأقسام والتقارير):
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                        <div>
+                          <label className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-2">من تاريخ</label>
+                          <Input type="date" value={ledgerFilter.startDate} onChange={(e: any) => setLedgerFilter(p => ({...p, startDate: e.target.value}))} dir="ltr" />
+                        </div>
+                        <div>
+                          <label className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-2">إلى تاريخ</label>
+                          <Input type="date" value={ledgerFilter.endDate} onChange={(e: any) => setLedgerFilter(p => ({...p, endDate: e.target.value}))} dir="ltr" />
+                        </div>
+                        <div>
+                          <label className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-2">القسم / التصنيف</label>
+                          <select 
+                            value={ledgerFilter.category} 
+                            onChange={e => setLedgerFilter(p => ({...p, category: e.target.value}))}
+                            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[6px] px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-100"
+                          >
+                            <option value="all">جميع الحسابات / الأقسام</option>
+                            {Array.from(new Set(generateLedgerEntries().map(e => e.category))).map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <label className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-2">بحث بالبند / الاسم</label>
+                            <Input type="text" value={ledgerFilter.search} onChange={(e: any) => setLedgerFilter(p => ({...p, search: e.target.value}))} placeholder="اكتب للبحث..." />
+                          </div>
+                          <button 
+                            onClick={() => setLedgerFilter({startDate: '', endDate: '', category: 'all', search: ''})} 
+                            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-650 dark:text-slate-450 px-3.5 py-2.5 rounded-[6px] border-none font-bold transition-all shrink-0 h-[38px] flex items-center justify-center cursor-pointer"
+                            title="إعادة ضبط الفلاتر"
+                          >
+                            مسح
+                          </button>
+                        </div>
+                      </div>
+                    </div>
 
-                    return dateMatch && categoryMatch && searchMatch;
-                  });
+                    {/* Sub-tabs menu bar */}
+                    <div className="flex flex-wrap gap-1.5 p-1 bg-slate-100 dark:bg-slate-850 rounded-[10px] mb-6 shadow-inner border border-slate-200/60 dark:border-slate-850">
+                      <button 
+                        onClick={() => setReportSubTab('ledger')}
+                        className={`flex-1 min-w-[124px] flex items-center justify-center gap-2 px-3 py-3 border-none rounded-[8px] text-xs md:text-sm font-bold cursor-pointer transition-all ${reportSubTab === 'ledger' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-md transform scale-[1.01]' : 'bg-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-white/40'}`}
+                      >
+                        <BookOpen size={16} />
+                        دفتر الأستاذ العام
+                      </button>
+                      <button 
+                        onClick={() => setReportSubTab('trial')}
+                        className={`flex-1 min-w-[124px] flex items-center justify-center gap-2 px-3 py-3 border-none rounded-[8px] text-xs md:text-sm font-bold cursor-pointer transition-all ${reportSubTab === 'trial' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-md transform scale-[1.01]' : 'bg-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-white/40'}`}
+                      >
+                        <Layers size={16} />
+                        ميزان المراجعة الحسابي
+                      </button>
+                      <button 
+                        onClick={() => setReportSubTab('pl')}
+                        className={`flex-1 min-w-[124px] flex items-center justify-center gap-2 px-3 py-3 border-none rounded-[8px] text-xs md:text-sm font-bold cursor-pointer transition-all ${reportSubTab === 'pl' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-md transform scale-[1.01]' : 'bg-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-white/40'}`}
+                      >
+                        <TrendingUp size={16} />
+                        الأرباح والخسائر
+                      </button>
+                      <button 
+                        onClick={() => setReportSubTab('cashflow')}
+                        className={`flex-1 min-w-[124px] flex items-center justify-center gap-2 px-3 py-3 border-none rounded-[8px] text-xs md:text-sm font-bold cursor-pointer transition-all ${reportSubTab === 'cashflow' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-md transform scale-[1.01]' : 'bg-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-white/40'}`}
+                      >
+                        <Activity size={16} />
+                        جدول التدفق النقدى
+                      </button>
+                      <button 
+                        onClick={() => setReportSubTab('visuals')}
+                        className={`flex-1 min-w-[124px] flex items-center justify-center gap-2 px-3 py-3 border-none rounded-[8px] text-xs md:text-sm font-bold cursor-pointer transition-all ${reportSubTab === 'visuals' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-md transform scale-[1.01]' : 'bg-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 hover:bg-white/40'}`}
+                      >
+                        <BarChart3 size={16} />
+                        مؤشرات ورسوم بيانية
+                      </button>
+                    </div>
 
-                  const filteredIn = filteredLedger.filter(e => e.type === 'in').reduce((sum, e) => sum + e.amount, 0);
-                  const filteredOut = filteredLedger.filter(e => e.type === 'out').reduce((sum, e) => sum + e.amount, 0);
-                  const filteredNeutral = filteredLedger.filter(e => e.type === 'neutral').reduce((sum, e) => sum + e.amount, 0);
+                    {/* SUB-TAB 1: DYNAMIC GENERAL LEDGER */}
+                    {reportSubTab === 'ledger' && (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[12px] p-4 flex items-center justify-between shadow-sm">
+                            <div>
+                              <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">إجمالي المقبوضات (مدين)</p>
+                              <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono" dir="ltr">{formatNum(filteredIn)}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                              <ArrowDownRight size={20} />
+                            </div>
+                          </div>
+                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[12px] p-4 flex items-center justify-between shadow-sm">
+                            <div>
+                              <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">إجمالي المصروفات (دائن)</p>
+                              <p className="text-xl font-bold text-rose-600 dark:text-rose-400 font-mono" dir="ltr">{formatNum(filteredOut)}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                              <ArrowUpRight size={20} />
+                            </div>
+                          </div>
+                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[12px] p-4 flex items-center justify-between shadow-sm">
+                            <div>
+                              <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold mb-1">الحركات المعلقة مؤقتاً</p>
+                              <p className="text-xl font-bold text-amber-600 dark:text-amber-400 font-mono" dir="ltr">{formatNum(filteredNeutral)}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                              <AlertCircle size={20} />
+                            </div>
+                          </div>
+                          <div className="bg-indigo-900 text-white border border-indigo-750 rounded-[12px] p-4 flex items-center justify-between shadow-sm">
+                            <div>
+                              <p className="text-indigo-200 text-xs font-semibold mb-1">صافي رصيد دفتر الأستاذ</p>
+                              <p className="text-xl font-extrabold text-white font-mono" dir="ltr">{formatNum(filteredIn - filteredOut)}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-indigo-850 flex items-center justify-center text-indigo-400 border border-indigo-500/25">
+                              <CheckCircle2 size={20} />
+                            </div>
+                          </div>
+                        </div>
 
-                  const handlePrintFilteredLedger = () => {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`
-                        <html dir="rtl">
-                          <head>
-                            <title>تقرير دفتر الأستاذ</title>
-                            <style>
-                              @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap');
-                              body { 
-                                font-family: 'Cairo', sans-serif; 
-                                padding: 30px; 
-                                color: #1e293b;
-                                background: #fff;
-                              }
-                              .report-header {
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: flex-start;
-                                border-bottom: 2px solid #0f172a;
-                                padding-bottom: 15px;
-                                margin-bottom: 30px;
-                              }
-                              .report-header h2 {
-                                margin: 0 0 10px 0;
-                                font-size: 28px;
-                                color: #0f172a;
-                              }
-                              .filters-info {
-                                color: #64748b;
-                                font-size: 14px;
-                                line-height: 1.6;
-                              }
-                              table { 
-                                width: 100%; 
-                                border-collapse: collapse; 
-                                font-size: 14px;
-                              }
-                              th, td { 
-                                border: 1px solid #e2e8f0; 
-                                padding: 12px 10px; 
-                                text-align: right; 
-                              }
-                              th { 
-                                background-color: #f8fafc; 
-                                color: #475569;
-                                font-weight: 800;
-                              }
-                              .text-left { text-align: left; font-family: monospace; font-size: 15px; }
-                              .summary-grid { 
-                                display: grid;
-                                grid-template-columns: repeat(4, 1fr);
-                                gap: 15px; 
-                                margin-bottom: 30px; 
-                              }
-                              .summary-card { 
-                                padding: 15px; 
-                                border: 1px solid #e2e8f0; 
-                                border-radius: 8px; 
-                                text-align: center;
-                                background: #f8fafc;
-                              }
-                              .summary-card span {
-                                display: block;
-                                font-size: 20px;
-                                font-weight: 800;
-                                font-family: monospace;
-                                margin-top: 5px;
-                              }
-                              .val-in { color: #059669; }
-                              .val-out { color: #e11d48; }
-                              .val-net { color: #2563eb; }
-                              
-                              @media print {
-                                body { padding: 0; }
-                                .no-print { display: none; }
-                                .summary-grid { display: none !important; }
-                              }
-                            </style>
-                          </head>
-                          <body>
-                            <div class="report-header" style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 2px solid #cbd5e1; margin-bottom: 20px;">
-                                <div style="flex: 1; text-align: right;">
-                                  <h2 style="font-size: 20px; font-weight: bold; color: #000; margin: 0;">${companyName}</h2>
-                                </div>
-                                <div style="flex: 2; text-align: center;">
-                                  <h2 style="font-size: 20px; font-weight: 800; margin: 0; display: inline-block; padding: 4px 16px; border: 2px solid #1e293b; border-radius: 4px; box-shadow: 2px 2px 0 0 #1e293b; background: white;">تقرير دفتر الأستاذ</h2>
-                                </div>
-                                <div style="flex: 1; text-align: left; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                                  ${(ledgerFilter.startDate || ledgerFilter.endDate) ? `<div style="font-size: 13px; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 6px; border-radius: 4px;">الفترة: <span dir="ltr">${ledgerFilter.startDate || '-'} / ${ledgerFilter.endDate || '-'}</span></div>` : ''}
-                                  ${ledgerFilter.category !== 'all' ? `<div style="font-size: 13px; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 6px; border-radius: 4px;">القسم: ${ledgerFilter.category}</div>` : ''}
-                                  <div style="font-size: 13px; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 6px; border-radius: 4px;">الطباعة: <span dir="ltr">${new Date().toLocaleString('ar-EG', {hour: '2-digit', minute:'2-digit'})}</span></div>
-                                </div>
+                        {/* Ledger Data Table */}
+                        <div className="bg-white dark:bg-slate-900 rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden mb-6">
+                          <div className="bg-slate-800 text-white p-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-700">
+                            <div className="flex items-center gap-2 font-black text-[15px]">
+                              <BookOpen size={20} className="text-indigo-400" /> 
+                              كشف قيود الموازنة والتصفية لدفتر الأستاذ (العمليات: {filteredLedger.length})
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto font-normal">
+                              <div className="flex flex-wrap items-center gap-2 bg-slate-700/50 p-2 rounded-[6px] border border-slate-600 text-xs text-slate-300">
+                                <span className="text-slate-400 font-bold ml-1">عرض بالطباعة:</span>
+                                <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.date} onChange={e => setLedgerPrintCols({...ledgerPrintCols, date: e.target.checked})} className="accent-indigo-600" /> التاريخ</label>
+                                <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.desc} onChange={e => setLedgerPrintCols({...ledgerPrintCols, desc: e.target.checked})} className="accent-indigo-600" /> البيان</label>
+                                <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.category} onChange={e => setLedgerPrintCols({...ledgerPrintCols, category: e.target.checked})} className="accent-indigo-600" /> التصنيف</label>
+                                <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.in} onChange={e => setLedgerPrintCols({...ledgerPrintCols, in: e.target.checked})} className="accent-emerald-500" /> وارد</label>
+                                <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.out} onChange={e => setLedgerPrintCols({...ledgerPrintCols, out: e.target.checked})} className="accent-rose-500" /> منصرف</label>
+                                <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.bal} onChange={e => setLedgerPrintCols({...ledgerPrintCols, bal: e.target.checked})} className="accent-indigo-600" /> الرصيد</label>
                               </div>
-                            
-                            <div class="summary-grid no-print">
-                              <div class="summary-card">
-                                <strong>إجمالي الوارد (مدين)</strong>
-                                <span class="val-in" dir="ltr">${formatNum(filteredIn)}</span>
-                              </div>
-                              <div class="summary-card">
-                                <strong>إجمالي المنصرف (دائن)</strong>
-                                <span class="val-out" dir="ltr">${formatNum(filteredOut)}</span>
-                              </div>
-                              <div class="summary-card">
-                                <strong>إجمالي المعلق</strong>
-                                <span dir="ltr" style="color: #d97706;">${formatNum(filteredNeutral)}</span>
-                              </div>
-                              <div class="summary-card">
-                                <strong>صافي الرصيد</strong>
-                                <span class="val-net" dir="ltr">${formatNum(filteredIn - filteredOut)}</span>
+                              <div className="flex gap-2 w-full lg:w-auto">
+                                <button onClick={exportLedgerCSV} className="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 bg-slate-705 hover:bg-slate-600 text-white border-none text-[13px] font-bold px-4 py-2 rounded-[6px] cursor-pointer transition-all shadow-sm">
+                                  <Download size={14} /> تصدير مجمع
+                                </button>
+                                <button onClick={handlePrintFilteredLedger} className="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white border-none text-[13px] font-bold px-4 py-2 rounded-[6px] cursor-pointer transition-all shadow-sm">
+                                  <Printer size={14} /> طباعة الدفتر
+                                </button>
                               </div>
                             </div>
-
-                            <table>
+                          </div>
+                          
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-right border-collapse">
                               <thead>
-                                <tr>
-                                  ${ledgerPrintCols.date ? `<th>التاريخ</th>` : ''}
-                                  ${ledgerPrintCols.desc ? `<th style="width: 35%">البيان</th>` : ''}
-                                  ${ledgerPrintCols.category ? `<th>التصنيف</th>` : ''}
-                                  ${ledgerPrintCols.in ? `<th>مدين (وارد)</th>` : ''}
-                                  ${ledgerPrintCols.out ? `<th>دائن (منصرف)</th>` : ''}
-                                  ${ledgerPrintCols.bal ? `<th>الرصيد التراكمي</th>` : ''}
+                                <tr className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                  <th className="p-3.5 font-bold border-l border-slate-200 dark:border-slate-800">التاريخ</th>
+                                  <th className="p-3.5 font-bold border-l border-slate-200 dark:border-slate-800 w-1/3">البيان المالي للحركة</th>
+                                  <th className="p-3.5 font-bold border-l border-slate-200 dark:border-slate-800">التصنيف الحسابي</th>
+                                  <th className="p-3.5 font-bold border-l border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-left">مدين (وارد)</th>
+                                  <th className="p-3.5 font-bold border-l border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 text-left">دائن (منصرف)</th>
+                                  <th className="p-3.5 font-bold text-slate-850 dark:text-slate-200 text-left">الرصيد التراكمي المتبقي</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                ${filteredLedger.map((e: any) => `
-                                  <tr>
-                                    ${ledgerPrintCols.date ? `<td>${e.date}</td>` : ''}
-                                    ${ledgerPrintCols.desc ? `<td><strong>${e.description}</strong></td>` : ''}
-                                    ${ledgerPrintCols.category ? `<td style="color: #64748b; font-size: 12px;">${e.category}</td>` : ''}
-                                    ${ledgerPrintCols.in ? `<td class="text-left val-in" dir="ltr">${e.type === 'in' ? formatNum(e.amount) : '-'}</td>` : ''}
-                                    ${ledgerPrintCols.out ? `<td class="text-left val-out" dir="ltr">${e.type === 'out' ? formatNum(e.amount) : '-'}</td>` : ''}
-                                    ${ledgerPrintCols.bal ? `<td class="text-left val-net font-bold" dir="ltr" style="background:#f8fafc;">${formatNum(e.balance)}</td>` : ''}
+                                {filteredLedger.map((entry: any, index: number) => (
+                                  <tr key={entry.id + index} className="border-b border-slate-100 dark:border-slate-800/60 hover:bg-indigo-50/10 dark:hover:bg-slate-800/30 transition-all">
+                                    <td className="p-3 text-slate-700 dark:text-slate-300 border-l border-slate-200 dark:border-slate-800 font-mono text-xs">{entry.date}</td>
+                                    <td className="p-3 font-bold text-slate-800 dark:text-slate-101 border-l border-slate-200 dark:border-slate-800">{entry.description}</td>
+                                    <td className="p-3 text-xs border-l border-slate-200 dark:border-slate-800 font-bold text-slate-500 dark:text-slate-300">
+                                      {entry.category}
+                                    </td>
+                                    <td className="p-3 border-l border-slate-200 dark:border-slate-800 font-mono text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-500/5 text-left" dir="ltr">
+                                      {entry.type === 'in' ? formatNum(entry.amount) : '-'}
+                                    </td>
+                                    <td className="p-3 border-l border-slate-200 dark:border-slate-800 font-mono text-rose-700 dark:text-rose-400 font-bold bg-rose-500/5 text-left" dir="ltr">
+                                      {entry.type === 'out' ? formatNum(entry.amount) : '-'}
+                                    </td>
+                                    <td className="p-3 font-mono text-indigo-750 dark:text-indigo-300 font-extrabold bg-slate-50 dark:bg-slate-800/10 text-left" dir="ltr">
+                                      {formatNum(entry.balance)}
+                                    </td>
                                   </tr>
-                                `).join('')}
-                                ${filteredLedger.length === 0 ? `<tr><td colspan="6" style="text-align:center; padding: 30px; color: #94a3b8;">لا توجد حركات مسجلة تطابق البحث</td></tr>` : ''}
+                                ))}
+                                {filteredLedger.length === 0 && (
+                                  <tr>
+                                    <td colSpan={6} className="text-center py-16 text-slate-400 bg-slate-50/30 dark:bg-slate-800/10">
+                                      <BookOpen size={48} className="mx-auto opacity-20 mb-3 text-slate-400" />
+                                      <p className="font-bold text-lg text-slate-550 dark:text-slate-400">لا توجد حركات أستاذ تطابق مدخلات الفلترة والبحث</p>
+                                      <p className="text-xs text-slate-400 mt-1">يرجى تعديل خيارات التصفية أو الفلترة العامة لتوسيع النطاق الحسابي.</p>
+                                    </td>
+                                  </tr>
+                                )}
                               </tbody>
-                              ${filteredLedger.length > 0 ? `
-                              <tfoot style="background: #f1f5f9; font-weight: bold;">
-                                <tr>
-                                  <td colspan="${(ledgerPrintCols.date?1:0)+(ledgerPrintCols.desc?1:0)+(ledgerPrintCols.category?1:0)}" style="text-align: center;">الإجمالي النهائي</td>
-                                  ${ledgerPrintCols.in ? `<td class="text-left val-in" dir="ltr">${formatNum(filteredIn)}</td>` : ''}
-                                  ${ledgerPrintCols.out ? `<td class="text-left val-out" dir="ltr">${formatNum(filteredOut)}</td>` : ''}
-                                  ${ledgerPrintCols.bal ? `<td class="text-left val-net" dir="ltr">${formatNum(filteredIn - filteredOut)}</td>` : ''}
-                                </tr>
-                              </tfoot>
-                              ` : ''}
                             </table>
-                            <script>
-                              window.onload = () => {
-                                setTimeout(() => window.print(), 500);
-                              };
-                            </script>
-                          </body>
-                        </html>
-                      `);
-                      printWindow.document.close();
-                    }
-                  };
+                          </div>
+                        </div>
+                      </>
+                    )}
 
-                  return (
-                    <>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
-                          <div>
-                            <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">إجمالي الوارد (مدين)</p>
-                            <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredIn)}</p>
+                    {/* SUB-TAB 2: TRIAL BALANCE SHEET */}
+                    {reportSubTab === 'trial' && (
+                      <div className="bg-white dark:bg-slate-900 rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden mb-6">
+                        <div className="bg-slate-800 text-white p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-700">
+                          <div className="flex items-center gap-2 font-black text-[15px]">
+                            <Layers size={20} className="text-indigo-400" />
+                            ميزان المراجعة والمطابقة المزدوجة (التصنيفات المكتشفة: {tbData.length})
                           </div>
-                        </div>
-                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
-                          <div>
-                            <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">إجمالي المنصرف (دائن)</p>
-                            <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredOut)}</p>
-                          </div>
-                        </div>
-                        <div className="bg-white dark:bg-slate-900 print:bg-white border border-slate-200 dark:border-slate-700/80 rounded-[1rem] p-4 flex items-center justify-between shadow-sm">
-                          <div>
-                            <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">إجمالي المعلق</p>
-                            <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredNeutral)}</p>
-                          </div>
-                        </div>
-                        <div className="bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-[4px] p-4 flex items-center justify-between shadow-sm">
-                          <div>
-                            <p className="text-slate-500 dark:text-slate-400 text-[13px] font-medium mb-1">صافي الرصيد</p>
-                            <p className="text-[20px] font-bold text-slate-800 dark:text-slate-200" dir="ltr">{formatNum(filteredIn - filteredOut)}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[4px] sm:rounded-[4px] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6">
-                        <div className="bg-slate-800 text-white p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700">
-                          <div className="flex items-center gap-2 font-bold">
-                            <BookOpen size={20} className="text-slate-300" /> كشف حساب (النتائج: {filteredLedger.length})
-                          </div>
-                          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3 w-full sm:w-auto">
-                            <div className="flex flex-wrap items-center gap-2 bg-slate-700/50 p-2 rounded-[4px] border border-slate-600/50 text-xs">
-                              <span className="text-slate-400 ml-1">أعمدة الطباعة:</span>
-                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.date} onChange={e => setLedgerPrintCols({...ledgerPrintCols, date: e.target.checked})} className="accent-slate-900" /> التاريخ</label>
-                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.desc} onChange={e => setLedgerPrintCols({...ledgerPrintCols, desc: e.target.checked})} className="accent-slate-900" /> البيان</label>
-                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.category} onChange={e => setLedgerPrintCols({...ledgerPrintCols, category: e.target.checked})} className="accent-slate-900" /> التصنيف</label>
-                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.in} onChange={e => setLedgerPrintCols({...ledgerPrintCols, in: e.target.checked})} className="accent-emerald-500" /> وارد</label>
-                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.out} onChange={e => setLedgerPrintCols({...ledgerPrintCols, out: e.target.checked})} className="accent-rose-500" /> منصرف</label>
-                              <label className="flex items-center gap-1 cursor-pointer hover:text-white"><input type="checkbox" checked={ledgerPrintCols.bal} onChange={e => setLedgerPrintCols({...ledgerPrintCols, bal: e.target.checked})} className="accent-slate-900" /> الرصيد</label>
-                            </div>
-                            <button onClick={handlePrintFilteredLedger} className="flex items-center justify-center gap-2 bg-brand-500 text-white border-none hover:bg-blue-700 text-white px-4 py-2 rounded-[4px] text-[15px] font-bold border border-slate-900 hover:bg-slate-900 transition-colors shrink-0 shadow-sm w-full sm:w-auto">
-                              <Printer size={16} /> طباعة التقرير
+                          <div className="flex gap-2 w-full md:w-auto self-stretch md:self-auto">
+                            <button onClick={exportTrialBalanceCSV} className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white border-none text-[13px] font-bold px-4 py-2 rounded-[6px] cursor-pointer transition-all shadow-sm">
+                              <Download size={14} /> تصدير الميزان
+                            </button>
+                            <button onClick={handlePrintTrialBalance} className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white border-none text-[13px] font-bold px-4 py-2 rounded-[6px] cursor-pointer transition-all shadow-sm">
+                              <Printer size={14} /> طباعة الميزان
                             </button>
                           </div>
                         </div>
-                        <div className="p-0 overflow-x-auto">
-                          <table className="w-full text-[15px] text-right border-collapse">
+
+                        <div className="p-4 bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <span className="flex items-center gap-1.5 leading-relaxed">
+                            <AlertCircle size={14} className="text-indigo-500 shrink-0" />
+                            ميزان المراجعة يلخص إجمالي ديون الالتزام وحركات الحسابات الدائنة والمدينة للتحقق المالي من توازن المعادلة الحسابية.
+                          </span>
+                          <span className={`px-3 py-1 rounded-[4px] font-bold inline-flex items-center gap-1 text-[11px] self-end sm:self-auto ${Math.abs(totalBal) < 0.01 ? 'bg-emerald-55 text-emerald-700 border border-emerald-250 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-rose-50 text-rose-700 border border-rose-250'}`}>
+                            التحقق الثنائي للمطابقة: {Math.abs(totalBal) < 0.01 ? 'متوازن ومكتمل (0)' : `فرق المطابقة: ${formatNum(totalBal)}`}
+                          </span>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm text-right border-collapse">
                             <thead>
-                              <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                                <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-700">التاريخ</th>
-                                <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-700 w-1/3">البيان</th>
-                                <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-700">التصنيف</th>
-                                <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-700 text-emerald-700">مدين (وارد)</th>
-                                <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-700 text-rose-700">دائن (منصرف)</th>
-                                <th className="p-3 font-bold text-slate-800 dark:text-slate-200 font-bold">الرصيد</th>
+                              <tr className="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                <th className="p-3.5 font-bold border-l border-slate-200 dark:border-slate-800">الحساب الرئيسي والتصنيف الحسابي</th>
+                                <th className="p-3.5 font-bold border-l border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400 text-left">إجمالي المدين (الداخل)</th>
+                                <th className="p-3.5 font-bold border-l border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400 text-left">إجمالي الدائن (الخارج)</th>
+                                <th className="p-3.5 font-bold text-slate-800 dark:text-slate-200 text-left">صافي رصيد الحساب المغلق</th>
                               </tr>
                             </thead>
                             <tbody>
-                              
-                              {filteredLedger.map((entry: any, index: number) => (
-                                <tr
-key={entry.id + index} 
-                                  className="border-b border-slate-200 dark:border-slate-700 hover:bg-amber-50/50 transition-colors"
-                                >
-                                  <td className="p-3 font-medium text-slate-700 dark:text-slate-300 border-l border-slate-200 dark:border-slate-700">{entry.date}</td>
-                                  <td className="p-3 font-bold text-slate-800 dark:text-slate-200 border-l border-slate-200 dark:border-slate-700">{entry.description}</td>
-                                  <td className="p-3 text-slate-500 dark:text-slate-400 text-xs border-l border-slate-200 dark:border-slate-700">
-                                    <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">{entry.category}</span>
-                                  </td>
-                                  <td className="p-3 border-l border-slate-200 dark:border-slate-700 font-mono text-emerald-700 font-bold bg-emerald-50/30" dir="ltr">
-                                    {entry.type === 'in' ? formatNum(entry.amount) : '-'}
-                                  </td>
-                                  <td className="p-3 border-l border-slate-200 dark:border-slate-700 font-mono text-rose-700 font-bold bg-rose-50/30" dir="ltr">
-                                    {entry.type === 'out' ? formatNum(entry.amount) : '-'}
-                                  </td>
-                                  <td className="p-3 font-mono text-slate-800 dark:text-slate-200 font-bold font-black bg-slate-100 dark:bg-slate-800/80/30" dir="ltr">
-                                    {formatNum(entry.balance)}
-                                  </td>
+                              {tbData.map((e, idx) => (
+                                <tr key={idx} className="border-b border-slate-100 dark:border-slate-800/55 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                                  <td className="p-3.5 font-bold text-slate-800 dark:text-slate-150 border-l border-slate-200 dark:border-slate-800">{e.category}</td>
+                                  <td className="p-3.5 font-mono text-emerald-600 dark:text-emerald-400 text-left border-l border-slate-200 dark:border-slate-800" dir="ltr">{formatNum(e.debit)}</td>
+                                  <td className="p-3.5 font-mono text-rose-600 dark:text-rose-400 text-left border-l border-slate-200 dark:border-slate-800" dir="ltr">{formatNum(e.credit)}</td>
+                                  <td className={`p-3.5 font-mono text-left font-black ${e.balance >= 0 ? 'text-indigo-650 dark:text-indigo-400 bg-indigo-50/10' : 'text-rose-600 dark:text-rose-400 bg-rose-50/10'}`} dir="ltr">{formatNum(e.balance)}</td>
                                 </tr>
                               ))}
-                              
-                              {filteredLedger.length === 0 && (
+                              {tbData.length === 0 && (
                                 <tr>
-                                  <td colSpan={6}>
-                                    <div className="flex flex-col items-center justify-center py-12 text-slate-400 bg-slate-50 dark:bg-slate-800/50">
-                                      <BookOpen size={48} className="opacity-20 mb-3" />
-                                      <p className="font-bold text-lg text-slate-500 dark:text-slate-400">لا توجد حركات مسجلة تطابق البحث</p>
-                                    </div>
-                                  </td>
+                                  <td colSpan={4} className="text-center py-12 text-slate-400">لا توجد حركات أو تصنيفات مالية معرفة لتعبئة ميزان المراجعة</td>
                                 </tr>
                               )}
                             </tbody>
+                            {tbData.length > 0 && (
+                              <tfoot className="bg-slate-100 dark:bg-slate-800 font-extrabold border-t-2 border-slate-300 dark:border-slate-700">
+                                <tr>
+                                  <td className="p-4 border-l border-slate-200 dark:border-slate-800">إجمالي الأرصدة المتطابقة</td>
+                                  <td className="p-4 font-mono text-emerald-700 dark:text-emerald-400 text-left border-l border-slate-200 dark:border-slate-800" dir="ltr">{formatNum(totalDebit)}</td>
+                                  <td className="p-4 font-mono text-rose-700 dark:text-rose-400 text-left border-l border-slate-200 dark:border-slate-800" dir="ltr">{formatNum(totalCredit)}</td>
+                                  <td className={`p-4 font-mono text-left text-lg ${totalBal >= 0 ? 'text-indigo-655 dark:text-indigo-400' : 'text-rose-650 dark:text-rose-500'}`} dir="ltr">{formatNum(totalBal)}</td>
+                                </tr>
+                              </tfoot>
+                            )}
                           </table>
                         </div>
                       </div>
-                    </>
-                  );
-                })()}
-              </div>
-              )}
+                    )}
 
+                    {/* SUB-TAB 3: PROFIT & LOSS STATEMENT */}
+                    {reportSubTab === 'pl' && (
+                      <div className="bg-white dark:bg-slate-900 rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden mb-6">
+                        <div className="bg-slate-800 text-white p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-700">
+                          <div className="flex items-center gap-2 font-black text-[15px]">
+                            <TrendingUp size={20} className="text-indigo-400" />
+                            قائمة الأرباح والخسائر التقديرية (قائمة الدخل ومجمل الربح المحقق)
+                          </div>
+                          <div className="flex gap-2 w-full md:w-auto self-stretch md:self-auto font-normal">
+                            <button onClick={exportPLCSV} className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white border-none text-[13px] font-bold px-4 py-2 rounded-[6px] cursor-pointer transition-all shadow-sm">
+                              <Download size={14} /> تصدير القائمة
+                            </button>
+                            <button onClick={handlePrintPL} className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 bg-indigo-650 hover:bg-indigo-700 text-white border-none text-[13px] font-bold px-4 py-2 rounded-[6px] cursor-pointer transition-all shadow-sm">
+                              <Printer size={14} /> طباعة القائمة
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="p-6">
+                          {/* Revenues section */}
+                          <div className="mb-6">
+                            <h3 className="text-sm font-black text-slate-800 dark:text-white border-r-4 border-emerald-500 pr-2.5 py-0.5 mb-3 flex items-center justify-between">
+                              <span>أولاً: إيرادات ومداخيل النشاط التشغيلي</span>
+                              <span className="text-xs text-slate-400 font-normal">نسبة التحليل الأفقي للقائمة كنسبة من الإيراد</span>
+                            </h3>
+                            <div className="space-y-2 bg-slate-50 dark:bg-slate-800/30 p-3 rounded-[8px] border border-slate-101">
+                              {pl.revenuesList.length === 0 ? (
+                                <p className="text-slate-400 text-xs py-2 text-center">لا توجد حركات إيرادات مسجلة لتحديث القائمة</p>
+                              ) : (
+                                pl.revenuesList.map((e, idx) => (
+                                  <div key={idx} className="flex justify-between items-center text-xs text-slate-650 dark:text-slate-350 py-1.5 border-b border-slate-100 last:border-none">
+                                    <span>{e.description} ({e.category})</span>
+                                    <div className="flex items-center gap-3">
+                                      <span className="font-mono text-emerald-650 dark:text-emerald-400 font-bold" dir="ltr">+{formatNum(e.amount)}</span>
+                                      <span className="text-[10px] text-slate-400 font-mono w-10 text-left">100%</span>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                              <div className="flex justify-between items-center text-sm font-black text-slate-800 dark:text-slate-100 pt-2.5 mt-2.5 border-t border-slate-200 dark:border-slate-700">
+                                <span>إجمالي الإيرادات وعوائد التشغيل (أ)</span>
+                                <span className="font-mono text-emerald-600 dark:text-emerald-400" dir="ltr">{formatNum(pl.totalRevenues)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Expenses section */}
+                          <div className="mb-6">
+                            <h3 className="text-sm font-black text-slate-800 dark:text-white border-r-4 border-rose-500 pr-2.5 py-0.5 mb-3">
+                              ثانياً: تكاليف ومصروفات التسوية والعمليات
+                            </h3>
+                            <div className="space-y-2 bg-slate-50 dark:bg-slate-800/30 p-3 rounded-[8px] border border-slate-101">
+                              {pl.expensesList.length === 0 ? (
+                                <p className="text-slate-400 text-xs py-2 text-center">لا توجد حركات مصروفات مسجلة حالياً</p>
+                              ) : (
+                                pl.expensesList.map((e, idx) => {
+                                  const ratio = pl.totalRevenues > 0 ? (e.amount / pl.totalRevenues) * 100 : 0;
+                                  return (
+                                    <div key={idx} className="flex justify-between items-center text-xs text-slate-650 dark:text-slate-350 py-1.5 border-b border-slate-100 last:border-none">
+                                      <span>{e.description} ({e.category})</span>
+                                      <div className="flex items-center gap-3">
+                                        <span className="font-mono text-rose-655 dark:text-rose-450 font-bold" dir="ltr">-{formatNum(e.amount)}</span>
+                                        <span className="text-[10px] text-slate-400 font-mono w-10 text-left" dir="ltr">({ratio.toFixed(1)}%)</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                              <div className="flex justify-between items-center text-sm font-black text-slate-800 dark:text-slate-101 pt-2.5 mt-2.5 border-t border-slate-200 dark:border-slate-700">
+                                <span>إجمالي المصروفات المدفوعة والشركات (ب)</span>
+                                <span className="font-mono text-rose-600 dark:text-rose-450" dir="ltr">-{formatNum(pl.totalExpenses)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Profit Summarization Block */}
+                          <div className="border border-indigo-500/10 dark:border-indigo-550/20 bg-slate-50/50 dark:bg-slate-800/20 p-5 rounded-[12px]">
+                            <h3 className="text-sm font-black text-slate-800 dark:text-white border-r-4 border-indigo-500 pr-2.5 py-0.5 mb-3">
+                              ثالثاً: ملخص الهوامش وصافي نتائج الفترات
+                            </h3>
+                            <div className="space-y-3 font-normal text-xs text-slate-600 dark:text-slate-300">
+                              <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-805/50">
+                                <span>مجمل الهامش والربح التشغيلي المباشر (أ - ب)</span>
+                                <span className={`font-mono font-bold ${pl.grossProfit >= 0 ? 'text-emerald-650' : 'text-rose-650'}`} dir="ltr">{formatNum(pl.grossProfit)}</span>
+                              </div>
+                              <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-800/50">
+                                <span>تحويلات عملاء ومطابقات التدفق الداخلة الأخرى (+)</span>
+                                <span className="font-mono font-bold text-emerald-650" dir="ltr">+{formatNum(pl.otherInflow)}</span>
+                              </div>
+                              <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-800/50">
+                                <span>إيداعات بنكية ومطابقات التدفق الخارجة الأخرى (-)</span>
+                                <span className="font-mono font-bold text-rose-650" dir="ltr">-{formatNum(pl.otherOutflow)}</span>
+                              </div>
+                              
+                              {/* Analytical Ratios row */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 pt-3 border-t border-slate-200/50 dark:border-slate-700/50">
+                                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-[8px] p-2.5">
+                                  <span className="block text:[10px] text-slate-400 font-extrabold mb-1">حمولة ومعدل المصروفات للإيراد:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-sm font-black text-indigo-650 dark:text-indigo-400" dir="ltr">{revenueToCostRatio.toFixed(1)}%</span>
+                                    <div className="flex-1 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                      <div className="bg-indigo-600 h-full" style={{ width: `${Math.min(revenueToCostRatio, 100)}%` }}></div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-[8px] p-2.5">
+                                  <span className="block text:[10px] text-slate-400 font-extrabold mb-1">هامش الأرباح التقديري الحقيقي:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`font-mono text-sm font-black ${profitMargin >= 0 ? 'text-emerald-650' : 'text-rose-600'}`} dir="ltr">{profitMargin.toFixed(1)}%</span>
+                                    <div className="flex-1 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                      <div className={`${profitMargin >= 0 ? 'bg-emerald-500' : 'bg-rose-500'} h-full`} style={{ width: `${Math.min(Math.abs(profitMargin), 100)}%` }}></div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-[8px] bg-indigo-600 text-white dark:bg-indigo-950/70 border-none shadow-md">
+                              <div>
+                                <h4 className="text-sm font-black">الربح الصافي / العائد التقديري للمنشأة:</h4>
+                                <p className="text-[11px] text-indigo-100 mt-1">يشمل جميع حركات الداخل والخارج للفروع والأقسام تحت التصفية المذكورة.</p>
+                              </div>
+                              <div className="text-right sm:text-left mt-2 sm:mt-0">
+                                <span className="text-2xl font-black font-mono tracking-tight text-white block" dir="ltr">
+                                  {formatNum(pl.netProfit)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SUB-TAB 4: DAILY CASH FLOW TIMELINE */}
+                    {reportSubTab === 'cashflow' && (
+                      <div className="bg-white dark:bg-slate-900 rounded-[1rem] shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden mb-6">
+                        <div className="bg-slate-800 text-white p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-700">
+                          <div className="flex items-center gap-2 font-black text-[15px]">
+                            <Activity size={20} className="text-indigo-400" />
+                            التدفقات النقدية وحركة تسييل الخزائن (الأيام المسجلة: {flows.length})
+                          </div>
+                          <div className="flex gap-2 w-full md:w-auto self-stretch md:self-auto font-normal">
+                            <button onClick={exportCashFlowCSV} className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 bg-slate-700 hover:bg-slate-600 text-white border-none text-[13px] font-bold px-4 py-2 rounded-[6px] cursor-pointer transition-all shadow-sm">
+                              <Download size={14} /> تصدير السيولة
+                            </button>
+                            <button onClick={handlePrintCashFlow} className="flex-1 md:flex-initial flex items-center justify-center gap-1.5 bg-indigo-650 hover:bg-indigo-700 text-white border-none text-[13px] font-bold px-4 py-2 rounded-[6px] cursor-pointer transition-all shadow-sm">
+                              <Printer size={14} /> طباعة السيولة
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-indigo-50/30 dark:bg-indigo-950/10 text-xs text-indigo-700 dark:text-indigo-300 border-b border-slate-200 flex items-center gap-1.5">
+                          <Sparkles size={14} className="text-indigo-500" />
+                          تتبع سرعة التدفقات المالية والنقدية اليومية بالخزينة، اضغط على أي يوم لرؤية الحركات الفردية المرتبطة به.
+                        </div>
+
+                        <div className="p-4 space-y-3">
+                          {flows.length === 0 ? (
+                            <p className="text-slate-400 text-center py-12">لا توجد حركات تدفقات نقدية مسجلة لعرضها</p>
+                          ) : (
+                            flows.map((flow, fidx) => {
+                              const isExpanded = !!expandedDates[flow.date];
+                              return (
+                                <div key={fidx} className="border border-slate-205 dark:border-slate-800 rounded-[8px] bg-white dark:bg-slate-900 overflow-hidden shadow-sm transition-all hover:border-slate-350 dark:hover:border-slate-700">
+                                  <div 
+                                    onClick={() => setExpandedDates(p => ({ ...p, [flow.date]: !p[flow.date] }))}
+                                    className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 cursor-pointer select-none hover:bg-slate-100/50 dark:hover:bg-slate-800/40"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex flex-col items-center justify-center shrink-0">
+                                        <CalendarDays size={18} className="text-indigo-500" />
+                                      </div>
+                                      <div>
+                                        <p className="text-[15px] font-extrabold text-slate-800 dark:text-white">{flow.date}</p>
+                                        <p className="text-[11px] text-slate-450">{flow.count} حركات تشغيلية</p>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
+                                      <div className="bg-emerald-500/5 px-2.5 py-1.5 rounded text-emerald-600">
+                                        وارد: <span className="font-bold">{formatNum(flow.inflows)}</span>
+                                      </div>
+                                      <div className="bg-rose-500/5 px-2.5 py-1.5 rounded text-rose-600">
+                                        منصرف: <span className="font-bold">{formatNum(flow.outflows)}</span>
+                                      </div>
+                                      <div className={`px-2.5 py-1.5 rounded ${flow.net >= 0 ? 'bg-emerald-50 text-emerald-700 font-extrabold dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-rose-50 text-rose-700 font-extrabold dark:bg-rose-950/45 dark:text-rose-450'}`}>
+                                        التدفق الحركي: <span>{formatNum(flow.net)}</span>
+                                      </div>
+                                      <div className="text-slate-350">
+                                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {isExpanded && (
+                                    <div className="bg-slate-50/50 dark:bg-slate-800/10 border-t border-slate-250 dark:border-slate-800 p-4">
+                                      <div className="overflow-x-auto rounded-[8px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                                        <table className="w-full text-xs text-right border-collapse">
+                                          <thead>
+                                            <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                              <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-800">البيان والشرح الحسابي للعملية</th>
+                                              <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-800">التصنيف</th>
+                                              <th className="p-3 font-bold border-l border-slate-200 dark:border-slate-800 text-left">الوارد (مدين)</th>
+                                              <th className="p-3 font-bold text-left">المنصرف (دائن)</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {flow.transactions.map((tr: any, sIdx: number) => (
+                                              <tr key={sIdx} className="hover:bg-slate-50 dark:hover:bg-slate-850 border-b border-slate-100 dark:border-slate-805 last:border-none">
+                                                <td className="p-3 font-semibold text-slate-850 dark:text-slate-100 border-l border-slate-200 dark:border-slate-800">{tr.description}</td>
+                                                <td className="p-3 text-slate-500 dark:text-slate-450 border-l border-slate-200 dark:border-slate-800">{tr.category}</td>
+                                                <td className="p-3 text-left border-l border-slate-200 dark:border-slate-800 font-mono font-bold text-emerald-600 dark:text-emerald-400" dir="ltr">
+                                                  {tr.type === 'in' ? formatNum(tr.amount) : '-'}
+                                                </td>
+                                                <td className="p-3 text-left font-mono font-bold text-rose-600 dark:text-rose-455" dir="ltr">
+                                                  {tr.type === 'out' ? formatNum(tr.amount) : '-'}
+                                                </td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SUB-TAB 5: FINANCIAL CHARTS & ANALYTICS DASHBOARD */}
+                    {reportSubTab === 'visuals' && (
+                      <div className="space-y-6 mb-6">
+                        {/* Highlights Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-[12px] p-5 shadow-sm">
+                            <span className="text-slate-400 dark:text-slate-450 text-xs font-bold block mb-1">هامش العائد التشغيلي</span>
+                            <div className="flex items-baseline gap-2 mt-2">
+                              <span className="text-2xl font-black text-indigo-650 dark:text-indigo-400 font-mono">{profitMargin.toFixed(1)}%</span>
+                              <span className="text-xs text-slate-500">من المبيعات والداخل</span>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-2">يمثل النسبة المئوية لصافي المردود الحقيقي بعد استخلاص المصاريف من الإيراد الفعلي.</p>
+                          </div>
+                          
+                          <div className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-[12px] p-5 shadow-sm">
+                            <span className="text-slate-400 dark:text-slate-450 text-xs font-bold block mb-1">كفاءة الرقابة والترشيد (النفقة)</span>
+                            <div className="flex items-baseline gap-2 mt-2">
+                              <span className="text-2xl font-black text-emerald-600 dark:text-emerald-500 font-mono">{(100 - revenueToCostRatio).toFixed(1)}%</span>
+                              <span className="text-xs text-slate-505">معدل البقاء والاحتفاظ</span>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-2">يمثل الجزء المتبقي من التدفقات لكل ريال مقبوض قبل أوجه التحويل الأخرى.</p>
+                          </div>
+
+                          <div className="bg-white dark:bg-slate-900 border border-slate-205 dark:border-slate-800 rounded-[12px] p-5 shadow-sm">
+                            <span className="text-slate-400 dark:text-slate-450 text-xs font-bold block mb-1">متوسط التدفق اليومي الصافي</span>
+                            <div className="flex items-baseline gap-2 mt-2">
+                              <span className="text-2xl font-black text-indigo-650 dark:text-indigo-400 font-mono">
+                                {flows.length > 0 ? formatNum(flows.reduce((sum, e) => sum + e.net, 0) / flows.length) : '0'}
+                              </span>
+                              <span className="text-xs text-slate-505">ريال / يوم</span>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-2">معدل تسييل العمليات وتسوياتها اليومية المجمعة في الخزائن الذكية.</p>
+                          </div>
+                        </div>
+
+                        {/* Chart Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          
+                          {/* Card 1: Cash Flow Composed Chart */}
+                          <div className="bg-white dark:bg-slate-900 p-5 rounded-[12px] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
+                            <h3 className="text-sm font-black text-slate-800 dark:text-white border-r-3 border-indigo-500 pr-2.5 py-0.5 mb-5 flex items-center justify-between">
+                              <span>مسار وسيولة التدفقات اليومية</span>
+                              <span className="text-[10px] text-slate-400 font-normal">الوارد السريع مقابل الصادر التشغيلي</span>
+                            </h3>
+                            <div className="flex-1 min-h-[300px] h-[300px] w-full font-mono text-[11px] ltr" style={{ direction: 'ltr' }}>
+                              <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart data={flows}>
+                                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                                  <XAxis dataKey="date" stroke="#94a3b8" />
+                                  <YAxis stroke="#94a3b8" />
+                                  <RechartsTooltip contentStyle={{ background: '#0f172a', border: 'none', borderRadius: '6px', color: '#fff' }} />
+                                  <Legend />
+                                  <Bar dataKey="inflows" name="التدفق الوارد" fill="#34d399" radius={[4, 4, 0, 0]} barSize={24} />
+                                  <Bar dataKey="outflows" name="التدفق الخارج" fill="#f87171" radius={[4, 4, 0, 0]} barSize={24} />
+                                  <Line type="monotone" dataKey="net" name="صافي التدفق" stroke="#6366f1" strokeWidth={3} dot={{ r: 4 }} />
+                                </ComposedChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+
+                          {/* Card 2: Expense Categories Bar breakout */}
+                          <div className="bg-white dark:bg-slate-900 p-5 rounded-[12px] border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
+                            <h3 className="text-sm font-black text-slate-800 dark:text-white border-r-3 border-rose-500 pr-2.5 py-0.5 mb-5 flex items-center justify-between">
+                              <span>تفنيد بنود الصرف والمصروفات</span>
+                              <span className="text-[10px] text-slate-400 font-normal">توزيع بنود ميزان المراجعة</span>
+                            </h3>
+                            <div className="flex-1 min-h-[300px] h-[300px] w-full font-mono text-[11px] ltr" style={{ direction: 'ltr' }}>
+                              {expenseChartData.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 dark:bg-slate-800/10 rounded-lg">
+                                  <BarChart3 size={32} className="opacity-25 mb-1 text-slate-400" />
+                                  <span>لا توجد مصروفات أو شركات مسددة حالياً</span>
+                                </div>
+                              ) : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <BarChart data={expenseChartData} layout="vertical">
+                                    <CartesianGrid strokeDasharray="3 3" opacity={0.15} horizontal={false} />
+                                    <YAxis dataKey="name" type="category" stroke="#94a3b8" width={90} />
+                                    <XAxis type="number" stroke="#94a3b8" />
+                                    <RechartsTooltip contentStyle={{ background: '#0f172a', border: 'none', borderRadius: '6px', color: '#fff' }} />
+                                    <Bar dataKey="value" name="مجموع الصرف" fill="#f87171" radius={[0, 4, 4, 0]} />
+                                  </BarChart>
+                                </ResponsiveContainer>
+                              )}
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })()}
               {/* Archive Tab */}
               { (activeTab === 'archive' && !isExporting) && (<div className="print:block">
                 <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[4px] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 flex flex-col">
