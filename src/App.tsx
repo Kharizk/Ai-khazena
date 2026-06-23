@@ -1351,6 +1351,44 @@ const AddNameInput = ({ onAdd }: { onAdd: (name: string) => void }) => {
   );
 };
 
+const EditableAmountInput = ({ value, onSave }: any) => {
+  const [localVal, setLocalVal] = useState<string>(value !== undefined && value !== 0 ? value.toString() : value === 0 ? '0' : '');
+
+  useEffect(() => {
+    setLocalVal(value !== undefined && value !== 0 ? value.toString() : value === 0 ? '0' : '');
+  }, [value]);
+
+  const handleBlur = () => {
+    const numeric = localVal === '' ? '' : Number(localVal);
+    if (numeric !== value) {
+      onSave(numeric);
+    }
+  };
+
+  const handleKeyDown = (e: any) => {
+    if (e.key === 'Enter') {
+      const numeric = localVal === '' ? '' : Number(localVal);
+      if (numeric !== value) {
+        onSave(numeric);
+      }
+      e.target.blur();
+    }
+  };
+
+  return (
+    <Input 
+      type="number" 
+      value={localVal} 
+      onChange={(e: any) => setLocalVal(e.target.value)} 
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      placeholder="المبلغ" 
+      className="text-left font-semibold group-hover/row:border-slate-300 dark:border-slate-600/60 !rounded-[4px]" 
+      dir="ltr" 
+    />
+  );
+};
+
 const DynamicTable = ({ title, field, data, icon: Icon, colorClass, onAdd, onUpdate, onRemove, onArchive, onTogglePin, onToggleSummary, onManage, onReorder, sumTransactions, formatNum, savedNames, onSaveName }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -1425,7 +1463,10 @@ key={item.id}
               />
             </div>
             <div className="w-1/3">
-              <Input type="number" value={item.amount !== undefined && item.amount !== 0 ? round2(item.amount) : item.amount === 0 ? 0 : ''} onChange={(e: any) => onUpdate(item.id, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="المبلغ" className="text-left font-semibold group-hover/row:border-slate-300 dark:border-slate-600/60 !rounded-[4px]" dir="ltr" />
+              <EditableAmountInput 
+                value={item.amount} 
+                onSave={(val: any) => onUpdate(item.id, 'amount', val)} 
+              />
             </div>
             {onManage && (
               <button onClick={() => onManage(item)} title="إدارة الحساب وكشف الحساب" className="p-2.5 text-slate-900 dark:text-white tracking-tight hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 rounded-[4px] transition-all hover:scale-105 active:scale-95">
@@ -1559,48 +1600,103 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
     }
   };
 
-  const personEntries = ledgerEntries.filter((e: any) => e.description.includes(fund.name));
+  const personEntries = fund.isReset ? [] : ledgerEntries.filter((e: any) => e.description.includes(fund.name));
   
   // Process legacy entries that don't have detailed history
   const legacyEntries = personEntries.filter((pe: any) => 
     !fund.history || !fund.history.some((h: any) => h.date.split(' ')[0] === pe.date)
-  ).map((pe: any) => ({
-    id: pe.id,
-    date: pe.date,
-    description: pe.description + ' (سجل مجمع للدفتر)',
-    type: pe.type,
-    amount: pe.amount,
-    note: '',
-    isLegacy: true
-  }));
+  ).map((pe: any) => {
+    // For money owed to US: pe.type === 'in' (received cash) is a reduction (credit), pe.type === 'out' (gave cash) is an addition (debit)
+    // For money owed BY US: pe.type === 'out' (paid supplier) is a reduction (debit), pe.type === 'in' (got cash) is an addition (credit)
+    let effect = 0;
+    let isDebit = false;
+    let isCredit = false;
 
-  const historyEntries = [
-    ...legacyEntries,
-    ...(fund.history || []).map((h: any) => ({
+    if (isToUs) {
+      if (pe.type === 'in') { // Received cash from customer
+        effect = -pe.amount;
+        isCredit = true;
+      } else { // Gave cash/value to customer
+        effect = pe.amount;
+        isDebit = true;
+      }
+    } else {
+      if (pe.type === 'out') { // Paid the supplier
+        effect = -pe.amount;
+        isDebit = true;
+      } else { // Got goods/value from supplier
+        effect = pe.amount;
+        isCredit = true;
+      }
+    }
+
+    return {
+      id: pe.id,
+      date: pe.date,
+      description: pe.description + ' (سجل مجمع للدفتر)',
+      type: pe.type,
+      amount: pe.amount,
+      note: '',
+      isLegacy: true,
+      effect,
+      isDebit,
+      isCredit
+    };
+  });
+
+  const detailedHistorySum = (fund.history || []).reduce((acc: number, h: any) => {
+    return acc + (h.type === 'add' ? h.amount : h.type === 'sub' ? -h.amount : 0);
+  }, 0);
+
+  const legacyNet = legacyEntries.reduce((sum: number, le: any) => sum + le.effect, 0);
+
+  // Total recorded net balance from detailed history and legacy
+  const totalRecordedSum = round2(detailedHistorySum + legacyNet);
+
+  // Discrepancy with the current total balance
+  const openingBalance = round2(Number(fund.amount || 0) - totalRecordedSum);
+
+  // Opening / Starting entry
+  const openingEntry = {
+    id: 'opening-baseline',
+    date: fund.history && fund.history.length > 0 ? fund.history[0].date : (fund.date || new Date().toLocaleDateString('ar-EG')),
+    description: 'رصيد سابق / افتتاحي',
+    type: 'neutral',
+    amount: Math.abs(openingBalance),
+    note: 'الرصيد الابتدائي المقيد للحساب لتطابق الإجماليات وعمليات التصفير والتدقيق المالي المحقق',
+    isLegacy: false,
+    isOpening: true,
+    effect: openingBalance,
+    isDebit: isToUs ? (openingBalance >= 0) : (openingBalance < 0),
+    isCredit: isToUs ? (openingBalance < 0) : (openingBalance >= 0),
+  };
+
+  const liveHistoryEntries = (fund.history || []).map((h: any) => {
+    const effect = h.type === 'add' ? h.amount : h.type === 'sub' ? -h.amount : 0;
+    return {
       id: h.id,
       date: h.date,
-      description: h.type === 'add' ? 'إضافة مبلغ' : h.type === 'sub' ? 'خصم مبلغ' : 'رصيد افتتاحي',
+      description: h.type === 'add' ? 'إضافة مبلغ' : h.type === 'sub' ? 'خصم / سداد مبلغ' : 'رصيد افتتاحي',
       type: h.type === 'add' ? 'in' : h.type === 'sub' ? 'out' : 'neutral',
       amount: h.amount,
       note: h.note || '',
-      isLegacy: false
-    }))
+      isLegacy: false,
+      effect,
+      isDebit: h.type === 'add',
+      isCredit: h.type === 'sub'
+    };
+  });
+
+  const historyEntries = [
+    openingEntry,
+    ...legacyEntries,
+    ...liveHistoryEntries
   ];
 
   // Calculate Running Balance line-by-line dynamically
-  // For 'toUs' (money owed to us): add (+) increases, sub (-) decreases.
-  // For 'byUs' (money we owe): add (+) increases liability, sub (-) decreases liability.
   let runningBal = 0;
   const historyWithRunningBalance = historyEntries.map((e: any) => {
-    let effect = 0;
-    if (e.type === 'in' || e.type === 'add') {
-      effect = e.amount;
-    } else if (e.type === 'out' || e.type === 'sub') {
-      effect = -e.amount;
-    } else {
-      effect = e.amount; // neutral fallback
-    }
-    runningBal = round2(runningBal + effect);
+    runningBal = round2(runningBal + e.effect);
     return {
       ...e,
       runningBalance: runningBal
@@ -1693,7 +1789,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
               </div>
               <div class="header-meta">
                 <div>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG')}</div>
-                <div style="font-size: 16px; font-weight: bold; color: #111; margin-top: 5px; text-align: left;">الرصيد المهائي الحالي: <span dir="ltr">${formatNum(fund.amount)}</span></div>
+                <div style="font-size: 16px; font-weight: bold; color: #111; margin-top: 5px; text-align: left;">الرصيد النهائي الحالي: <span dir="ltr">${formatNum(fund.amount)}</span></div>
               </div>
             </div>
 
@@ -1791,7 +1887,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
             </div>
 
             <div className="bg-blue-50 dark:bg-blue-950/30 p-3.5 rounded-[10px] border border-blue-200 dark:border-blue-900/40 text-center flex flex-col justify-between shadow-sm">
-              <span className="text-[13px] text-blue-700 dark:text-blue-300 font-bold mb-1 block">الرصيد المهائي الحالي</span>
+              <span className="text-[13px] text-blue-700 dark:text-blue-300 font-bold mb-1 block">الرصيد النهائي الحالي</span>
               <span className="text-xl font-bold text-blue-800 dark:text-blue-200" dir="ltr">{formatNum(fund.amount)}</span>
             </div>
           </div>
@@ -1956,9 +2052,9 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredHistory.map((entry: any, idx: number) => {
-                    const isDebit = isToUs ? (entry.type === 'in' || entry.type === 'add') : (entry.type === 'out' || entry.type === 'sub');
-                    const isCredit = isToUs ? (entry.type === 'out' || entry.type === 'sub') : (entry.type === 'in' || entry.type === 'add');
+                  {[...filteredHistory].reverse().map((entry: any, idx: number) => {
+                    const isDebit = entry.isDebit;
+                    const isCredit = entry.isCredit;
                     return (
                       <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 last:border-0 transition-colors">
                         <td className="p-3 text-center text-xs font-semibold text-slate-400 select-none">
@@ -2024,66 +2120,67 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                           )}
                         </td>
 
-                      {/* Actions */}
-                      <td className="p-3 text-center whitespace-nowrap">
-                        {editingEntry === entry.id ? (
-                          <div className="flex items-center gap-1.5 justify-center">
-                            <button 
-                              onClick={() => {
-                                if (editAmount && Number(editAmount) > 0) {
-                                  onEditHistory(field, fund.id, entry.id, Number(editAmount), editType, editNote);
-                                  setEditingEntry(null);
-                                  showToast('تم تعديل الحركة وحفظ البيانات المحدثة', 'success');
-                                }
-                              }}
-                              className="text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1 rounded-[4px] transition-colors"
-                              title="حفظ"
-                            >
-                              <Check size={14} />
-                            </button>
-                            <button 
-                              onClick={() => setEditingEntry(null)}
-                              className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-1 rounded-[4px] transition-colors"
-                              title="إلغاء التعديل"
-                            >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ) : (
-                          !entry.isLegacy ? (
-                            <div className="flex items-center gap-1.5 justify-center opacity-40 group-hover:opacity-100 hover:opacity-100 transition-opacity">
+                        {/* Actions */}
+                        <td className="p-3 text-center whitespace-nowrap">
+                          {editingEntry === entry.id ? (
+                            <div className="flex items-center gap-1.5 justify-center">
                               <button 
                                 onClick={() => {
-                                  setEditingEntry(entry.id);
-                                  setEditAmount(entry.amount);
-                                  setEditType(entry.type === 'in' ? 'add' : 'sub');
-                                  setEditNote(entry.note || '');
-                                }}
-                                className="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
-                                title="تعديل هذا القيد"
-                              >
-                                <Edit2 size={13} />
-                              </button>
-                              <button 
-                                onClick={() => {
-                                  if(window.confirm('هل أنت متأكد من حذف هذه الحركة؟')) {
-                                    onDeleteHistory(field, fund.id, entry.id);
-                                    showToast('تمت إزالة الحركة بالكامل بنجاح', 'success');
+                                  if (editAmount && Number(editAmount) > 0) {
+                                    onEditHistory(field, fund.id, entry.id, Number(editAmount), editType, editNote);
+                                    setEditingEntry(null);
+                                    showToast('تم تعديل الحركة وحفظ البيانات المحدثة', 'success');
                                   }
                                 }}
-                                className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded"
-                                title="حذف القيد"
+                                className="text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 p-1 rounded-[4px] transition-colors"
+                                title="حفظ"
                               >
-                                <Trash2 size={13} />
+                                <Check size={14} />
+                              </button>
+                              <button 
+                                onClick={() => setEditingEntry(null)}
+                                className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-1 rounded-[4px] transition-colors"
+                                title="إلغاء التعديل"
+                              >
+                                <X size={14} />
                               </button>
                             </div>
                           ) : (
-                            <span className="text-[10px] text-slate-400 font-bold">-</span>
-                          )
-                        )}
-                      </td>
-                    </tr>
-                  )})}
+                            (!entry.isLegacy && !entry.isOpening) ? (
+                              <div className="flex items-center gap-1.5 justify-center opacity-40 group-hover:opacity-100 hover:opacity-100 transition-opacity">
+                                <button 
+                                  onClick={() => {
+                                    setEditingEntry(entry.id);
+                                    setEditAmount(entry.amount);
+                                    setEditType(entry.type === 'in' ? 'add' : 'sub');
+                                    setEditNote(entry.note || '');
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 p-1 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
+                                  title="تعديل هذا القيد"
+                                >
+                                  <Edit2 size={13} />
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                    if(window.confirm('هل أنت متأكد من حذف هذه الحركة؟')) {
+                                      onDeleteHistory(field, fund.id, entry.id);
+                                      showToast('تمت إزالة الحركة بالكامل بنجاح', 'success');
+                                    }
+                                  }}
+                                  className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded"
+                                  title="حذف القيد"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-bold">-</span>
+                            )
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                   
                   {filteredHistory.length === 0 && (
                     <tr>
@@ -2896,7 +2993,8 @@ const handleCopyDailyReport = () => {
             return {
               ...t,
               amount: 0,
-              history: []
+              history: [],
+              isReset: true
             };
           }
           return t;
