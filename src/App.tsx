@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useDeferredValue, useMemo, Suspense
 import { createPortal } from 'react-dom';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, Copy, Search, Check, Edit2, BarChart3, TrendingUp, TrendingDown, ChevronUp, ChevronDown, ArrowRight, ChevronLeft, Database, Sparkles, Activity, PieChart as PieChartIcon, LineChart as LineChartIcon } from 'lucide-react';
+import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, RotateCcw, Copy, Search, Check, Edit2, BarChart3, TrendingUp, TrendingDown, ChevronUp, ChevronDown, ArrowRight, ChevronLeft, Database, Sparkles, Activity, PieChart as PieChartIcon, LineChart as LineChartIcon } from 'lucide-react';
 import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, updateDoc, where } from 'firebase/firestore';
@@ -1487,7 +1487,7 @@ key={item.id}
   );
 };
 
-const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, onEditHistory, onDeleteHistory, onArchive, onClose, formatNum, showToast }: any) => {
+const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, onResetFund, onEditHistory, onDeleteHistory, onArchive, onClose, formatNum, showToast }: any) => {
   const [amount, setAmount] = useState<number | ''>('');
   const [note, setNote] = useState<string>('');
   const [customDate, setCustomDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -1514,6 +1514,15 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
     "تعديل وتصحيح رصيد",
     "دفعة تحت الحساب"
   ];
+
+  const handleResetFund = () => {
+    if (window.confirm('هل أنت متأكد من تصفير هذا الحساب بالكامل وتصفية رصيد العميل؟ هذا الإجراء سيقوم بحذف كافة سجل حركات الحساب بالكامل وتصفير الرصيد.')) {
+      onResetFund(field, fund.id);
+      setAmount('');
+      setNote('');
+      showToast('تم تصفير رصيد الحساب وحذف سجل الحركات بالكامل بنجاح', 'success');
+    }
+  };
 
   const handleAdd = () => {
     if (amount && Number(amount) > 0) {
@@ -1695,31 +1704,31 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
               <thead>
                 <tr>
                   <th style="width: 5%;">#</th>
-                  <th style="width: 25%;">التاريخ والوقت</th>
-                  <th>الحركة والبيان المالي الموثق</th>
-                  <th style="width: 12%;">النوع</th>
-                  <th style="width: 15%; text-align: left;">المبلغ</th>
-                  <th style="width: 18%; text-align: left;">الرصيد التراكمي</th>
+                  <th style="width: 20%;">التاريخ والوقت</th>
+                  <th>البيان المالي لحركة الحساب</th>
+                  <th style="width: 15%; text-align: left;">عليه (مدين)</th>
+                  <th style="width: 15%; text-align: left;">له (دائن)</th>
+                  <th style="width: 15%; text-align: left;">الرصيد</th>
                 </tr>
               </thead>
               <tbody>
-                ${historyWithRunningBalance.map((e: any, idx: number) => `
-                  <tr>
-                    <td>${idx + 1}</td>
-                    <td>${e.date}</td>
-                    <td>
-                      <div><strong>${e.description}</strong></div>
-                      ${e.note ? `<div style="font-size: 12px; color: #666; margin-top: 2px;">• ملاحظة: ${e.note}</div>` : ''}
-                    </td>
-                    <td>
-                      ${e.type === 'in' || e.type === 'add' ? '<span class="badge badge-in">إضافة</span>' : 
-                        e.type === 'out' || e.type === 'sub' ? '<span class="badge badge-out">خصم / سداد</span>' :
-                        '<span class="badge" style="background: #efefef; color: #333;">افتتاحي</span>'}
-                    </td>
-                    <td dir="ltr" style="text-align: left; font-weight: 500; font-family: monospace;">${formatNum(e.amount)}</td>
-                    <td dir="ltr" class="running-bal" style="text-align: left; font-family: monospace;">${formatNum(e.runningBalance)}</td>
-                  </tr>
-                `).join('')}
+                ${historyWithRunningBalance.map((e: any, idx: number) => {
+                  const isDebit = isToUs ? (e.type === 'in' || e.type === 'add') : (e.type === 'out' || e.type === 'sub');
+                  const isCredit = isToUs ? (e.type === 'out' || e.type === 'sub') : (e.type === 'in' || e.type === 'add');
+                  return `
+                    <tr>
+                      <td>${idx + 1}</td>
+                      <td>${e.date}</td>
+                      <td>
+                        <div><strong>${e.description}</strong></div>
+                        ${e.note ? `<div style="font-size: 11px; color: #666; margin-top: 1px;">• ملاحظة: ${e.note}</div>` : ''}
+                      </td>
+                      <td dir="ltr" style="text-align: left; font-family: monospace; ${isDebit ? 'color: #15803d; font-weight: bold;' : 'color: #94a3b8;'}">${isDebit ? formatNum(e.amount) : '-'}</td>
+                      <td dir="ltr" style="text-align: left; font-family: monospace; ${isCredit ? 'color: #b91c1c; font-weight: bold;' : 'color: #94a3b8;'}">${isCredit ? formatNum(e.amount) : '-'}</td>
+                      <td dir="ltr" class="running-bal" style="text-align: left; font-family: monospace; font-weight: bold; color: #1e3a8a;">${formatNum(e.runningBalance)}</td>
+                    </tr>
+                  `;
+                }).join('')}
               </tbody>
             </table>
 
@@ -1889,6 +1898,9 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                 <button onClick={handlePrint} className="text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/30 px-3 py-1.5 rounded-[6px] text-sm font-bold transition-colors flex items-center gap-1 border border-blue-100 dark:border-blue-900/10">
                   <Printer size={15} /> طباعة كشف منسق
                 </button>
+                <button onClick={handleResetFund} className="text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/30 px-3 py-1.5 rounded-[6px] text-sm font-bold transition-colors flex items-center gap-1 border border-rose-100 dark:border-rose-900/10" title="تصفير الحساب">
+                  <RotateCcw size={15} /> تصفير الحساب
+                </button>
               </div>
             </div>
 
@@ -1937,74 +1949,80 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                     <th className="p-3 font-semibold text-center w-12">#</th>
                     <th className="p-3 font-semibold w-36">التاريخ والوقت</th>
                     <th className="p-3 font-semibold">تفاصيل الكشف المالي</th>
-                    <th className="p-3 font-semibold text-center w-24">النوع</th>
-                    <th className="p-3 font-semibold text-left w-24">المبلغ</th>
-                    <th className="p-3 font-semibold text-left w-32">الرصيد التراكمي</th>
+                    <th className="p-3 font-semibold text-left w-24">عليه (مدين)</th>
+                    <th className="p-3 font-semibold text-left w-24">له (دائن)</th>
+                    <th className="p-3 font-semibold text-left w-28">الرصيد</th>
                     <th className="p-3 font-semibold text-center w-20">تعديل</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredHistory.map((entry: any, idx: number) => (
-                    <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 last:border-0 transition-colors">
-                      <td className="p-3 text-center text-xs font-semibold text-slate-400 select-none">
-                        {idx + 1}
-                      </td>
-                      <td className="p-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        {entry.date}
-                      </td>
-                      <td className="p-3 text-xs">
-                        <div className="font-bold text-slate-800 dark:text-slate-200">{entry.description}</div>
-                        {entry.note ? (
-                          <span className="text-slate-500 dark:text-slate-400 mt-1 block px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-[4px] max-w-fit font-medium">
-                            • {entry.note}
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="p-3 text-center text-xs">
-                        {editingEntry === entry.id ? (
-                          <select 
-                            value={editType} 
-                            onChange={(e: any) => setEditType(e.target.value)}
-                            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[4px] px-2 py-1 text-xs outline-none"
-                          >
-                            <option value="add">إضافة</option>
-                            <option value="sub">خصم</option>
-                          </select>
-                        ) : (
-                          entry.type === 'in' || entry.type === 'add' ? (
-                            <span className="px-2 py-0.5 rounded-[4px] font-bold text-[11px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">وارد (+)</span>
-                          ) : entry.type === 'out' || entry.type === 'sub' ? (
-                            <span className="px-2 py-0.5 rounded-[4px] font-bold text-[11px] bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400">سداد (-)</span>
+                  {filteredHistory.map((entry: any, idx: number) => {
+                    const isDebit = isToUs ? (entry.type === 'in' || entry.type === 'add') : (entry.type === 'out' || entry.type === 'sub');
+                    const isCredit = isToUs ? (entry.type === 'out' || entry.type === 'sub') : (entry.type === 'in' || entry.type === 'add');
+                    return (
+                      <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 last:border-0 transition-colors">
+                        <td className="p-3 text-center text-xs font-semibold text-slate-400 select-none">
+                          {idx + 1}
+                        </td>
+                        <td className="p-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                          {entry.date}
+                        </td>
+                        <td className="p-3 text-xs">
+                          <div className="font-bold text-slate-800 dark:text-slate-200">{entry.description}</div>
+                          {entry.note ? (
+                            <span className="text-slate-500 dark:text-slate-400 mt-1 block px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-[4px] max-w-fit font-medium">
+                              • {entry.note}
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="p-3 font-semibold text-left whitespace-nowrap" dir="ltr">
+                          {editingEntry === entry.id ? (
+                            <select 
+                              value={editType} 
+                              onChange={(e: any) => setEditType(e.target.value)}
+                              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[4px] px-2 py-1 text-xs outline-none font-bold text-slate-800 dark:text-slate-200"
+                            >
+                              <option value="add">إضافة (+)</option>
+                              <option value="sub">خصم (-)</option>
+                            </select>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-[4px] font-bold text-[11px] bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400">افتتاحي</span>
-                          )
-                        )}
-                      </td>
-                      
-                      {/* Amount column */}
-                      <td className="p-3 font-semibold text-left whitespace-nowrap" dir="ltr">
-                        {editingEntry === entry.id ? (
-                          <input 
-                            type="number" 
-                            value={editAmount} 
-                            onChange={(e: any) => setEditAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                            className="w-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[4px] px-1.5 py-1 text-xs outline-none text-left font-bold"
-                          />
-                        ) : (
-                          <span className={entry.type === 'in' || entry.type === 'add' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : entry.type === 'out' || entry.type === 'sub' ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-slate-600 dark:text-slate-400 font-bold'}>
-                            {formatNum(entry.amount)}
-                          </span>
-                        )}
-                      </td>
+                            isDebit ? (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                                {formatNum(entry.amount)}
+                              </span>
+                            ) : (
+                              <span className="text-slate-300 dark:text-slate-700">-</span>
+                            )
+                          )}
+                        </td>
+                        
+                        <td className="p-3 font-semibold text-left whitespace-nowrap" dir="ltr">
+                          {editingEntry === entry.id ? (
+                            <input 
+                              type="number" 
+                              value={editAmount} 
+                              onChange={(e: any) => setEditAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                              className="w-20 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[4px] px-1.5 py-1 text-xs outline-none text-left font-bold text-slate-800 dark:text-slate-200"
+                              placeholder="0.00"
+                            />
+                          ) : (
+                            isCredit ? (
+                              <span className="text-rose-600 dark:text-rose-400 font-bold">
+                                {formatNum(entry.amount)}
+                              </span>
+                            ) : (
+                              <span className="text-slate-300 dark:text-slate-700">-</span>
+                            )
+                          )}
+                        </td>
 
-                      {/* Running Balance Column */}
-                      <td className="p-3 font-bold text-left text-xs whitespace-nowrap text-blue-600 dark:text-blue-400" dir="ltr">
-                        {editingEntry === entry.id ? (
-                          <span className="text-slate-400">-</span>
-                        ) : (
-                          formatNum(entry.runningBalance)
-                        )}
-                      </td>
+                        <td className="p-3 font-bold text-left text-xs whitespace-nowrap text-blue-600 dark:text-blue-400" dir="ltr">
+                          {editingEntry === entry.id ? (
+                            <span className="text-slate-400">-</span>
+                          ) : (
+                            formatNum(entry.runningBalance)
+                          )}
+                        </td>
 
                       {/* Actions */}
                       <td className="p-3 text-center whitespace-nowrap">
@@ -2065,7 +2083,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                         )}
                       </td>
                     </tr>
-                  ))}
+                  )})}
                   
                   {filteredHistory.length === 0 && (
                     <tr>
@@ -2786,7 +2804,38 @@ const handleCopyDailyReport = () => {
   };
 
   const updateTransaction = (field: keyof AppState, id: string, key: 'name' | 'amount', value: string | number) => {
-    setState(prev => ({ ...prev, [field]: (prev[field] as Transaction[]).map(t => t.id === id ? { ...t, [key]: value } : t) }));
+    setState(prev => {
+      const list = prev[field] as Transaction[];
+      return {
+        ...prev,
+        [field]: list.map(t => {
+          if (t.id === id) {
+            if (key === 'amount' && (field === 'pendingFundsOwedToUs' || field === 'pendingFundsOwedByUs')) {
+              const oldVal = Number(t.amount || 0);
+              const newVal = Number(value || 0);
+              if (oldVal !== newVal) {
+                const diff = newVal - oldVal;
+                const newHistory = [...(t.history || [])];
+                newHistory.push({
+                  id: generateId(),
+                  date: new Date().toLocaleString('ar-EG'),
+                  amount: Math.abs(diff),
+                  type: diff > 0 ? 'add' : 'sub',
+                  note: 'تعديل مباشر من جدول الواجهة الخارجية'
+                });
+                return {
+                  ...t,
+                  amount: newVal,
+                  history: newHistory
+                };
+              }
+            }
+            return { ...t, [key]: value };
+          }
+          return t;
+        })
+      };
+    });
   };
 
   const handleReorderTransaction = (field: keyof AppState, id: string, direction: 'up' | 'down') => {
@@ -2829,6 +2878,25 @@ const handleCopyDailyReport = () => {
               ...t, 
               amount: actionType === 'add' ? Number(t.amount) + amountChange : Number(t.amount) - amountChange, 
               history: newHistory 
+            };
+          }
+          return t;
+        })
+      };
+    });
+  };
+
+  const resetFundAmount = (field: keyof AppState, id: string) => {
+    setState(prev => {
+      const list = prev[field] as Transaction[];
+      return {
+        ...prev,
+        [field]: list.map(t => {
+          if (t.id === id) {
+            return {
+              ...t,
+              amount: 0,
+              history: []
             };
           }
           return t;
@@ -5319,6 +5387,7 @@ const handleCopyDailyReport = () => {
           ledgerEntries={generateLedgerEntries()}
           onUpdate={updateTransaction}
           onAdjustFund={adjustFundAmount}
+          onResetFund={resetFundAmount}
           onEditHistory={editFundHistoryEntry}
           onDeleteHistory={deleteFundHistoryEntry}
           onArchive={archivePendingFund}
