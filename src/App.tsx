@@ -1542,6 +1542,65 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
   const [historySearchQuery, setHistorySearchQuery] = useState<string>('');
   const [historyTypeFilter, setHistoryTypeFilter] = useState<'all' | 'in' | 'out'>('all');
 
+  // Advanced Period filters based on customer feedback
+  const [startDateFilter, setStartDateFilter] = useState<string>('');
+  const [endDateFilter, setEndDateFilter] = useState<string>('');
+  const [resetFromStart, setResetFromStart] = useState<boolean>(false);
+
+  // Support Arabic locale date string parsing as well as standard ISO values
+  const parseToLocalDate = (dateStr: string): Date => {
+    if (!dateStr) return new Date();
+    
+    // Check if ISO standard
+    const parsed = Date.parse(dateStr);
+    if (!isNaN(parsed)) {
+      return new Date(parsed);
+    }
+
+    // Convert Arabic eastern numerals to western numbers
+    let normalized = dateStr
+      .replace(/[٠۰]/g, '0')
+      .replace(/[١۱]/g, '1')
+      .replace(/[٢۲]/g, '2')
+      .replace(/[٣۳]/g, '3')
+      .replace(/[٤۴]/g, '4')
+      .replace(/[٥۵]/g, '5')
+      .replace(/[٦۶]/g, '6')
+      .replace(/[٧۷]/g, '7')
+      .replace(/[٨۸]/g, '8')
+      .replace(/[٩۹]/g, '9')
+      .replace(/١/g, '1')
+      .replace(/٢/g, '2')
+      .replace(/٣/g, '3')
+      .replace(/٤/g, '4')
+      .replace(/٥/g, '5')
+      .replace(/٦/g, '6')
+      .replace(/٧/g, '7')
+      .replace(/٨/g, '8')
+      .replace(/٩/g, '9');
+
+    normalized = normalized.replace(/[^\d/:\-,\s]/g, '');
+
+    const parts = normalized.split(/[\/\-,\s]+/);
+    if (parts.length >= 3) {
+      let day = parseInt(parts[0], 10);
+      let month = parseInt(parts[1], 10);
+      let year = parseInt(parts[2], 10);
+
+      if (parts[0].length === 4) {
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10);
+        day = parseInt(parts[2], 10);
+      }
+
+      if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+        return new Date(year, month - 1, day, 12, 0, 0); 
+      }
+    }
+
+    return new Date();
+  };
+
   const isToUs = field === 'pendingFundsOwedToUs';
 
   // Quick preset notes
@@ -1693,23 +1752,52 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
     ...liveHistoryEntries
   ];
 
-  // Calculate Running Balance line-by-line dynamically
-  let runningBal = 0;
-  const historyWithRunningBalance = historyEntries.map((e: any) => {
-    runningBal = round2(runningBal + e.effect);
+  // Sort chronological ascending to calculate running balance correctly
+  const sortedHistoryEntries = [...historyEntries].sort((a, b) => {
+    const da = parseToLocalDate(a.date).getTime();
+    const db = parseToLocalDate(b.date).getTime();
+    return da - db;
+  });
+
+  // Calculate bound dates for filter
+  const filterFrom = startDateFilter ? new Date(startDateFilter + 'T00:00:00') : null;
+  const filterTo = endDateFilter ? new Date(endDateFilter + 'T23:59:59') : null;
+
+  // Split history based on Date selection
+  const prePeriodEntries: any[] = [];
+  const inPeriodEntries: any[] = [];
+
+  sortedHistoryEntries.forEach((e: any) => {
+    const entryDate = parseToLocalDate(e.date);
+    if (filterFrom && entryDate < filterFrom) {
+      prePeriodEntries.push(e);
+    } else if (!filterTo || entryDate <= filterTo) {
+      inPeriodEntries.push(e);
+    }
+  });
+
+  const prePeriodNetEffect = prePeriodEntries.reduce((acc, curr) => acc + curr.effect, 0);
+
+  // If "Reset Balance to Zero" is activated, cumulative tracking starts completely fresh from 0.00
+  const startingPeriodBalance = (filterFrom && resetFromStart) ? 0 : prePeriodNetEffect;
+
+  // Let's compute running balances on inside-period entries starting from the baseline
+  let runningBalRaw = startingPeriodBalance;
+  const computedInPeriodEntries = inPeriodEntries.map((e: any) => {
+    runningBalRaw = round2(runningBalRaw + e.effect);
     return {
       ...e,
-      runningBalance: runningBal
+      runningBalance: runningBalRaw
     };
   });
 
-  // Calculate stats
+  // Calculate legacySum and overall stats for raw history
   const legacySum = round2(legacyEntries.reduce((acc: number, item: any) => acc + item.amount, 0));
   const totalIn = round2((fund.history || []).filter((h: any) => h.type === 'add').reduce((acc: number, h: any) => acc + h.amount, 0));
   const totalOut = round2((fund.history || []).filter((h: any) => h.type === 'sub').reduce((acc: number, h: any) => acc + h.amount, 0));
 
-  // Perform search & filters on detailed records
-  const filteredHistory = historyWithRunningBalance.filter((e: any) => {
+  // Perform search & filters on the filtered historical subset
+  const filteredHistory = computedInPeriodEntries.filter((e: any) => {
     const matchesSearch = 
       e.description.toLowerCase().includes(historySearchQuery.toLowerCase()) || 
       e.note.toLowerCase().includes(historySearchQuery.toLowerCase()) || 
@@ -1723,13 +1811,29 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
     return matchesSearch && matchesFilter;
   });
 
+  // Period-specific statistics
+  const periodInflow = inPeriodEntries
+    .filter((e) => e.type === 'in' || e.type === 'add')
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const periodOutflow = inPeriodEntries
+    .filter((e) => e.type === 'out' || e.type === 'sub')
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const periodEndingBalance = computedInPeriodEntries.length > 0
+    ? computedInPeriodEntries[computedInPeriodEntries.length - 1].runningBalance
+    : startingPeriodBalance;
+
   const handleCopy = () => {
-    const text = `كشف حساب مالي تفصيلي: ${fund.name}\n` +
+    const text = `كشف حساب مالي تفصيلي لفترة محددة: ${fund.name}\n` +
       `نوع الحساب: ${isToUs ? 'ذمم مدينة (أموال لنا في السوق)' : 'ذمم دائنة (أموال معلقة علينا للغير)'}\n` +
-      `الرصيد النهائي الحالي: ${formatNum(fund.amount)}\n` +
-      `إجمالي الحركات - المضاف: ${formatNum(totalIn)} | المسدد/المخصوم: ${formatNum(totalOut)}\n\n` +
+      `الفترة الزمنية: من ${startDateFilter || 'البداية'} إلى ${endDateFilter || 'الآن'}\n` +
+      `الرصيد الافتتاحي المقيد لبداية الفترة: ${formatNum(startingPeriodBalance)}\n` +
+      `إجمالي الزيادات في الفترة (+): ${formatNum(periodInflow)}\n` +
+      `إجمالي الخصومات في الفترة (-): ${formatNum(periodOutflow)}\n` +
+      `رصيد نهاية الفترة الختامي: ${formatNum(periodEndingBalance)}\n\n` +
       `سجل الحركات التفصيلية:\n` +
-      historyWithRunningBalance.map((e: any) => `${e.date} | ${e.type === 'in' ? 'إضافة (+)' : e.type === 'out' ? 'خصم (-)' : 'معلق'} | الحركة: ${e.description} | الملاحظات: ${e.note || 'بلا'} | الرصيد: ${formatNum(e.amount)} | التراكمي: ${formatNum(e.runningBalance)}`).join('\n');
+      [...computedInPeriodEntries].reverse().map((e: any) => `${e.date} | ${e.type === 'in' ? 'إضافة (+)' : e.type === 'out' ? 'خصم (-)' : 'افتتاحي'} | الحركة: ${e.description} | الملاحظة: ${e.note || 'بلا'} | الرصيد: ${formatNum(e.amount)} | الإجمالي المتراكم: ${formatNum(e.runningBalance)}`).join('\n');
       
     navigator.clipboard.writeText(text);
     showToast('تم نسخ كشف الحساب والتقرير للحافظة بنجاح', 'success');
@@ -1739,19 +1843,25 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       const headingTitle = isToUs ? 'كشف حساب مالي - ديون مستحقة لنا (مدين)' : 'كشف حساب مالي - ديون مستحقة علينا للغير (دائن)';
+      const periodStr = `${startDateFilter || 'البداية'} إلى ${endDateFilter || 'الآن'}`;
+      
       const statsBlock = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px; font-family: sans-serif;">
-          <div style="border: 1px solid #ddd; padding: 12px; border-radius: 4px; text-align: center; background-color: #fcfcfc;">
-            <div style="font-size: 13px; color: #666; margin-bottom: 4px;">الرصيد الافتتاحي السابق</div>
-            <div style="font-size: 18px; font-weight: bold; color: #333;">${formatNum(legacySum)}</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px; font-family: sans-serif;">
+          <div style="border: 1px solid #ddd; padding: 12px; border-radius: 4px; text-align: center; background-color: #fbfbfb;">
+            <div style="font-size: 11px; color: #666; margin-bottom: 4px;">رصيد بداية الفترة</div>
+            <div style="font-size: 16px; font-weight: bold; color: #444;">${formatNum(startingPeriodBalance)}</div>
           </div>
           <div style="border: 1px solid #ddd; padding: 12px; border-radius: 4px; text-align: center; background-color: #f6fff6; border-color: #c2ecc2;">
-            <div style="font-size: 13px; color: #2e7d32; margin-bottom: 4px;">إجمالي المضاف (+)</div>
-            <div style="font-size: 18px; font-weight: bold; color: #2e7d32;">${formatNum(totalIn)}</div>
+            <div style="font-size: 11px; color: #2e7d32; margin-bottom: 4px;">إجمالي الإضافات خلال الفترة (+)</div>
+            <div style="font-size: 16px; font-weight: bold; color: #2e7d32;">${formatNum(periodInflow)}</div>
           </div>
           <div style="border: 1px solid #ddd; padding: 12px; border-radius: 4px; text-align: center; background-color: #fff6f6; border-color: #fcc2c2;">
-            <div style="font-size: 13px; color: #c62828; margin-bottom: 4px;">إجمالي المقبوض/المسدد (-)</div>
-            <div style="font-size: 18px; font-weight: bold; color: #c62828;">${formatNum(totalOut)}</div>
+            <div style="font-size: 11px; color: #c62828; margin-bottom: 4px;">إجمالي الخصومات خلال الفترة (-)</div>
+            <div style="font-size: 16px; font-weight: bold; color: #c62828;">${formatNum(periodOutflow)}</div>
+          </div>
+          <div style="border: 1px solid #1e3a8a; padding: 12px; border-radius: 4px; text-align: center; background-color: #eff6ff; border-color: #bfdbfe;">
+            <div style="font-size: 11px; color: #1e3a8a; margin-bottom: 4px;">رصيد نهاية الفترة الختامي</div>
+            <div style="font-size: 18px; font-weight: bold; color: #1e3a8a;">${formatNum(periodEndingBalance)}</div>
           </div>
         </div>
       `;
@@ -1759,7 +1869,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
       printWindow.document.write(`
         <html dir="rtl">
           <head>
-            <title>كشف حساب مالي تفصيلي - ${fund.name}</title>
+            <title>كشف حساب مالي تفصيلي لفترة - ${fund.name}</title>
             <style>
               body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #333; line-height: 1.5; }
               table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
@@ -1786,16 +1896,17 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
               <div>
                 <div class="header-title">${headingTitle}</div>
                 <div style="font-size: 16px; font-weight: 600; margin-top: 5px; color: #444;">صاحب الحساب: ${fund.name}</div>
+                <div style="font-size: 12px; color: #777; margin-top: 3px;">فترة كشف الحساب: ${periodStr}</div>
               </div>
               <div class="header-meta">
                 <div>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG')}</div>
-                <div style="font-size: 16px; font-weight: bold; color: #111; margin-top: 5px; text-align: left;">الرصيد النهائي الحالي: <span dir="ltr">${formatNum(fund.amount)}</span></div>
+                <div style="font-size: 16px; font-weight: bold; color: #111; margin-top: 5px; text-align: left;">الرصيد الكلي الحالي: <span dir="ltr">${formatNum(fund.amount)}</span></div>
               </div>
             </div>
 
             ${statsBlock}
             
-            <h3 style="border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 25px; font-size: 16px;">سجل حركة الحساب والمدفوعات</h3>
+            <h3 style="border-bottom: 1px solid #eee; padding-bottom: 8px; margin-top: 25px; font-size: 16px;">سجل حركات الحساب التفصيلية للفترة المحددة</h3>
             <table>
               <thead>
                 <tr>
@@ -1804,11 +1915,11 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                   <th>البيان المالي لحركة الحساب</th>
                   <th style="width: 15%; text-align: left;">عليه (مدين)</th>
                   <th style="width: 15%; text-align: left;">له (دائن)</th>
-                  <th style="width: 15%; text-align: left;">الرصيد</th>
+                  <th style="width: 15%; text-align: left;">الرصيد المتراكم</th>
                 </tr>
               </thead>
               <tbody>
-                ${historyWithRunningBalance.map((e: any, idx: number) => {
+                ${computedInPeriodEntries.map((e: any, idx: number) => {
                   const isDebit = isToUs ? (e.type === 'in' || e.type === 'add') : (e.type === 'out' || e.type === 'sub');
                   const isCredit = isToUs ? (e.type === 'out' || e.type === 'sub') : (e.type === 'in' || e.type === 'add');
                   return `
@@ -1848,8 +1959,8 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
   };
 
   return (
-    <div className="fixed inset-0 z-[150] bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden">
-      <div className="bg-white dark:bg-slate-900 rounded-[12px] w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh] shadow-2xl border border-slate-200 dark:border-slate-800 transition-all">
+    <div className="fixed inset-0 z-[150] bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden print:bg-white print:text-black print:p-0 selection:bg-slate-200 dark:selection:bg-slate-800/50">
+      <div className="bg-white dark:bg-slate-900 w-full h-full flex flex-col shadow-none border-0 transition-all">
         {/* Header Modal */}
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-md">
           <div className="flex flex-col gap-1">
@@ -1869,26 +1980,65 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
         {/* Body content scrollable */}
         <div className="p-6 overflow-y-auto space-y-6">
           
+          {/* Section: Interactive Date Range Filtering */}
+          <div className="bg-slate-50 dark:bg-slate-800/20 p-4 rounded-[12px] border border-slate-200 dark:border-slate-800 space-y-3.5 print:hidden">
+            <div className="text-xs font-black text-indigo-600 dark:text-indigo-450 flex items-center gap-1.5 uppercase tracking-wider">
+              <span>📅 مرشحات وتصفية الفترة الزمنية للحساب</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">من تاريخ:</label>
+                <input 
+                  type="date" 
+                  value={startDateFilter} 
+                  onChange={(e) => setStartDateFilter(e.target.value)} 
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-[6px] px-3 py-1.5 text-xs outline-none font-bold text-slate-800 dark:text-slate-200 focus:border-indigo-500 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">إلى تاريخ:</label>
+                <input 
+                  type="date" 
+                  value={endDateFilter} 
+                  onChange={(e) => setEndDateFilter(e.target.value)} 
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-[6px] px-3 py-1.5 text-xs outline-none font-bold text-slate-800 dark:text-slate-200 focus:border-indigo-500 transition-colors"
+                />
+              </div>
+              <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 p-2.5 rounded-[6px] self-end h-[34px]">
+                <input 
+                  type="checkbox" 
+                  id="reset-from-start-checkbox"
+                  checked={resetFromStart} 
+                  onChange={(e) => setResetFromStart(e.target.checked)} 
+                  className="w-4 h-4 text-indigo-600 border-slate-300 rounded cursor-pointer accent-indigo-600"
+                />
+                <label htmlFor="reset-from-start-checkbox" className="text-xs font-bold text-slate-705 dark:text-slate-300 cursor-pointer select-none">
+                  تصفير الرصيد من بداية المدة المحددة
+                </label>
+              </div>
+            </div>
+          </div>
+
           {/* Section: Advanced Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-[8px] border border-slate-200 dark:border-slate-800/80 text-center flex flex-col justify-between">
-              <span className="text-[13px] text-slate-500 dark:text-slate-400 font-bold mb-1 block">الرصيد الافتتاحي</span>
-              <span className="text-lg font-black text-slate-700 dark:text-slate-200" dir="ltr">{formatNum(legacySum)}</span>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-[10px] border border-slate-200 dark:border-slate-800/80 text-center flex flex-col justify-between shadow-sm">
+              <span className="text-xs text-slate-500 dark:text-slate-450 font-extrabold mb-1 block">رصيد أول الفترة</span>
+              <span className="text-lg font-black text-slate-700 dark:text-slate-200" dir="ltr">{formatNum(startingPeriodBalance)}</span>
             </div>
             
-            <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3.5 rounded-[8px] border border-emerald-100 dark:border-emerald-950/40 text-center flex flex-col justify-between">
-              <span className="text-[13px] text-emerald-700 dark:text-emerald-400 font-bold mb-1 block">إجمالي الإضافات (+)</span>
-              <span className="text-lg font-black text-emerald-600 dark:text-emerald-400" dir="ltr">{formatNum(totalIn)}</span>
+            <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-4 rounded-[10px] border border-emerald-100 dark:border-emerald-950/40 text-center flex flex-col justify-between shadow-sm">
+              <span className="text-xs text-emerald-700 dark:text-emerald-450 font-extrabold mb-1 block">مضاف الفترة (+)</span>
+              <span className="text-lg font-black text-emerald-600 dark:text-emerald-400" dir="ltr">{formatNum(periodInflow)}</span>
             </div>
             
-            <div className="bg-rose-50/50 dark:bg-rose-950/20 p-3.5 rounded-[8px] border border-rose-100 dark:border-rose-950/40 text-center flex flex-col justify-between">
-              <span className="text-[13px] text-rose-700 dark:text-rose-400 font-bold mb-1 block">إجمالي المسدد (-)</span>
-              <span className="text-lg font-black text-rose-600 dark:text-rose-400" dir="ltr">{formatNum(totalOut)}</span>
+            <div className="bg-rose-50/50 dark:bg-rose-950/20 p-4 rounded-[10px] border border-rose-100 dark:border-rose-950/40 text-center flex flex-col justify-between shadow-sm">
+              <span className="text-xs text-rose-700 dark:text-rose-450 font-extrabold mb-1 block">مسدد الفترة (-)</span>
+              <span className="text-lg font-black text-rose-600 dark:text-rose-400" dir="ltr">{formatNum(periodOutflow)}</span>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-950/30 p-3.5 rounded-[10px] border border-blue-200 dark:border-blue-900/40 text-center flex flex-col justify-between shadow-sm">
-              <span className="text-[13px] text-blue-700 dark:text-blue-300 font-bold mb-1 block">الرصيد النهائي الحالي</span>
-              <span className="text-xl font-bold text-blue-800 dark:text-blue-200" dir="ltr">{formatNum(fund.amount)}</span>
+            <div className="bg-indigo-50/40 dark:bg-indigo-950/20 p-4 rounded-[10px] border border-indigo-200/60 dark:border-indigo-900/40 text-center flex flex-col justify-between shadow-sm">
+              <span className="text-xs text-indigo-700 dark:text-indigo-400 font-extrabold mb-1 block">رصيد الفترة الختامي</span>
+              <span className="text-lg font-black text-indigo-700 dark:text-indigo-400" dir="ltr">{formatNum(periodEndingBalance)}</span>
             </div>
           </div>
 
@@ -2058,7 +2208,7 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                     return (
                       <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 last:border-0 transition-colors">
                         <td className="p-3 text-center text-xs font-semibold text-slate-400 select-none">
-                          {idx + 1}
+                          {filteredHistory.length - idx}
                         </td>
                         <td className="p-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                           {entry.date}
@@ -2913,13 +3063,30 @@ const handleCopyDailyReport = () => {
               if (oldVal !== newVal) {
                 const diff = newVal - oldVal;
                 const newHistory = [...(t.history || [])];
-                newHistory.push({
-                  id: generateId(),
-                  date: new Date().toLocaleString('ar-EG'),
-                  amount: Math.abs(diff),
-                  type: diff > 0 ? 'add' : 'sub',
-                  note: 'تعديل مباشر من جدول الواجهة الخارجية'
-                });
+                const latestEntry = newHistory[newHistory.length - 1];
+
+                if (latestEntry && latestEntry.note === 'تعديل مباشر من جدول الواجهة الخارجية') {
+                  const transitionEffect = latestEntry.type === 'add' ? latestEntry.amount : -latestEntry.amount;
+                  const originalBase = oldVal - transitionEffect;
+                  const finalDiff = newVal - originalBase;
+                  
+                  if (finalDiff === 0) {
+                    newHistory.pop();
+                  } else {
+                    latestEntry.amount = Math.abs(finalDiff);
+                    latestEntry.type = finalDiff > 0 ? 'add' : 'sub';
+                    latestEntry.date = new Date().toLocaleString('ar-EG');
+                  }
+                } else {
+                  newHistory.push({
+                    id: generateId(),
+                    date: new Date().toLocaleString('ar-EG'),
+                    amount: Math.abs(diff),
+                    type: diff > 0 ? 'add' : 'sub',
+                    note: 'تعديل مباشر من جدول الواجهة الخارجية'
+                  });
+                }
+
                 return {
                   ...t,
                   amount: newVal,
