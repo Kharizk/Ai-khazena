@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useDeferredValue, useMemo, Suspense
 import { createPortal } from 'react-dom';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { motion, AnimatePresence } from 'motion/react';
 import { Save, Printer, FilePlus, Plus, Trash2, Calculator, Wallet, ArrowDownRight, ArrowUpRight, AlertCircle, CheckCircle2, CreditCard, Receipt, Layers, Pin, Settings, Undo2, History, Eye, EyeOff, X, LogIn, LogOut, CalendarDays, Download, FileText, Image as ImageIcon, BookOpen, PlusCircle, RotateCcw, Copy, Search, Check, Edit2, BarChart3, TrendingUp, TrendingDown, ChevronUp, ChevronDown, ArrowRight, ChevronLeft, Database, Sparkles, Activity, PieChart as PieChartIcon, LineChart as LineChartIcon } from 'lucide-react';
 import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, User, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
@@ -1073,6 +1074,120 @@ ${summaryText.substring(0, 3000)}
         </div>
       </div>
 
+      {/* Row 2: Debts Breakdown & Active Peak Trading Periods */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        
+        {/* Debts Breakdown (Owed To Us vs By Us) - Donut Pie Chart */}
+        <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-xl p-6 rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 dark:border-slate-700/60 flex flex-col transition-all hover:shadow-lg">
+          <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2 text-lg">
+            <PieChartIcon className="text-indigo-600" size={20} /> توزيع الديون والالتزامات المعلقة
+          </h3>
+          <p className="text-xs text-slate-500 mb-4">مقارنة إجمالي الذمم والالتزامات المستحقة لنا بذمم الغير المستحقة علينا</p>
+          
+          {(() => {
+            const totalOwedToUs = currentState.pendingFundsOwedToUs ? currentState.pendingFundsOwedToUs.reduce((sum: number, item: any) => sum + item.amount, 0) : 0;
+            const totalOwedByUs = currentState.pendingFundsOwedByUs ? currentState.pendingFundsOwedByUs.reduce((sum: number, item: any) => sum + item.amount, 0) : 0;
+            
+            const debtChartData = [
+              { name: 'ذمم مدينة (لنا بالخارج)', value: totalOwedToUs, color: '#10b981' },
+              { name: 'ذمم دائنة (علينا للغير)', value: totalOwedByUs, color: '#f43f5e' }
+            ].filter(d => d.value > 0);
+
+            if (debtChartData.length > 0) {
+              return (
+                <div className="h-[280px] w-full flex flex-col justify-between" dir="ltr">
+                  <div className="flex-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={debtChartData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          paddingAngle={4}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {debtChartData.map((entry, index) => (
+                            <Cell key={`debt-cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip 
+                          formatter={(value: number) => formatNum(value)}
+                          contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontFamily: 'Cairo', textAlign: 'right', fontSize: '14px', fontWeight: 'bold' }}
+                        />
+                        <Legend layout={undefined} verticalAlign="bottom" align="center" wrapperStyle={{ fontFamily: 'Cairo', fontSize: '12px' }} iconType="circle" />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="text-right mt-2 bg-slate-50 dark:bg-slate-800/30 p-3 rounded-[4px] grid grid-cols-2 gap-2 text-xs font-bold" style={{ direction: 'rtl' }}>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-slate-400">إجمالي مستحقاتنا (لنا):</span>
+                      <span className="text-emerald-600 text-sm" dir="ltr">{formatNum(totalOwedToUs)}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-slate-400">إجمالي التزاماتنا (علينا):</span>
+                      <span className="text-rose-600 text-sm" dir="ltr">{formatNum(totalOwedByUs)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            } else {
+              return (
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-800/50/50 rounded-[4px] border border-dashed border-slate-200 dark:border-slate-700 min-h-[250px]">
+                  <PieChartIcon size={40} className="mb-3 opacity-30" />
+                  <p className="font-medium text-[15px]">لا يوجد ذمم أو ديون معلقة حالياً</p>
+                </div>
+              );
+            }
+          })()}
+        </div>
+
+        {/* Peak Financial Active Periods - Interactive Bar Chart */}
+        <div className="bg-white dark:bg-slate-900 print:bg-white/90 backdrop-blur-xl p-6 rounded-[4px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 dark:border-slate-700/60 flex flex-col transition-all hover:shadow-lg">
+          <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-2 flex items-center gap-2 text-lg">
+            <BarChart3 className="text-blue-600" size={20} /> فترات النشاط المالي Peak Periods (أعلى 5 أيام)
+          </h3>
+          <p className="text-xs text-slate-500 mb-4">أعلى الأيام من حيث حجم التدفق المالي الكلي (الوارد والمنصرف مجتمعين)</p>
+          
+          {(() => {
+            const activePeriodStats = [...dailyMetrics]
+              .sort((a: any, b: any) => (b.sales + b.expenses) - (a.sales + a.expenses))
+              .slice(0, 5);
+
+            if (activePeriodStats.length > 0) {
+              return (
+                <div className="h-[280px] w-full" dir="ltr">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={activePeriodStats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                      <XAxis dataKey="dateName" tick={{ fill: '#64748B', fontSize: 11 }} />
+                      <YAxis tick={{ fill: '#64748B', fontSize: 11 }} />
+                      <RechartsTooltip 
+                        formatter={(value: number, name: string) => [formatNum(value), name === 'pureNetSales' ? 'إجمالي الإيراد' : 'إجمالي المصروف']}
+                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontFamily: 'Cairo', textAlign: 'right', fontSize: '13px', fontWeight: 'bold' }}
+                      />
+                      <Legend wrapperStyle={{ fontFamily: 'Cairo', fontSize: '12px' }} />
+                      <Bar dataKey="pureNetSales" name="إجمالي الإيراد" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="expenses" name="إجمالي المصروف" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              );
+            } else {
+              return (
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-800/50/50 rounded-[4px] border border-dashed border-slate-200 dark:border-slate-700 min-h-[250px]">
+                  <BarChart3 size={40} className="mb-3 opacity-30" />
+                  <p className="font-medium text-[15px]">لا يوجد تداولات كافية لتحليل فترات النشاط</p>
+                </div>
+              );
+            }
+          })()}
+        </div>
+
+      </div>
+
       {/* AI Assistant Section */}
       <div className="bg-indigo-950 rounded-[4px] shadow-xl p-[2px] relative overflow-hidden mt-8 print:hidden transition-all hover:shadow-2xl">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/microbial-mat.png')] opacity-10 MixBlendMode-overlay"></div>
@@ -1528,9 +1643,10 @@ key={item.id}
   );
 };
 
-const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, onResetFund, onEditHistory, onDeleteHistory, onArchive, onClose, formatNum, showToast }: any) => {
+const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, onResetFund, onEditHistory, onDeleteHistory, onArchive, onClose, formatNum, showToast, companyName }: any) => {
   const [amount, setAmount] = useState<number | ''>('');
   const [note, setNote] = useState<string>('');
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [customDate, setCustomDate] = useState<string>(new Date().toISOString().split('T')[0]);
   
   const [editingEntry, setEditingEntry] = useState<string | null>(null);
@@ -1958,8 +2074,79 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
     }
   };
 
+  const SecurityStamp = () => (
+    <div className="relative w-24 h-24 border-[3px] border-amber-600/30 rounded-full flex flex-col items-center justify-center p-2 text-center select-none rotate-6 opacity-85 hover:opacity-100 transition-opacity">
+      <div className="absolute inset-0.5 border border-dashed border-amber-600/40 rounded-full"></div>
+      <CheckCircle2 size={14} className="text-amber-600 mb-0.5" />
+      <span className="text-[7.5px] font-black text-amber-700 tracking-tight block">مستند معتمد</span>
+      <span className="text-[7px] text-slate-500 font-bold block scale-90 mt-0.5">{(companyName || 'مؤسستنا التجارية').slice(0, 20)}</span>
+      <span className="text-[6px] text-amber-600 font-bold block mt-0.5 uppercase tracking-widest font-mono">SEAL-SECURE</span>
+    </div>
+  );
+
+  const handleExportPDF = async () => {
+    setIsGeneratingPdf(true);
+    showToast('جاري توليد ملف الـ PDF عالي الجودة...', 'success');
+    try {
+      const element = document.getElementById('account-statement-pdf-target');
+      if (!element) {
+        throw new Error("Target element not found");
+      }
+      
+      const dataUrl = await toPng(element, {
+        quality: 1.0,
+        backgroundColor: '#ffffff',
+        pixelRatio: 3,
+        style: {
+          transform: 'none',
+        }
+      });
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      
+      const imgWidth = pdfWidth;
+      const imgHeight = (img.naturalHeight * pdfWidth) / img.naturalWidth;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= pdfHeight;
+      
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pdfHeight;
+      }
+      
+      pdf.save(`كشف_حساب_${fund.name}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      showToast('تم تحميل كشف الحساب كـ PDF رسمي بنجاح', 'success');
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      showToast('فشل توليد ملف الـ PDF. يرجى المحاولة لاحقاً', 'error');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[150] bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden print:bg-white print:text-black print:p-0 selection:bg-slate-200 dark:selection:bg-slate-800/50">
+    <motion.div 
+      initial={{ opacity: 0, y: "100%" }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: "100%" }}
+      transition={{ type: "spring", damping: 25, stiffness: 200 }}
+      className="fixed inset-0 z-[150] bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden print:bg-white print:text-black print:p-0 selection:bg-slate-200 dark:selection:bg-slate-800/50"
+    >
       <div className="bg-white dark:bg-slate-900 w-full h-full flex flex-col shadow-none border-0 transition-all">
         {/* Header Modal */}
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-md">
@@ -1977,8 +2164,11 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
           </button>
         </div>
         
-        {/* Body content scrollable */}
-        <div className="p-6 overflow-y-auto space-y-6">
+        {/* Split container */}
+        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row bg-slate-50 dark:bg-slate-950">
+          
+          {/* Right column: Interactive control panel and entries (55% width) */}
+          <div className="flex-1 lg:max-w-[55%] h-full overflow-y-auto p-6 space-y-6 border-l border-slate-200 dark:border-slate-850">
           
           {/* Section: Interactive Date Range Filtering */}
           <div className="bg-slate-50 dark:bg-slate-800/20 p-4 rounded-[12px] border border-slate-200 dark:border-slate-800 space-y-3.5 print:hidden">
@@ -2143,6 +2333,13 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
                 </button>
                 <button onClick={handlePrint} className="text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/30 px-3 py-1.5 rounded-[6px] text-sm font-bold transition-colors flex items-center gap-1 border border-blue-100 dark:border-blue-900/10">
                   <Printer size={15} /> طباعة كشف منسق
+                </button>
+                <button 
+                  onClick={handleExportPDF} 
+                  disabled={isGeneratingPdf} 
+                  className="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 px-3 py-1.5 rounded-[6px] text-sm font-bold transition-colors flex items-center gap-1 border border-emerald-100 dark:border-emerald-900/10 disabled:opacity-50"
+                >
+                  <Download size={15} /> {isGeneratingPdf ? 'جاري تصدير PDF...' : 'تصدير كـ PDF'}
                 </button>
                 <button onClick={handleResetFund} className="text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/30 px-3 py-1.5 rounded-[6px] text-sm font-bold transition-colors flex items-center gap-1 border border-rose-100 dark:border-rose-900/10" title="تصفير الحساب">
                   <RotateCcw size={15} /> تصفير الحساب
@@ -2349,8 +2546,145 @@ const FundManagerModal = ({ fund, field, ledgerEntries, onUpdate, onAdjustFund, 
           </div>
 
         </div>
+
+        {/* Left column: Live A4 PDF preview (45% width) */}
+          <div className="hidden lg:flex lg:w-[45%] h-full bg-slate-100 dark:bg-slate-900/40 p-6 overflow-y-auto flex-col items-center gap-4 print:hidden shrink-0">
+             <div className="w-full max-w-[500px] flex justify-between items-center bg-transparent shrink-0">
+               <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 uppercase tracking-wider">
+                 <span>📄 معاينة كشف الحساب المباشر المعتمد (A4)</span>
+               </span>
+               <button 
+                 onClick={handleExportPDF}
+                 disabled={isGeneratingPdf}
+                 className="bg-emerald-650 hover:bg-emerald-700 bg-emerald-600 text-white border-none py-1.5 px-3.5 rounded-[6px] text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50 shadow-sm"
+               >
+                 {isGeneratingPdf ? 'جاري تصدير PDF...' : <><Download size={13} /> تحميل كـ PDF معتمد</>}
+               </button>
+             </div>
+             
+             {/* Scaled viewport container */}
+             <div className="w-full flex justify-center items-start overflow-y-auto overflow-x-hidden flex-1 py-4">
+               <div className="origin-top shrink-0" style={{ transform: 'scale(0.60)', width: '794px', height: `${1123 * 0.60}px`, marginBottom: `${-1123 * 0.40}px` }}>
+                 <div className="w-[794px] min-h-[1123px] bg-white text-slate-950 p-10 relative flex flex-col justify-between border border-slate-300 text-right shrink-0" style={{ direction: 'rtl' }} id="account-statement-pdf-target">
+                   <div>
+                     {/* Company Banner & Letterhead */}
+                     <div className="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-6">
+                       <div className="flex items-center gap-3">
+                         {/* Modern elegant geometric badge */}
+                         <div className="w-12 h-12 bg-slate-900 text-white flex items-center justify-center rounded-[4px] shadow-sm select-none">
+                           <Layers size={22} className="text-amber-500" />
+                         </div>
+                         <div>
+                           <div className="text-lg font-black text-slate-900 tracking-tight leading-none">{companyName || 'مؤسسة أعمالي التجارية'}</div>
+                           <div className="text-[10px] text-slate-500 font-extrabold mt-1">قسم التدقيق والمراجعة المالية للذمم</div>
+                         </div>
+                       </div>
+                       <div className="text-left">
+                         <h2 className="text-xl font-black text-slate-900 leading-none">كشف حساب مالي تفصيلي</h2>
+                         <div className="text-[10px] text-slate-500 font-bold mt-2">تاريخ الإصدار: {new Date().toLocaleDateString('ar-EG')}</div>
+                         <div className="text-[10px] text-slate-500 font-mono mt-1">REF-ID: REF-{fund.id.slice(0, 6).toUpperCase()}</div>
+                       </div>
+                     </div>
+
+                     {/* Customer Information Cards */}
+                     <div className="grid grid-cols-2 gap-4 mb-6">
+                       <div className="bg-slate-50 p-4 rounded-[4px] border border-slate-200">
+                         <span className="text-[10px] font-black text-slate-400 block mb-1">بيانات صاحب الحساب / العميل</span>
+                         <div className="text-sm font-black text-slate-800">{fund.name}</div>
+                         <span className="text-[10px] text-slate-500 mt-1 block">الحالة الحالية: {isToUs ? 'ذمم مدينة (لنا)' : 'ذمم دائنة (علينا)'}</span>
+                       </div>
+                       <div className="bg-slate-50 p-4 rounded-[4px] border border-slate-200 text-left">
+                         <span className="text-[10px] font-black text-slate-400 block mb-1">فترة تصفية الحساب</span>
+                         <div className="text-xs font-bold text-slate-800">
+                           {startDateFilter ? `من: ${startDateFilter}` : 'من: بداية القيد الأول'}
+                         </div>
+                         <div className="text-xs font-bold text-slate-800 mt-1">
+                           {endDateFilter ? `إلى: ${endDateFilter}` : 'إلى: تاريخ اليوم'}
+                         </div>
+                       </div>
+                     </div>
+
+                     {/* Key Period Financial Totals Grid */}
+                     <div className="grid grid-cols-4 gap-3 mb-6 bg-slate-900 text-white p-4 rounded-[4px] shadow-sm">
+                       <div className="text-center">
+                         <span className="text-[9px] text-slate-400 font-bold block mb-1">رصيد أول المدة</span>
+                         <span className="text-sm font-black" dir="ltr">{formatNum(startingPeriodBalance)}</span>
+                       </div>
+                       <div className="text-center border-r border-slate-700">
+                         <span className="text-[9px] text-slate-400 font-bold block mb-1">مضاف الفترة (+)</span>
+                         <span className="text-sm font-black text-emerald-400" dir="ltr">{formatNum(periodInflow)}</span>
+                       </div>
+                       <div className="text-center border-r border-slate-700">
+                         <span className="text-[9px] text-slate-400 font-bold block mb-1">مسدد الفترة (-)</span>
+                         <span className="text-sm font-black text-rose-400" dir="ltr">{formatNum(periodOutflow)}</span>
+                       </div>
+                       <div className="text-center border-r border-slate-700">
+                         <span className="text-[9px] text-indigo-300 font-black block mb-1">الرصيد الختامي</span>
+                         <span className="text-sm font-black text-amber-300" dir="ltr">{formatNum(periodEndingBalance)}</span>
+                       </div>
+                     </div>
+
+                     {/* Statement Movements Table */}
+                     <div className="border border-slate-300 rounded-[4px] overflow-hidden">
+                       <table className="w-full text-[11px] text-right">
+                         <thead className="bg-slate-100 text-slate-700 border-b border-slate-300 font-black">
+                           <tr>
+                             <th className="p-2 text-center w-8">#</th>
+                             <th className="p-2 w-28">التاريخ والوقت</th>
+                             <th className="p-2">تفاصيل الحركة المالية والبيان</th>
+                             <th className="p-2 text-left w-20">عليه (مدين)</th>
+                             <th className="p-2 text-left w-20">له (دائن)</th>
+                             <th className="p-2 text-left w-24">الرصيد المتبقي</th>
+                           </tr>
+                         </thead>
+                         <tbody className="divide-y divide-slate-200">
+                           {filteredHistory.map((entry: any, index: number) => {
+                             const isDebit = entry.isDebit;
+                             const isCredit = entry.isCredit;
+                             return (
+                               <tr key={entry.id} className="hover:bg-slate-50 transition-colors">
+                                 <td className="p-2 text-center text-slate-400 font-bold">{filteredHistory.length - index}</td>
+                                 <td className="p-2 text-slate-500 font-medium whitespace-nowrap">{entry.date}</td>
+                                 <td className="p-2">
+                                   <div className="font-bold text-slate-800">{entry.description}</div>
+                                   {entry.note ? <span className="text-slate-500 text-[9px] font-medium block mt-0.5">• {entry.note}</span> : null}
+                                 </td>
+                                 <td className="p-2 font-black text-left text-rose-600 whitespace-nowrap" dir="ltr">{isCredit ? formatNum(entry.amount) : '-'}</td>
+                                 <td className="p-2 font-black text-left text-emerald-600 whitespace-nowrap" dir="ltr">{isDebit ? formatNum(entry.amount) : '-'}</td>
+                                 <td className="p-2 font-black text-left text-slate-900 whitespace-nowrap" dir="ltr">{formatNum(entry.runningBalance)}</td>
+                                </tr>
+                             );
+                           })}
+                         </tbody>
+                       </table>
+                     </div>
+                   </div>
+
+                   {/* Statement Footer: Digital stamp & Signatures */}
+                   <div className="flex justify-between items-end mt-12 pt-6 border-t border-slate-200">
+                     <div className="flex flex-col gap-1 items-center">
+                       <span className="text-[10px] text-slate-400 font-black mb-1">الختم والاعتماد الرقمي الرسمي</span>
+                       <SecurityStamp />
+                     </div>
+                     <div className="flex gap-16">
+                       <div className="text-center">
+                         <span className="text-[10px] text-slate-500 font-black block mb-12">توقيع مسؤول المراجعة والتدقيق</span>
+                         <div className="w-36 border-b border-slate-400 border-dashed"></div>
+                       </div>
+                       <div className="text-center">
+                         <span className="text-[10px] text-slate-500 font-black block mb-12">توقيع الطرف الثاني المستلم</span>
+                         <div className="w-36 border-b border-slate-400 border-dashed"></div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+          </div>
+
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -2417,9 +2751,27 @@ export default function App() {
   // UI State
   const [toast, setToast] = useState<{message: string, type: 'success'|'error'} | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{message: string, onConfirm: () => void} | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   
   // Modals State
   const [activeNetworkPosId, setActiveNetworkPosId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      showToast("تم استعادة الاتصال بالإنترنت ومزامنة الحركات مع السحابة!", "success");
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      showToast("أنت تعمل حالياً دون اتصال. سيتم حفظ وإدخال الحركات ومزامنتها تلقائياً فور عودة الاتصال", "error");
+    };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const [currentAppView, setCurrentAppView] = useState<'launcher' | 'treasury'>('launcher');
 
@@ -2723,6 +3075,70 @@ export default function App() {
   const [printSnapshot, setPrintSnapshot] = useState<{state: AppState, summary: ReturnType<typeof getSummary>} | null>(null);
   const [showCalculator, setShowCalculator] = useState(false);
   const [thermalPreviewData, setThermalPreviewData] = useState<{ type: 'daily' | 'pos' | 'history', id?: string, snap?: any } | null>(null);
+
+  const [pdfCaptureView, setPdfCaptureView] = useState<'none' | 'daily' | 'comprehensive_a4' | 'pending'>('none');
+  const [isGeneratingAppPdf, setIsGeneratingAppPdf] = useState(false);
+
+  const handleExportDirectPDF = async (viewType: 'daily' | 'comprehensive_a4' | 'pending') => {
+    setIsGeneratingAppPdf(true);
+    setPdfCaptureView(viewType);
+    showToast('جاري تحضير ورسم تقارير الـ PDF المستقلة...', 'success');
+    
+    setTimeout(async () => {
+      try {
+        const element = document.getElementById('hidden-pdf-capture-target');
+        if (!element) {
+          throw new Error("Target element for PDF capturing not found in DOM");
+        }
+        
+        const dataUrl = await toPng(element, {
+          quality: 1.0,
+          backgroundColor: '#ffffff',
+          pixelRatio: 3,
+          style: {
+            transform: 'none',
+          }
+        });
+        
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        
+        const img = new Image();
+        img.src = dataUrl;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+        
+        const imgWidth = pdfWidth;
+        const imgHeight = (img.naturalHeight * pdfWidth) / img.naturalWidth;
+        
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pdfHeight;
+        
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+          heightLeft -= pdfHeight;
+        }
+        
+        const typeStr = viewType === 'daily' ? 'التقرير_المبسط' : viewType === 'comprehensive_a4' ? 'التقرير_الشامل' : 'تقرير_الذمم_المعلقة';
+        pdf.save(`${typeStr}_${state.date.split('/').join('-')}.pdf`);
+        showToast('تم تحميل ملف الـ PDF عالي الجودة بنجاح', 'success');
+      } catch (err) {
+        console.error("Direct PDF capture failed:", err);
+        showToast('فشل رسم ملف الـ PDF. يرجى استخدام طباعة المتصفح كبديل', 'error');
+      } finally {
+        setPdfCaptureView('none');
+        setIsGeneratingAppPdf(false);
+      }
+    }, 400);
+  };
 
   useEffect(() => {
     const handleAfterPrint = () => {
@@ -4447,6 +4863,16 @@ const handleCopyDailyReport = () => {
                       </select>
                     </div>
                   )}
+                  {/* Connection Status Badge */}
+                  <div className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border shadow-sm transition-all ${
+                    isOnline 
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40' 
+                      : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200/60 dark:border-rose-800/40 animate-pulse'
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-rose-500 animate-ping'}`}></span>
+                    <span>{isOnline ? 'متصل سحابياً' : 'مزامنة تلقائية دون اتصال'}</span>
+                  </div>
+
                   <div className="hidden md:flex items-center gap-2 text-[15px] text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 print:bg-white/60 backdrop-blur-sm px-4 py-2.5 rounded-[4px] border border-slate-200 dark:border-slate-700/60 font-medium shadow-sm">
                     <div className="w-2.5 h-2.5 btn-success rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     <span className="font-mono">{user.email?.split('@')[0]}</span>
@@ -5537,130 +5963,157 @@ const handleCopyDailyReport = () => {
       </div>
 
       {/* Export Modal */}
-      
-      {showExportModal && (
-        <div className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="pro-card w-full max-w-md overflow-hidden">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <Download size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
-                تصدير التسوية
-              </h3>
-              <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors"><X size={20} /></button>
-            </div>
-            <div className="p-6">
-              <div className="mb-6">
-                <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-3">نوع التقرير (التفاصيل)</label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button 
-                    onClick={() => setExportMode('summary')}
-                    className={`p-3 rounded-[4px] border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'summary' ? 'border-slate-900 bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'}`}
-                  >
-                    <FileText size={24} />
-                    <span className="font-bold">مبسط</span>
-                    <span className="text-xs text-center opacity-80">التقفيل النهائي</span>
-                  </button>
-                  <button 
-                    onClick={() => setExportMode('comprehensive')}
-                    className={`p-3 rounded-[4px] border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'comprehensive' ? 'border-slate-900 bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'}`}
-                  >
-                    <BarChart3 size={24} />
-                    <span className="font-bold">شامل</span>
-                    <span className="text-xs text-center opacity-80">صفحة A4</span>
-                  </button>
-                  <button 
-                    onClick={() => setExportMode('detailed')}
-                    className={`p-3 rounded-[4px] border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'detailed' ? 'border-slate-900 bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'}`}
-                  >
-                    <BookOpen size={24} />
-                    <span className="font-bold">مفصل</span>
-                    <span className="text-xs text-center opacity-80">كل الجداول</span>
-                  </button>
-                </div>
+      <AnimatePresence>
+        {showExportModal && (
+          <div className="fixed inset-0 z-[200] bg-slate-900/65 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="pro-card w-full max-w-md overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl"
+            >
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                  <Download size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
+                  تصدير التسوية
+                </h3>
+                <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors"><X size={20} /></button>
               </div>
-              
-              <div className="flex gap-2 w-full mt-4">
-                <button 
-                  onClick={() => handleExport('a4')}
-                  disabled={isExporting}
-                  className="flex-1 bg-brand-500 text-white border-none hover:bg-blue-700 text-white py-3 rounded-[4px] font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isExporting ? 'جاري التحضير...' : (
-                    <>
-                      {exportMode === 'summary' ? <Download size={20} /> : <Printer size={20} />} طباعة A4
-                    </>
-                  )}
-                </button>
+              <div className="p-6">
+                <div className="mb-6">
+                  <label className="block text-[15px] font-bold text-slate-700 dark:text-slate-300 mb-3">نوع التقرير (التفاصيل)</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button 
+                      onClick={() => setExportMode('summary')}
+                      className={`p-3 rounded-[4px] border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'summary' ? 'border-slate-900 bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'}`}
+                    >
+                      <FileText size={24} />
+                      <span className="font-bold">مبسط</span>
+                      <span className="text-xs text-center opacity-80">التقفيل النهائي</span>
+                    </button>
+                    <button 
+                      onClick={() => setExportMode('comprehensive')}
+                      className={`p-3 rounded-[4px] border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'comprehensive' ? 'border-slate-900 bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'}`}
+                    >
+                      <BarChart3 size={24} />
+                      <span className="font-bold">شامل</span>
+                      <span className="text-xs text-center opacity-80">صفحة A4</span>
+                    </button>
+                    <button 
+                      onClick={() => setExportMode('detailed')}
+                      className={`p-3 rounded-[4px] border-2 flex flex-col items-center gap-2 transition-colors ${exportMode === 'detailed' ? 'border-slate-900 bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:border-slate-600'}`}
+                    >
+                      <BookOpen size={24} />
+                      <span className="font-bold">مفصل</span>
+                      <span className="text-xs text-center opacity-80">كل الجداول</span>
+                    </button>
+                  </div>
+                </div>
                 
-                {exportMode === 'summary' && (
+                <div className="flex gap-2 w-full mt-4">
                   <button 
-                    onClick={() => handleExport('thermal')}
+                    onClick={() => handleExport('a4')}
                     disabled={isExporting}
-                    className="flex-1 bg-slate-800 text-white py-3 rounded-[4px] font-bold hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 bg-brand-500 text-white border-none hover:bg-blue-700 text-white py-3 rounded-[4px] font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    <Printer size={20} /> حراري
+                    {isExporting ? 'جاري التحضير...' : (
+                      <>
+                        {exportMode === 'summary' ? <Download size={20} /> : <Printer size={20} />} طباعة A4
+                      </>
+                    )}
+                  </button>
+                  
+                  {exportMode === 'summary' && (
+                    <button 
+                      onClick={() => handleExport('thermal')}
+                      disabled={isExporting}
+                      className="flex-1 bg-slate-800 text-white py-3 rounded-[4px] font-bold hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      <Printer size={20} /> حراري
+                    </button>
+                  )}
+                </div>
+                
+                {/* Direct Pixel-Perfect PDF Export Button */}
+                {(exportMode === 'summary' || exportMode === 'comprehensive') && (
+                  <button
+                    onClick={() => handleExportDirectPDF(exportMode === 'summary' ? 'daily' : 'comprehensive_a4')}
+                    disabled={isGeneratingAppPdf}
+                    className="w-full mt-3 bg-emerald-600 text-white border-none py-3 rounded-[4px] font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                  >
+                    <Download size={20} /> {isGeneratingAppPdf ? 'جاري تصدير PDF...' : 'تحميل كـ PDF رسمي معتمد'}
                   </button>
                 )}
+                
+                {exportMode === 'summary' && (
+                    <button 
+                      onClick={handleCopyDailyReport}
+                      className="w-full mt-3 btn-success text-white py-3 rounded-[4px] font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Copy size={20} /> نسخ التقرير النصي
+                    </button>
+                )}
               </div>
-              
-              {exportMode === 'summary' && (
-                  <button 
-                    onClick={handleCopyDailyReport}
-                    className="w-full mt-3 btn-success text-white py-3 rounded-[4px] font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Copy size={20} /> نسخ التقرير النصي
-                  </button>
-              )}
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
       
 
       {/* View Snapshot Modal */}
-      
-      {viewSnapshot && (
-        <div className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-800/500 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
-          <div className="pro-card w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 shrink-0">
-              <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <CalendarDays size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
-                تفاصيل يوم: {viewSnapshot.state.date}
-              </h3>
-              <div className="flex items-center gap-2">
-                <div className="flex bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white tracking-tight rounded-[4px] overflow-hidden border border-slate-300 dark:border-slate-600">
-                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'a4'); }} className="hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 text-[15px] font-bold transition-colors border-l border-slate-300 dark:border-slate-600 flex items-center gap-1" title="طباعة A4"><Printer size={16} /> A4</button>
-                  <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'thermal'); }} className="hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 text-[15px] font-bold transition-colors" title="طباعة حراري">حراري</button>
+      <AnimatePresence>
+        {viewSnapshot && (
+          <div className="fixed inset-0 z-[100] bg-slate-900/65 backdrop-blur-sm flex items-center justify-center p-4 print:hidden">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="pro-card w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl"
+            >
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 shrink-0">
+                <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                  <CalendarDays size={20} className="text-slate-900 dark:text-white tracking-tight" /> 
+                  تفاصيل يوم: {viewSnapshot.state.date}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <div className="flex bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white tracking-tight rounded-[4px] overflow-hidden border border-slate-300 dark:border-slate-600">
+                    <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'a4'); }} className="hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 text-[15px] font-bold transition-colors border-l border-slate-300 dark:border-slate-600 flex items-center gap-1" title="طباعة A4"><Printer size={16} /> A4</button>
+                    <button onClick={() => { setViewSnapshot(null); handlePrintHistory(viewSnapshot, 'thermal'); }} className="hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 px-3 py-1.5 text-[15px] font-bold transition-colors" title="طباعة حراري">حراري</button>
+                  </div>
+                  <button onClick={() => setViewSnapshot(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors"><X size={20} /></button>
                 </div>
-                <button onClick={() => setViewSnapshot(null)} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-[4px] transition-colors"><X size={20} /></button>
               </div>
-            </div>
-            <div className="p-4 overflow-y-auto bg-slate-100 dark:bg-slate-800">
-              <SummaryDashboard state={viewSnapshot.state} summary={viewSnapshot.summary} />
-            </div>
+              <div className="p-4 overflow-y-auto bg-slate-100 dark:bg-slate-800">
+                <SummaryDashboard state={viewSnapshot.state} summary={viewSnapshot.summary} />
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
       
 
       {/* Fund Manager Modal */}
-      
-      {managingFund && state[managingFund.field].find(f => f.id === managingFund.item.id) && (
-        <FundManagerModal 
-          fund={state[managingFund.field].find(f => f.id === managingFund.item.id)}
-          field={managingFund.field}
-          ledgerEntries={generateLedgerEntries()}
-          onUpdate={updateTransaction}
-          onAdjustFund={adjustFundAmount}
-          onResetFund={resetFundAmount}
-          onEditHistory={editFundHistoryEntry}
-          onDeleteHistory={deleteFundHistoryEntry}
-          onArchive={archivePendingFund}
-          onClose={() => setManagingFund(null)}
-          formatNum={formatNum}
-          showToast={showToast}
-        />
-      )}
+      <AnimatePresence>
+        {managingFund && state[managingFund.field].find(f => f.id === managingFund.item.id) && (
+          <FundManagerModal 
+            fund={state[managingFund.field].find(f => f.id === managingFund.item.id)}
+            field={managingFund.field}
+            ledgerEntries={generateLedgerEntries()}
+            onUpdate={updateTransaction}
+            onAdjustFund={adjustFundAmount}
+            onResetFund={resetFundAmount}
+            onEditHistory={editFundHistoryEntry}
+            onDeleteHistory={deleteFundHistoryEntry}
+            onArchive={archivePendingFund}
+            onClose={() => setManagingFund(null)}
+            formatNum={formatNum}
+            showToast={showToast}
+            companyName={companyName}
+          />
+        )}
+      </AnimatePresence>
       
 
             <SettingsModalComponent
@@ -5926,6 +6379,25 @@ const handleCopyDailyReport = () => {
       )}
       
       {showCalculator && <CalculatorWidget onClose={() => setShowCalculator(false)} />}
+      
+      {pdfCaptureView !== 'none' && (
+        <div 
+          id="hidden-pdf-capture-target" 
+          className="fixed bg-white text-slate-950 p-10 z-[250] text-right" 
+          style={{ 
+            left: '-9999px', 
+            top: 0, 
+            width: '794px', 
+            minHeight: '1123px',
+            direction: 'rtl',
+            fontFamily: 'Cairo, sans-serif'
+          }}
+        >
+          {pdfCaptureView === 'comprehensive_a4' && <ComprehensivePrintView companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} />}
+          {pdfCaptureView === 'daily' && <DailyPrintView companyName={companyName} state={state} summary={currentSummary} formatNum={formatNum} />}
+          {pdfCaptureView === 'pending' && <PendingPrintView companyName={companyName} pendingOwedToUs={state.pendingFundsOwedToUs} pendingOwedByUs={state.pendingFundsOwedByUs} formatNum={formatNum} />}
+        </div>
+      )}
       
       {thermalPreviewData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden">

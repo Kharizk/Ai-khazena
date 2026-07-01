@@ -19,6 +19,9 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        workbox: {
+          maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        },
         manifest: {
           name: 'الخزينة الذكية',
           short_name: 'الخزينة',
