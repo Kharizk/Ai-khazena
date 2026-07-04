@@ -614,15 +614,15 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
               <div className="mt-4 flex justify-between items-end">
                 {/* Managers Signs */}
                 <div className="flex-1 flex justify-around text-center text-xs font-black pb-2">
-                  <div className="flex flex-col gap-10">
+                  <div className="flex flex-col gap-8">
                     <span>الإدارة</span>
                     <span className="w-24 border-b border-black"></span>
                   </div>
-                  <div className="flex flex-col gap-10">
+                  <div className="flex flex-col gap-8">
                     <span>المحاسبة</span>
                     <span className="w-24 border-b border-black"></span>
                   </div>
-                  <div className="flex flex-col gap-10">
+                  <div className="flex flex-col gap-8">
                     <span>مدير القسم</span>
                     <span className="w-24 border-b border-black"></span>
                   </div>
@@ -654,6 +654,28 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
       {/* Embedded print style to handle only printing the A4 target on print command */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+
+        /* Tight layout styles for A4 attendance sheet cells to prevent overflowing 1123px standard height */
+        #attendance-sheet-a4-target td,
+        #attendance-sheet-a4-target th {
+          padding: 1.5px 1px !important;
+          line-height: 1.1 !important;
+          box-sizing: border-box !important;
+        }
+        #attendance-sheet-a4-target tbody td {
+          height: 20px !important;
+        }
+        #attendance-sheet-a4-target input {
+          padding: 0 !important;
+          margin: 0 !important;
+          height: 100% !important;
+          line-height: 1.1 !important;
+          border: none !important;
+          background: transparent !important;
+          font-size: 10px !important;
+          font-weight: 700 !important;
+          text-align: center !important;
+        }
 
         .friday-shaded {
           background-color: #cbd5e1 !important;
@@ -762,7 +784,7 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
             top: 0 !important;
             left: 0 !important;
             margin: 0 !important;
-            padding: 1.5cm 1.5cm !important; /* Elegant spacing margins for print */
+            padding: 1.2cm 1.2cm !important; /* Elegant spacing margins for print */
             width: 210mm !important;
             height: 297mm !important;
             max-height: 297mm !important;
