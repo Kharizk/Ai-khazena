@@ -500,17 +500,17 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
                     </tr>
                     <tr className="bg-slate-50 border-b-2 border-black text-[8px] font-bold text-slate-800 sub-header-shaded">
                       {/* Morning In */}
-                      <th className="border border-black py-0.5 sub-header-shaded w-[6%]">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded w-[13.5%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[3.5%]">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[16%]">التوقيع<br/>.Sign</th>
                       {/* Morning Out */}
-                      <th className="border border-black py-0.5 sub-header-shaded w-[6%]">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded w-[13.5%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[3.5%]">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[16%]">التوقيع<br/>.Sign</th>
                       {/* Evening In */}
-                      <th className="border border-black py-0.5 sub-header-shaded w-[6%]">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded w-[13.5%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[3.5%]">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[16%]">التوقيع<br/>.Sign</th>
                       {/* Evening Out */}
-                      <th className="border border-black py-0.5 sub-header-shaded w-[6%]">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded w-[13.5%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[3.5%]">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[16%]">التوقيع<br/>.Sign</th>
                     </tr>
                   </thead>
                   <tbody>
