@@ -3,7 +3,8 @@ import { motion } from 'motion/react';
 import { 
   Printer, ArrowRight, Download, Calendar, 
   User, Building, RotateCcw, HelpCircle, 
-  Edit, Check, Sparkles, CheckCircle2, FileText, X
+  Edit, Check, Sparkles, CheckCircle2, FileText, X,
+  Sliders, Settings
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
@@ -48,6 +49,63 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
   const [previewScale, setPreviewScale] = useState(0.8);
   const containerRef = useRef<HTMLDivElement>(null);
   const pdfTargetRef = useRef<HTMLDivElement>(null);
+
+  // Dynamic Layout states with Excel-like customization
+  const [timeColWidth, setTimeColWidth] = useState(() => {
+    const saved = localStorage.getItem('att_timeColWidth');
+    return saved !== null ? Number(saved) : 4.5;
+  });
+  const [signColWidth, setSignColWidth] = useState(() => {
+    const saved = localStorage.getItem('att_signColWidth');
+    return saved !== null ? Number(saved) : 12.0;
+  });
+  const [dateColWidth, setDateColWidth] = useState(() => {
+    const saved = localStorage.getItem('att_dateColWidth');
+    return saved !== null ? Number(saved) : 6.5;
+  });
+  const [dayColWidth, setDayColWidth] = useState(() => {
+    const saved = localStorage.getItem('att_dayColWidth');
+    return saved !== null ? Number(saved) : 8.0;
+  });
+  const [delayColWidth, setDelayColWidth] = useState(() => {
+    const saved = localStorage.getItem('att_delayColWidth');
+    return saved !== null ? Number(saved) : 7.0;
+  });
+  const [cellPaddingY, setCellPaddingY] = useState(() => {
+    const saved = localStorage.getItem('att_cellPaddingY');
+    return saved !== null ? Number(saved) : 1.5;
+  });
+  const [fontSize, setFontSize] = useState(() => {
+    const saved = localStorage.getItem('att_fontSize');
+    return saved !== null ? Number(saved) : 10;
+  });
+  const [rowHeight, setRowHeight] = useState(() => {
+    const saved = localStorage.getItem('att_rowHeight');
+    return saved !== null ? Number(saved) : 21;
+  });
+
+  // Persist layout changes to localStorage
+  useEffect(() => {
+    localStorage.setItem('att_timeColWidth', String(timeColWidth));
+    localStorage.setItem('att_signColWidth', String(signColWidth));
+    localStorage.setItem('att_dateColWidth', String(dateColWidth));
+    localStorage.setItem('att_dayColWidth', String(dayColWidth));
+    localStorage.setItem('att_delayColWidth', String(delayColWidth));
+    localStorage.setItem('att_cellPaddingY', String(cellPaddingY));
+    localStorage.setItem('att_fontSize', String(fontSize));
+    localStorage.setItem('att_rowHeight', String(rowHeight));
+  }, [timeColWidth, signColWidth, dateColWidth, dayColWidth, delayColWidth, cellPaddingY, fontSize, rowHeight]);
+
+  const handleResetLayout = () => {
+    setTimeColWidth(4.5);
+    setSignColWidth(12.0);
+    setDateColWidth(6.5);
+    setDayColWidth(8.0);
+    setDelayColWidth(7.0);
+    setCellPaddingY(1.5);
+    setFontSize(10);
+    setRowHeight(21);
+  };
 
   const arabicMonths = [
     { value: 1, label: 'يناير' },
@@ -415,6 +473,170 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
             </div>
           </div>
 
+          {/* Excel-like Layout Customizer Section */}
+          <div className="bg-slate-900/55 p-4 rounded-xl border border-slate-700/40">
+            <h2 className="text-sm font-bold text-slate-300 mb-2 flex items-center gap-2">
+              <Sliders size={16} className="text-brand-400" />
+              <span>تنسيق أبعاد الجدول (تحكم Excel)</span>
+            </h2>
+            <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">
+              تحكم في عرض كل عمود، ارتفاع الصفوف، وحجم الخط للحصول على أفضل ملاءمة لصفحة الطباعة وتوقيع الموظفين بدقة. يتم حفظ هذه الإعدادات تلقائياً.
+            </p>
+            
+            <div className="space-y-4">
+              {/* Width Controls */}
+              <div className="space-y-3 border-b border-slate-700/60 pb-3">
+                <span className="block text-xs font-bold text-brand-300">عرض الأعمدة (%)</span>
+                
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="text-slate-300">أعمدة التوقيع (.Sign)</span>
+                    <span className="text-brand-300 font-mono font-bold">{signColWidth}%</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="4" 
+                    max="22" 
+                    step="0.5"
+                    value={signColWidth} 
+                    onChange={e => setSignColWidth(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="text-slate-300">أعمدة الوقت (Time)</span>
+                    <span className="text-brand-300 font-mono font-bold">{timeColWidth}%</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="2" 
+                    max="10" 
+                    step="0.1"
+                    value={timeColWidth} 
+                    onChange={e => setTimeColWidth(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-slate-300">التاريخ (Date)</span>
+                      <span className="text-brand-300 font-mono font-bold">{dateColWidth}%</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="3" 
+                      max="12" 
+                      step="0.5"
+                      value={dateColWidth} 
+                      onChange={e => setDateColWidth(Number(e.target.value))}
+                      className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-slate-300">اليوم (Day)</span>
+                      <span className="text-brand-300 font-mono font-bold">{dayColWidth}%</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="4" 
+                      max="14" 
+                      step="0.5"
+                      value={dayColWidth} 
+                      onChange={e => setDayColWidth(Number(e.target.value))}
+                      className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="text-slate-300">عمود التأخير (Delay)</span>
+                    <span className="text-brand-300 font-mono font-bold">{delayColWidth}%</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="4" 
+                    max="12" 
+                    step="0.5"
+                    value={delayColWidth} 
+                    onChange={e => setDelayColWidth(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                  />
+                </div>
+              </div>
+
+              {/* Height & Font Controls */}
+              <div className="space-y-3 pb-2">
+                <span className="block text-xs font-bold text-brand-300">أبعاد وحجم الصفوف</span>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-slate-300">ارتفاع الصف (px)</span>
+                      <span className="text-brand-300 font-mono font-bold">{rowHeight}px</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="16" 
+                      max="32" 
+                      step="1"
+                      value={rowHeight} 
+                      onChange={e => setRowHeight(Number(e.target.value))}
+                      className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-slate-300">حجم الخط (pt)</span>
+                      <span className="text-brand-300 font-mono font-bold">{fontSize}px</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="8" 
+                      max="14" 
+                      step="0.5"
+                      value={fontSize} 
+                      onChange={e => setFontSize(Number(e.target.value))}
+                      className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="text-slate-300">حواشي الخلايا (Padding Y)</span>
+                    <span className="text-brand-300 font-mono font-bold">{cellPaddingY}px</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="6" 
+                    step="0.5"
+                    value={cellPaddingY} 
+                    onChange={e => setCellPaddingY(Number(e.target.value))}
+                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-500"
+                  />
+                </div>
+              </div>
+
+              {/* Reset Layout Buttons */}
+              <div className="flex gap-2 pt-2">
+                <button 
+                  onClick={handleResetLayout}
+                  className="w-full bg-slate-700 hover:bg-slate-600 text-slate-200 py-1.5 rounded-[4px] text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                >
+                  <RotateCcw size={13} />
+                  إعادة تعيين أبعاد الجدول الافتراضية
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* Right Preview Column: 60% width */}
@@ -481,14 +703,34 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
                 </div>
 
                 {/* 3. GRID TABLE SECTION */}
-                <table className="w-full border-collapse border-2 border-black text-center text-[10.5px] mt-2">
+                <table className="w-full table-fixed border-collapse border-2 border-black text-center text-[10.5px] mt-2">
+                  <colgroup>
+                    <col style={{ width: `${dateColWidth}%` }} />
+                    <col style={{ width: `${dayColWidth}%` }} />
+                    
+                    {/* Morning In */}
+                    <col style={{ width: `${timeColWidth}%` }} />
+                    <col style={{ width: `${signColWidth}%` }} />
+                    {/* Morning Out */}
+                    <col style={{ width: `${timeColWidth}%` }} />
+                    <col style={{ width: `${signColWidth}%` }} />
+                    
+                    {/* Evening In */}
+                    <col style={{ width: `${timeColWidth}%` }} />
+                    <col style={{ width: `${signColWidth}%` }} />
+                    {/* Evening Out */}
+                    <col style={{ width: `${timeColWidth}%` }} />
+                    <col style={{ width: `${signColWidth}%` }} />
+                    
+                    <col style={{ width: `${delayColWidth}%` }} />
+                  </colgroup>
                   <thead>
                     <tr className="bg-slate-100 border-b-2 border-black header-shaded">
-                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] w-[6%] header-shaded">التاريخ<br/>DATE</th>
-                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] w-[8%] header-shaded">اليوم<br/>DAY</th>
+                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] header-shaded">التاريخ<br/>DATE</th>
+                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] header-shaded">اليوم<br/>DAY</th>
                       <th colSpan={4} className="border border-black py-1 font-black text-[11.5px] header-shaded">الفترة الصباحية Morning Period</th>
                       <th colSpan={4} className="border border-black py-1 font-black text-[11.5px] header-shaded">الفترة المسائية Evening Period</th>
-                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] w-[8%] leading-tight header-shaded">ساعات<br/>التأخير<br/>Delay<br/>Hour</th>
+                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] leading-tight header-shaded">ساعات<br/>التأخير<br/>Delay<br/>Hour</th>
                     </tr>
                     <tr className="bg-slate-50 border-b border-black font-bold sub-header-shaded">
                       {/* Morning Period Columns */}
@@ -500,24 +742,25 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
                     </tr>
                     <tr className="bg-slate-50 border-b-2 border-black text-[8px] font-bold text-slate-800 sub-header-shaded">
                       {/* Morning In */}
-                      <th className="border border-black py-0.5 sub-header-shaded w-[3.5%]">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded w-[16%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
                       {/* Morning Out */}
-                      <th className="border border-black py-0.5 sub-header-shaded w-[3.5%]">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded w-[16%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
                       {/* Evening In */}
-                      <th className="border border-black py-0.5 sub-header-shaded w-[3.5%]">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded w-[16%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
                       {/* Evening Out */}
-                      <th className="border border-black py-0.5 sub-header-shaded w-[3.5%]">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded w-[16%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
                     </tr>
                   </thead>
                   <tbody>
                     {days.map((day, idx) => (
                       <tr 
                         key={day.dateStr} 
-                        className={`border-b border-black h-[21px] ${day.isFriday ? 'friday-shaded' : ''}`}
+                        className={`border-b border-black ${day.isFriday ? 'friday-shaded' : ''}`}
+                        style={{ height: `${rowHeight}px` }}
                       >
                         {/* DATE */}
                         <td 
@@ -658,12 +901,13 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
         /* Tight layout styles for A4 attendance sheet cells to prevent overflowing 1123px standard height */
         #attendance-sheet-a4-target td,
         #attendance-sheet-a4-target th {
-          padding: 1.5px 1px !important;
+          padding: ${cellPaddingY}px 1px !important;
           line-height: 1.1 !important;
           box-sizing: border-box !important;
+          font-size: ${fontSize}px !important;
         }
         #attendance-sheet-a4-target tbody td {
-          height: 20px !important;
+          height: ${rowHeight}px !important;
         }
         #attendance-sheet-a4-target input {
           padding: 0 !important;
@@ -672,7 +916,7 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
           line-height: 1.1 !important;
           border: none !important;
           background: transparent !important;
-          font-size: 10px !important;
+          font-size: ${fontSize}px !important;
           font-weight: 700 !important;
           text-align: center !important;
         }
