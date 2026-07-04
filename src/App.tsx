@@ -9,6 +9,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthState
 import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, updateDoc, where } from 'firebase/firestore';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, ComposedChart } from 'recharts';
 import CalculatorWidget from './components/Calculator';
+import { AttendanceSheet } from './components/AttendanceSheet';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
@@ -2773,7 +2774,7 @@ export default function App() {
     };
   }, []);
 
-  const [currentAppView, setCurrentAppView] = useState<'launcher' | 'treasury'>('launcher');
+  const [currentAppView, setCurrentAppView] = useState<'launcher' | 'treasury' | 'attendance'>('launcher');
 
   const [theme, setTheme] = useState<'system'|'light'|'dark'>(() => {
     return (safeLocalStorage.getItem('smart_safe_theme') as any) || 'system';
@@ -4743,6 +4744,17 @@ const handleCopyDailyReport = () => {
               <span className="text-xs font-bold drop-shadow-md tracking-wide text-white/90">الخزينة</span>
             </button>
 
+            {/* Attendance App */}
+            <button 
+              onClick={() => setCurrentAppView('attendance')}
+              className="flex flex-col items-center gap-2 group active:scale-95 transition-all"
+            >
+              <div className="w-[72px] h-[72px] bg-white dark:bg-slate-900 print:bg-white rounded-[4px] shadow-xl ring-1 ring-white/10 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:shadow-2xl group-hover:-translate-y-1 group-hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50">
+                <CalendarDays size={28} className="text-[#0a6ed1] dark:text-blue-400 drop-shadow-md" />
+              </div>
+              <span className="text-xs font-bold drop-shadow-md tracking-wide text-white/90">كشف الدوام</span>
+            </button>
+
             {/* Dummy Apps */}
             {[
               { name: 'المبيعات', icon: Receipt, color: '#1A1A1A', disabled: true },
@@ -4796,6 +4808,15 @@ const handleCopyDailyReport = () => {
         removeSavedName={removeSavedName}
       />
       </>
+    );
+  }
+
+  if (currentAppView === 'attendance') {
+    return (
+      <AttendanceSheet 
+        onClose={() => setCurrentAppView('launcher')} 
+        defaultBranch={currentBranchId ? branches.find(b => b.id === currentBranchId)?.name : null}
+      />
     );
   }
 
