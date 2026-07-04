@@ -162,14 +162,33 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
     
     try {
       const element = pdfTargetRef.current;
+      const parentWrapper = element.parentElement;
+      const originalTransform = parentWrapper ? parentWrapper.style.transform : '';
+      
+      // Temporarily remove transform scaling so html-to-image captures at natural full 100% scale
+      if (parentWrapper) {
+        parentWrapper.style.transform = 'none';
+      }
+
+      // Capture the element at exact standard A4 size (794px width, 1123px height at 96 DPI)
       const dataUrl = await toPng(element, {
         quality: 1.0,
         backgroundColor: '#ffffff',
-        pixelRatio: 3, // very high quality
+        pixelRatio: 2.5, // optimal resolution for print quality and file size
+        width: 794,
+        height: 1123,
         style: {
           transform: 'none',
+          margin: '0',
+          padding: '32px', // p-8 equals 32px padding
+          boxSizing: 'border-box'
         }
       });
+      
+      // Restore the scaling transform for user UI preview
+      if (parentWrapper) {
+        parentWrapper.style.transform = originalTransform;
+      }
       
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -657,31 +676,93 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
             size: A4 portrait;
             margin: 0mm !important;
           }
-          body {
+          
+          /* Hide non-printable elements from taking up layout space */
+          .print\:hidden,
+          button,
+          nav,
+          header,
+          footer,
+          sidebar,
+          div.print\:hidden,
+          div.relative.z-10.shrink-0 {
+            display: none !important;
+          }
+
+          /* Reset body and html layout */
+          html, body {
             background-color: #ffffff !important;
             color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          /* Hide everything by default in the body */
-          body * {
-            visibility: hidden !important;
+
+          /* Reset main root wrapper */
+          #root {
+            display: block !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
           }
-          /* Show only the target sheet container and its internal tree */
-          #attendance-sheet-a4-target,
-          #attendance-sheet-a4-target * {
-            visibility: visible !important;
-          }
-          /* Position the target container precisely to cover exactly one A4 page */
-          #attendance-sheet-a4-target {
+
+          /* Reset absolute/fixed full-screen modal container of AttendanceSheet */
+          div.fixed.inset-0.z-\[150\] {
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
             right: 0 !important;
+            bottom: auto !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+            background: white !important;
+            display: block !important;
+          }
+
+          /* Reset main workspace columns */
+          div.flex-1.flex.overflow-hidden {
+            display: block !important;
+            overflow: visible !important;
+            height: auto !important;
+            background: white !important;
+          }
+
+          /* Hide left form editor column */
+          div.lg\:w-\[38\%\] {
+            display: none !important;
+          }
+
+          /* Reset right preview column layout */
+          div.flex-1.bg-slate-900\/40 {
+            display: block !important;
+            padding: 0 !important;
             margin: 0 !important;
-            padding: 1.2cm 1.2cm !important; /* Proper margin for standard A4 printing */
+            overflow: visible !important;
+            background: white !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+
+          /* Reset scaling preview container wrapper */
+          div.relative.origin-top {
+            transform: none !important;
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+          }
+
+          /* Precision sizing for target A4 document */
+          #attendance-sheet-a4-target {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            margin: 0 !important;
+            padding: 1.5cm 1.5cm !important; /* Elegant spacing margins for print */
             width: 210mm !important;
             height: 297mm !important;
             max-height: 297mm !important;
@@ -697,6 +778,7 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
+
           .friday-shaded {
             background-color: #cbd5e1 !important;
             -webkit-print-color-adjust: exact !important;
