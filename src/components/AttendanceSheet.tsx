@@ -411,163 +411,177 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
               id="attendance-sheet-a4-target"
               ref={pdfTargetRef}
               dir="rtl"
-              className="bg-white text-black font-sans p-10 box-border border border-slate-350 shadow-2xl flex flex-col justify-between"
+              className="bg-white text-black p-8 box-border border-2 border-slate-400 shadow-2xl flex flex-col justify-between"
               style={{
                 width: '794px',
                 height: '1123px',
                 minHeight: '1123px',
                 maxHeight: '1123px',
-                fontFamily: "'Inter', sans-serif"
+                fontFamily: "'Cairo', 'Inter', sans-serif",
+                WebkitPrintColorAdjust: 'exact',
+                printColorAdjust: 'exact'
               }}
             >
               <div>
                 {/* 1. TOP HEADER SECTION */}
-                <div className="flex justify-between items-start pb-4 border-b border-black">
+                <div className="flex justify-between items-start pb-2 border-b-4 border-double border-black">
                   <div className="flex-1 text-right">
-                    <h2 className="text-[20px] font-black text-sky-700 tracking-tight leading-tight">{companyName}</h2>
+                    <h2 className="text-[21px] font-black text-sky-800 tracking-tight leading-tight">{companyName}</h2>
                   </div>
                   <div className="flex-1 text-center">
-                    <h1 className="text-[22px] font-black tracking-tight leading-none text-slate-900">كشف الدوام اليومي</h1>
+                    <h1 className="text-[24px] font-black tracking-tight leading-none text-slate-950">كشف الدوام اليومي</h1>
                   </div>
                   <div className="flex-1 text-left flex flex-col items-end">
                     <div className="flex items-center gap-1">
-                      <span className="text-[13px] font-bold text-slate-800">الفرع :</span>
-                      <span className="text-[13px] font-medium text-slate-700">{branchName}</span>
+                      <span className="text-[13px] font-black text-slate-950">الفرع :</span>
+                      <span className="text-[13px] font-bold text-slate-800">{branchName}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 font-mono">
-                      <span>Bransh:</span>
+                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600 font-mono">
+                      <span>Branch:</span>
                       <span>{branchName}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* 2. EMPLOYEE & MONTH DETAILS SECTION */}
-                <div className="flex justify-between items-center py-3 border-b-2 border-black/40 text-[13px]">
+                <div className="flex justify-between items-center py-2.5 border-b-2 border-black/80 text-[13px]">
                   <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-slate-900 text-sm">الاســــــــــــــم :</span>
-                    <span className="font-black border-b border-dashed border-slate-400 pb-0.5 px-3 text-slate-800 text-[15px]">{employeeName}</span>
+                    <span className="font-extrabold text-slate-950 text-sm">الاســــــــــــــم :</span>
+                    <span className="font-black border-b-2 border-dashed border-slate-500 pb-0.5 px-4 text-slate-900 text-[15px]">{employeeName}</span>
                   </div>
                   <div className="flex items-center gap-6">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-extrabold text-slate-900">شهر:</span>
-                      <span className="font-black border-b border-dashed border-slate-400 pb-0.5 px-3 text-slate-800 text-[14px]">{monthLabel} {year}</span>
+                      <span className="font-extrabold text-slate-950">شهر:</span>
+                      <span className="font-black border-b-2 border-dashed border-slate-500 pb-0.5 px-4 text-slate-900 text-[14px]">{monthLabel} {year}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-slate-600 font-mono text-[11px]">
+                    <div className="flex items-center gap-1.5 text-slate-700 font-mono text-[11px]">
                       <span className="font-bold">Month:</span>
-                      <span className="font-semibold">{monthLabel} {year}</span>
+                      <span className="font-bold">{monthLabel} {year}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* 3. GRID TABLE SECTION */}
-                <table className="w-full border-collapse border border-black text-center text-[10.5px] mt-3">
+                <table className="w-full border-collapse border-2 border-black text-center text-[10.5px] mt-2">
                   <thead>
-                    <tr className="bg-slate-250 border-b border-black">
-                      <th rowSpan={2} className="border border-black py-1.5 font-black text-[11px] w-[5%]">التاريخ<br/>DATE</th>
-                      <th rowSpan={2} className="border border-black py-1.5 font-black text-[11px] w-[9%]">اليوم<br/>DAY</th>
-                      <th colSpan={4} className="border border-black py-1 font-black text-[11.5px] bg-slate-200">الفترة الصباحية Morning Period</th>
-                      <th colSpan={4} className="border border-black py-1 font-black text-[11.5px] bg-slate-200">الفترة المسائية Evening Period</th>
-                      <th rowSpan={2} className="border border-black py-1.5 font-black text-[11.5px] w-[8%] leading-tight">ساعات<br/>التأخير<br/>Delay<br/>Hour</th>
+                    <tr className="bg-slate-100 border-b-2 border-black header-shaded">
+                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] w-[6%] header-shaded">التاريخ<br/>DATE</th>
+                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] w-[10%] header-shaded">اليوم<br/>DAY</th>
+                      <th colSpan={4} className="border border-black py-1 font-black text-[11.5px] header-shaded">الفترة الصباحية Morning Period</th>
+                      <th colSpan={4} className="border border-black py-1 font-black text-[11.5px] header-shaded">الفترة المسائية Evening Period</th>
+                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] w-[8%] leading-tight header-shaded">ساعات<br/>التأخير<br/>Delay<br/>Hour</th>
                     </tr>
-                    <tr className="bg-slate-150 border-b border-black font-bold">
+                    <tr className="bg-slate-50 border-b border-black font-bold sub-header-shaded">
                       {/* Morning Period Columns */}
-                      <th colSpan={2} className="border-l border-black py-0.5 bg-slate-100/60 font-black text-[10px]">حضور Incoming</th>
-                      <th colSpan={2} className="border-l border-black py-0.5 bg-slate-100/60 font-black text-[10px]">انصراف Going Out</th>
+                      <th colSpan={2} className="border border-black py-0.5 font-black text-[10px] sub-header-shaded">حضور Incoming</th>
+                      <th colSpan={2} className="border border-black py-0.5 font-black text-[10px] sub-header-shaded">انصراف Going Out</th>
                       {/* Evening Period Columns */}
-                      <th colSpan={2} className="border-l border-black py-0.5 bg-slate-100/60 font-black text-[10px]">حضور Incoming</th>
-                      <th colSpan={2} className="border-r border-black py-0.5 bg-slate-100/60 font-black text-[10px]">انصراف Going Out</th>
+                      <th colSpan={2} className="border border-black py-0.5 font-black text-[10px] sub-header-shaded">حضور Incoming</th>
+                      <th colSpan={2} className="border border-black py-0.5 font-black text-[10px] sub-header-shaded">انصراف Going Out</th>
                     </tr>
-                    <tr className="bg-slate-100 border-b border-black text-[8.5px] font-bold text-slate-700">
-                      <th className="border border-black bg-white"></th>
-                      <th className="border border-black bg-white"></th>
+                    <tr className="bg-slate-50 border-b-2 border-black text-[8px] font-bold text-slate-800 sub-header-shaded">
                       {/* Morning In */}
-                      <th className="border border-black w-[10%]">الساعة<br/>Time</th>
-                      <th className="border border-black w-[10%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
                       {/* Morning Out */}
-                      <th className="border border-black w-[10%]">الساعة<br/>Time</th>
-                      <th className="border border-black w-[10%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
                       {/* Evening In */}
-                      <th className="border border-black w-[10%]">الساعة<br/>Time</th>
-                      <th className="border border-black w-[10%]">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
                       {/* Evening Out */}
-                      <th className="border border-black w-[10%]">الساعة<br/>Time</th>
-                      <th className="border border-black w-[10%]">التوقيع<br/>.Sign</th>
-                      <th className="border border-black"></th>
+                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
                     </tr>
                   </thead>
                   <tbody>
                     {days.map((day, idx) => (
                       <tr 
                         key={day.dateStr} 
-                        className={`border-b border-black h-[21.5px] ${
-                          day.isFriday ? 'bg-slate-350 text-slate-900 font-bold' : ''
-                        }`}
+                        className={`border-b border-black h-[21px] ${day.isFriday ? 'friday-shaded' : ''}`}
                       >
-                        <td className="border border-black font-black text-[11px] bg-slate-50">{day.dateStr}</td>
-                        <td className={`border border-black font-black text-[11px] ${day.isFriday ? 'text-rose-700 bg-slate-300' : 'bg-slate-50'}`}>
+                        {/* DATE */}
+                        <td 
+                          className={`border border-black font-black text-[11px] ${day.isFriday ? 'friday-shaded' : 'bg-slate-50'}`}
+                        >
+                          {day.dateStr}
+                        </td>
+
+                        {/* DAY */}
+                        <td 
+                          className={`border border-black font-black text-[11px] ${day.isFriday ? 'text-red-600 font-bold friday-shaded' : 'bg-slate-50'}`}
+                        >
                           {day.dayName}
                         </td>
                         
-                        {/* Morning In */}
-                        <td className="border border-black font-bold font-mono text-[10.5px]">
+                        {/* Morning In - Time */}
+                        <td className={`border border-black font-bold font-mono text-[10.5px] p-0 m-0 ${day.isFriday ? 'friday-shaded' : ''}`}>
                           {day.isFriday ? '' : (
                             <input 
                               type="text" 
                               value={day.morningIn}
                               onChange={e => handleCellChange(idx, 'morningIn', e.target.value)}
-                              className="w-full h-full bg-transparent border-0 text-center focus:outline-none cursor-text p-0 m-0 print:placeholder-transparent text-black"
+                              className="w-full h-full bg-transparent border-0 text-center focus:outline-none cursor-text p-0 m-0 text-black font-bold text-[10.5px]"
                             />
                           )}
                         </td>
-                        <td className="border border-black"></td>
 
-                        {/* Morning Out */}
-                        <td className="border border-black font-bold font-mono text-[10.5px]">
+                        {/* Morning In - Sign */}
+                        <td className={`border border-black ${day.isFriday ? 'friday-shaded' : ''}`}></td>
+
+                        {/* Morning Out - Time */}
+                        <td className={`border border-black font-bold font-mono text-[10.5px] p-0 m-0 ${day.isFriday ? 'friday-shaded' : ''}`}>
                           {day.isFriday ? '' : (
                             <input 
                               type="text" 
                               value={day.morningOut}
                               onChange={e => handleCellChange(idx, 'morningOut', e.target.value)}
-                              className="w-full h-full bg-transparent border-0 text-center focus:outline-none cursor-text p-0 m-0 text-black"
+                              className="w-full h-full bg-transparent border-0 text-center focus:outline-none cursor-text p-0 m-0 text-black font-bold text-[10.5px]"
                             />
                           )}
                         </td>
-                        <td className="border border-black"></td>
 
-                        {/* Evening In */}
-                        <td className="border border-black font-bold font-mono text-[10.5px]">
+                        {/* Morning Out - Sign */}
+                        <td className={`border border-black ${day.isFriday ? 'friday-shaded' : ''}`}></td>
+
+                        {/* Evening In - Time */}
+                        <td className={`border border-black font-bold font-mono text-[10.5px] p-0 m-0 ${day.isFriday ? 'friday-shaded' : ''}`}>
                           {day.isFriday ? '' : (
                             <input 
                               type="text" 
                               value={day.eveningIn}
                               onChange={e => handleCellChange(idx, 'eveningIn', e.target.value)}
-                              className="w-full h-full bg-transparent border-0 text-center focus:outline-none cursor-text p-0 m-0 text-black"
+                              className="w-full h-full bg-transparent border-0 text-center focus:outline-none cursor-text p-0 m-0 text-black font-bold text-[10.5px]"
                             />
                           )}
                         </td>
-                        <td className="border border-black"></td>
 
-                        {/* Evening Out */}
-                        <td className="border border-black font-bold font-mono text-[10.5px]">
+                        {/* Evening In - Sign */}
+                        <td className={`border border-black ${day.isFriday ? 'friday-shaded' : ''}`}></td>
+
+                        {/* Evening Out - Time */}
+                        <td className={`border border-black font-bold font-mono text-[10.5px] p-0 m-0 ${day.isFriday ? 'friday-shaded' : ''}`}>
                           {day.isFriday ? '' : (
                             <input 
                               type="text" 
                               value={day.eveningOut}
                               onChange={e => handleCellChange(idx, 'eveningOut', e.target.value)}
-                              className="w-full h-full bg-transparent border-0 text-center focus:outline-none cursor-text p-0 m-0 text-black"
+                              className="w-full h-full bg-transparent border-0 text-center focus:outline-none cursor-text p-0 m-0 text-black font-bold text-[10.5px]"
                             />
                           )}
                         </td>
-                        <td className="border border-black"></td>
+
+                        {/* Evening Out - Sign */}
+                        <td className={`border border-black ${day.isFriday ? 'friday-shaded' : ''}`}></td>
 
                         {/* Delay */}
-                        <td className="border border-black font-bold font-mono text-[10.5px]">
+                        <td className={`border border-black font-bold font-mono text-[10.5px] p-0 m-0 ${day.isFriday ? 'friday-shaded' : ''}`}>
                           {day.isFriday ? '' : (
                             <input 
                               type="text" 
                               value={day.delay}
                               onChange={e => handleCellChange(idx, 'delay', e.target.value)}
-                              className="w-full h-full bg-transparent border-0 text-center focus:outline-none cursor-text p-0 m-0 text-black"
+                              className="w-full h-full bg-transparent border-0 text-center focus:outline-none cursor-text p-0 m-0 text-black font-bold text-[10.5px]"
                             />
                           )}
                         </td>
@@ -596,7 +610,7 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
                 </div>
 
                 {/* Absence and delay table on the right */}
-                <div className="w-[45%] flex flex-col border border-black shrink-0 text-xs font-black bg-white rounded-none">
+                <div className="w-[45%] flex flex-col border-2 border-black shrink-0 text-xs font-black bg-white rounded-none">
                   <div className="flex border-b border-black h-8 items-center bg-slate-50">
                     <span className="w-1/3 text-center border-l border-black py-1 bg-slate-100">ملاحظات :</span>
                     <span className="w-2/3 px-2 text-[10px] text-slate-700 font-semibold truncate">{notes || ' '}</span>
@@ -620,6 +634,24 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
 
       {/* Embedded print style to handle only printing the A4 target on print command */}
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
+
+        .friday-shaded {
+          background-color: #cbd5e1 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .header-shaded {
+          background-color: #f1f5f9 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .sub-header-shaded {
+          background-color: #f8fafc !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+
         @media print {
           body, html {
             background-color: #ffffff !important;
@@ -628,6 +660,8 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
             padding: 0 !important;
             height: 100% !important;
             width: 100% !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           #attendance-sheet-a4-target {
             border: none !important;
@@ -636,14 +670,26 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
             top: 0 !important;
             left: 0 !important;
             margin: 0 !important;
-            padding: 2.5cm 2cm !important; /* Proper margin for standard A4 printing */
+            padding: 1.2cm 1.2cm !important; /* Proper margin for standard A4 printing */
             width: 100% !important;
             height: 100% !important;
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            box-sizing: border-box !important;
           }
           .print\\:hidden, header, footer, nav, sidebar, button {
             display: none !important;
+          }
+          .friday-shaded {
+            background-color: #cbd5e1 !important;
+          }
+          .header-shaded {
+            background-color: #f1f5f9 !important;
+          }
+          .sub-header-shaded {
+            background-color: #f8fafc !important;
           }
         }
       `}</style>
