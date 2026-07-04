@@ -653,43 +653,64 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
         }
 
         @media print {
-          body, html {
+          @page {
+            size: A4 portrait;
+            margin: 0mm !important;
+          }
+          body {
             background-color: #ffffff !important;
             color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
-            height: 100% !important;
-            width: 100% !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
+          /* Hide everything by default in the body */
+          body * {
+            visibility: hidden !important;
+          }
+          /* Show only the target sheet container and its internal tree */
+          #attendance-sheet-a4-target,
+          #attendance-sheet-a4-target * {
+            visibility: visible !important;
+          }
+          /* Position the target container precisely to cover exactly one A4 page */
           #attendance-sheet-a4-target {
-            border: none !important;
-            box-shadow: none !important;
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
+            right: 0 !important;
             margin: 0 !important;
             padding: 1.2cm 1.2cm !important; /* Proper margin for standard A4 printing */
-            width: 100% !important;
-            height: 100% !important;
+            width: 210mm !important;
+            height: 297mm !important;
+            max-height: 297mm !important;
+            box-sizing: border-box !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: white !important;
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            box-sizing: border-box !important;
-          }
-          .print\\:hidden, header, footer, nav, sidebar, button {
-            display: none !important;
           }
           .friday-shaded {
             background-color: #cbd5e1 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           .header-shaded {
             background-color: #f1f5f9 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           .sub-header-shaded {
             background-color: #f8fafc !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
         }
       `}</style>
