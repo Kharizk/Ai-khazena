@@ -485,7 +485,7 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
                   <thead>
                     <tr className="bg-slate-100 border-b-2 border-black header-shaded">
                       <th rowSpan={3} className="border border-black py-2 font-black text-[11px] w-[6%] header-shaded">التاريخ<br/>DATE</th>
-                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] w-[10%] header-shaded">اليوم<br/>DAY</th>
+                      <th rowSpan={3} className="border border-black py-2 font-black text-[11px] w-[8%] header-shaded">اليوم<br/>DAY</th>
                       <th colSpan={4} className="border border-black py-1 font-black text-[11.5px] header-shaded">الفترة الصباحية Morning Period</th>
                       <th colSpan={4} className="border border-black py-1 font-black text-[11.5px] header-shaded">الفترة المسائية Evening Period</th>
                       <th rowSpan={3} className="border border-black py-2 font-black text-[11px] w-[8%] leading-tight header-shaded">ساعات<br/>التأخير<br/>Delay<br/>Hour</th>
@@ -500,17 +500,17 @@ export const AttendanceSheet: React.FC<AttendanceSheetProps> = ({ onClose, defau
                     </tr>
                     <tr className="bg-slate-50 border-b-2 border-black text-[8px] font-bold text-slate-800 sub-header-shaded">
                       {/* Morning In */}
-                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[6%]">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[13.5%]">التوقيع<br/>.Sign</th>
                       {/* Morning Out */}
-                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[6%]">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[13.5%]">التوقيع<br/>.Sign</th>
                       {/* Evening In */}
-                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[6%]">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[13.5%]">التوقيع<br/>.Sign</th>
                       {/* Evening Out */}
-                      <th className="border border-black py-0.5 sub-header-shaded">الساعة<br/>Time</th>
-                      <th className="border border-black py-0.5 sub-header-shaded">التوقيع<br/>.Sign</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[6%]">الساعة<br/>Time</th>
+                      <th className="border border-black py-0.5 sub-header-shaded w-[13.5%]">التوقيع<br/>.Sign</th>
                     </tr>
                   </thead>
                   <tbody>
