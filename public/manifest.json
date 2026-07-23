@@ -1,7 +1,7 @@
 {
-  "name": "سرب ERP - الخزينة الذكية",
-  "short_name": "سرب",
-  "description": "نظام الإدارة المتكامل والخزينة الذكية للتحكم بالحسابات والمصروفات",
+  "name": "rezora Cash Manager",
+  "short_name": "rezora",
+  "description": "Smart Safe and Cash Matching Ledger System",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

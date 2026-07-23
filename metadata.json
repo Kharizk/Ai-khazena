@@ -1,6 +1,6 @@
 {
-  "name": "سرب ERP",
-  "description": "نظام سرب لإدارة الخزينة والعمليات الذكية",
+  "name": "rezora",
+  "description": "أول نظام عربي متخصص لإدارة خزينة المتاجر والسوبر ماركت والمطاعم، مع مطابقة النقد، ونقاط البيع، والمصروفات، والأموال المعلقة، واكتشاف العجز والزيادة في نهاية الوردية",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

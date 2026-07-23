@@ -32,7 +32,7 @@ type FundHistoryEntry = {
 
 type Transaction = { id: string; name: string; amount: number; isPinned?: boolean; showInSummary?: boolean; history?: FundHistoryEntry[] };
 type ArchivedFund = Transaction & { type: 'toUs' | 'byUs'; dateSettled: string };
-type POSData = { id: string; name: string; sales: number; returns: number; networks: number[]; physicalCash?: number; isPinned?: boolean };
+type POSData = { id: string; name: string; sales: number; returns: number; networks: number[]; physicalCash?: number; isPinned?: boolean; invoiceCount?: number };
 
 type UserRole = 'admin' | 'manager' | 'cashier';
 type UserStatus = 'pending' | 'active' | 'suspended';
@@ -165,13 +165,15 @@ const getSummary = (s: AppState) => {
 
   const actualCash = round2(physicalCash + totalPendingOwedToUs - totalPendingOwedByUs);
   const difference = round2(actualCash - expectedCash);
+  const totalInvoices = safePosData.reduce((sum, item) => sum + (Number(item.invoiceCount) || 0), 0);
 
   return {
     totalSales, totalReturns, netSales, totalExpenseRefunds, totalCashIn,
     totalNetworks, totalCustomerTransfers, totalCompanyPayments,
     separatedExpenses, separatedExpensesTotal, generalExpensesTotal, totalExpenses, totalCashDeposits, totalCashOut,
     expectedCash, physicalDenominations, physicalCustomCash, physicalCash,
-    totalPendingOwedToUs, totalPendingOwedByUs, actualCash, difference
+    totalPendingOwedToUs, totalPendingOwedByUs, actualCash, difference,
+    totalInvoices
   };
 };
 
@@ -1570,6 +1572,7 @@ key={item.id}
             <span className={`text-slate-300 text-xs font-bold select-none text-center ${onReorder && searchQuery === '' ? 'w-2' : 'w-4'}`}>{actualIndex + 1}</span>
             <div className="flex-1">
               <Input 
+                id={`input-name-${item.id}`}
                 list={listId}
                 value={item.name} 
                 onChange={(e: any) => onUpdate(item.id, 'name', e.target.value)} 
@@ -1628,14 +1631,14 @@ key={item.id}
               <p className="text-[15px] text-slate-400">لم تقم بإضافة أي بنود في هذا القسم بعد.</p>
             </div>
             <button onClick={onAdd} className="mt-2 text-[15px] font-bold text-slate-900 dark:text-white tracking-tight bg-slate-100 dark:bg-slate-800/80 px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800 rounded-[4px] transition-colors flex items-center gap-2">
-              <Plus size={16} /> أضف أول بند
+              <Plus size={16} /> أضف أول بند <kbd className="mr-1 px-1 py-0.5 text-[9px] font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-slate-400 select-none">F9</kbd>
             </button>
           </div>
         )}
         {data.length > 0 && (
           <div className="px-5 pb-5">
             <button onClick={onAdd} className="flex items-center justify-center gap-2 w-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-white text-[14px] font-medium px-4 py-2.5 rounded-[4px] border border-dashed border-slate-300 dark:border-slate-600 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 transition-all active:scale-95 group/btn">
-              <Plus size={18} className="group-hover/btn:rotate-90 transition-transform" /> إضافة بند جديد
+              <Plus size={18} className="group-hover/btn:rotate-90 transition-transform" /> إضافة بند جديد <kbd className="mr-2 px-1.5 py-0.5 text-[10px] font-mono bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded text-slate-400 select-none">F9</kbd>
             </button>
           </div>
         )}
@@ -2709,6 +2712,7 @@ const LiveClock = () => {
 
 export default function App() {
   const [state, setState] = useState<AppState>(getInitialState());
+  const [lastAddedId, setLastAddedId] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [skipLogin, setSkipLogin] = useState(false);
   const [showAddBranchModal, setShowAddBranchModal] = useState(false);
@@ -2724,7 +2728,7 @@ export default function App() {
   const [adminUsers, setAdminUsers] = useState<UserProfile[]>([]);
   
   const [history, setHistory] = useState<DailySnapshot[]>([]);
-  const [activeTab, setActiveTab] = useState<'sales' | 'payments' | 'pending' | 'cash' | 'archive' | 'history' | 'ledger' | 'analytics' | 'settings' | 'admin'>('sales');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'sales' | 'payments' | 'pending' | 'cash' | 'archive' | 'history' | 'ledger' | 'analytics' | 'settings' | 'admin'>('dashboard');
   const [reportSubTab, setReportSubTab] = useState<'ledger' | 'trial' | 'pl' | 'cashflow' | 'visuals'>('ledger');
   const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
   const [user, setUser] = useState<User | null>(null);
@@ -2775,6 +2779,60 @@ export default function App() {
   }, []);
 
   const [currentAppView, setCurrentAppView] = useState<'launcher' | 'treasury' | 'attendance'>('launcher');
+
+  // Keyboard shortcut listener to add new items and focus them instantly
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle shortcut when we are active in the Cash Manager (treasury) app view
+      if (currentAppView !== 'treasury') return;
+
+      // Match F9 key
+      const isF9Shortcut = e.key === 'F9' || e.code === 'F9';
+
+      if (isF9Shortcut) {
+        e.preventDefault();
+        
+        if (activeTab === 'dashboard' || activeTab === 'sales') {
+          if (activeTab === 'dashboard') {
+            setActiveTab('sales');
+          }
+          addPOSRow();
+          showToast('تم إضافة نقطة بيع جديدة وتوجيه التركيز إليها', 'success');
+        } else if (activeTab === 'payments') {
+          addTransaction('expenses');
+          showToast('تم إضافة بند مصروفات جديد وتوجيه التركيز إليه', 'success');
+        } else if (activeTab === 'pending') {
+          addTransaction('pendingFundsOwedToUs');
+          showToast('تم إضافة بند أموال معلقة لنا وتوجيه التركيز إليه', 'success');
+        } else if (activeTab === 'cash') {
+          addTransaction('customCashAmounts');
+          showToast('تم إضافة رزمة/كاش مجمع وتوجيه التركيز إليه', 'success');
+        } else {
+          showToast('يرجى الانتقال لصفحة المبيعات أو المدفوعات لإضافة بنود جديدة', 'error');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentAppView, activeTab]);
+
+  // Autofocus target element when lastAddedId changes
+  useEffect(() => {
+    if (lastAddedId) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`input-name-${lastAddedId}`) || 
+                   document.getElementById(`input-pos-name-${lastAddedId}`);
+        if (el) {
+          el.focus();
+          (el as HTMLInputElement).select();
+        }
+      }, 80);
+      return () => clearTimeout(timer);
+    }
+  }, [lastAddedId, state]);
 
   const [theme, setTheme] = useState<'system'|'light'|'dark'>(() => {
     return (safeLocalStorage.getItem('smart_safe_theme') as any) || 'system';
@@ -3464,7 +3522,18 @@ const handleCopyDailyReport = () => {
   const updateField = (field: keyof AppState, value: any) => setState(prev => ({ ...prev, [field]: value }));
 
   const addTransaction = (field: keyof AppState) => {
-    setState(prev => ({ ...prev, [field]: [...(prev[field] as Transaction[]), { id: generateId(), name: '', amount: 0 }] }));
+    const newId = generateId();
+    setLastAddedId(newId);
+    setState(prev => ({ ...prev, [field]: [...(prev[field] as Transaction[]), { id: newId, name: '', amount: 0 }] }));
+  };
+
+  const addPOSRow = () => {
+    const newId = generateId();
+    setLastAddedId(newId);
+    setState(prev => ({
+      ...prev,
+      posData: [...(prev.posData || []), { id: newId, name: '', sales: 0, returns: 0, networks: [] }]
+    }));
   };
 
   const updateTransaction = (field: keyof AppState, id: string, key: 'name' | 'amount', value: string | number) => {
@@ -4741,7 +4810,7 @@ const handleCopyDailyReport = () => {
                   <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
                 </svg>
               </div>
-              <span className="text-xs font-bold drop-shadow-md tracking-wide text-white/90">الخزينة</span>
+              <span className="text-xs font-bold drop-shadow-md tracking-wide text-white/90">rezora Cash Manager</span>
             </button>
 
             {/* Attendance App */}
@@ -4832,7 +4901,7 @@ const handleCopyDailyReport = () => {
               <button 
                 onClick={() => setCurrentAppView('launcher')}
                 className="w-10 h-10 flex items-center justify-center hover:bg-white/10 text-white rounded-[3px] transition-all"
-                title="الرئيسية (سرب ERP)"
+                title="الرئيسية (rezora)"
               >
                 <ArrowRight size={20} />
               </button>
@@ -4846,10 +4915,10 @@ const handleCopyDailyReport = () => {
                 </div>
                 <div className="flex flex-col items-start translate-y-0.5">
                   <div className="flex items-center gap-1.5 leading-none">
-                    <h1 className="font-normal text-white text-base md:text-xl tracking-tight leading-none">سرب</h1>
-                    <span className="text-white font-normal text-xs md:text-[15px] tracking-[0.1em] font-poppins leading-none">ERP</span>
+                    <h1 className="font-bold text-white text-base md:text-xl tracking-tight leading-none">rezora</h1>
+                    <span className="text-white font-normal text-xs md:text-[15px] tracking-wide font-poppins leading-none">Cash Manager</span>
                   </div>
-                  <span className="text-[9px] md:text-[10px] text-brand-100 font-normal">نظام الخزينة الذكية</span>
+                  <span className="text-[9px] md:text-[10px] text-brand-100 font-normal">نظام مطابقة الخزينة والوردية الذكي</span>
                 </div>
               </div>
             </div>
@@ -4954,6 +5023,7 @@ const handleCopyDailyReport = () => {
               {(!isExporting && (!userProfile || userProfile.role !== 'admin' || currentBranchId)) && (
                 <div className="fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 print:bg-white/95 backdrop-blur-2xl border-t border-slate-200 dark:border-slate-700 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-[90] flex overflow-x-auto gap-1.5 print:hidden md:relative md:bg-transparent md:backdrop-blur-none md:border-t-0 md:p-0 md:mb-8 md:pb-2 md:gap-2 overscroll-x-contain shadow-md md:shadow-none items-center scrollbar-hide">
                   {[
+                    { id: 'dashboard', label: 'الرئيسية', icon: Activity },
                     { id: 'sales', label: 'المبيعات', icon: Receipt },
                     { id: 'payments', label: 'المدفوعات', icon: ArrowUpRight },
                     { id: 'pending', label: 'معلقة', icon: AlertCircle },
@@ -5015,6 +5085,245 @@ const handleCopyDailyReport = () => {
                   </div>
                 ) : (
                 <>
+                {/* Dashboard Tab */}
+                {activeTab === 'dashboard' && (
+                  <div className="space-y-6 mb-8 print:hidden">
+                    {/* Branded Header */}
+                    <div className="relative overflow-hidden bg-[#354a5f] text-white rounded-[4px] p-6 shadow-sm border border-slate-700/30">
+                      <div className="absolute inset-0 bg-grid-white/[0.05]" />
+                      <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                          <span className="bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            rezora Cash Manager
+                          </span>
+                          <h2 className="text-xl md:text-2xl font-black mt-2">
+                            لوحة المتابعة والتحكم المالي للخزينة
+                          </h2>
+                          <p className="text-slate-300 text-xs md:text-sm mt-1 max-w-2xl">
+                            أول نظام عربي متخصص لإدارة خزينة المتاجر والسوبر ماركت والمطاعم، مع مطابقة النقد، ونقاط البيع، والمصروفات، والأموال المعلقة، واكتشاف العجز والزيادة في نهاية الوردية.
+                          </p>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-[4px] border border-white/10 self-stretch md:self-auto flex md:flex-col justify-between items-center md:items-end gap-2 text-right">
+                          <span className="text-[11px] text-slate-300 font-bold">تاريخ الوردية الحالية</span>
+                          <span className="font-mono text-lg font-bold">{state.date}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* KPI Bento Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {/* 💰 رصيد اليوم */}
+                      <div className="bg-white dark:bg-slate-900 rounded-[4px] p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 text-sm font-bold">💰 رصيد اليوم الفعلي</span>
+                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white mt-1 font-mono tracking-tight">
+                              {formatNum(currentSummary.actualCash)} <span className="text-xs font-normal text-slate-500">ر.س</span>
+                            </h3>
+                          </div>
+                          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-[4px]">
+                            <Wallet size={24} />
+                          </div>
+                        </div>
+                        <div className="border-t border-slate-100 dark:border-slate-800/60 mt-4 pt-3 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          <span>الرصيد الدفتري (المتوقع):</span>
+                          <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">{formatNum(currentSummary.expectedCash)} ر.س</span>
+                        </div>
+                      </div>
+
+                      {/* 💵 إجمالي المبيعات */}
+                      <div className="bg-white dark:bg-slate-900 rounded-[4px] p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 text-sm font-bold">💵 إجمالي المبيعات (الصافي)</span>
+                            <h3 className="text-2xl md:text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1 font-mono tracking-tight">
+                              {formatNum(currentSummary.netSales)} <span className="text-xs font-normal text-slate-500">ر.س</span>
+                            </h3>
+                          </div>
+                          <div className="p-2.5 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-[4px]">
+                            <TrendingUp size={24} />
+                          </div>
+                        </div>
+                        <div className="border-t border-slate-100 dark:border-slate-800/60 mt-4 pt-3 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          <span>المبيعات: <strong className="font-mono text-slate-700 dark:text-slate-300">{formatNum(currentSummary.totalSales)}</strong></span>
+                          <span>المرتجع: <strong className="font-mono text-rose-600">{formatNum(currentSummary.totalReturns)}</strong></span>
+                        </div>
+                      </div>
+
+                      {/* ⚠️ العجز أو الزيادة */}
+                      <div className="bg-white dark:bg-slate-900 rounded-[4px] p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 text-sm font-bold">⚠️ العجز أو الزيادة</span>
+                            <h3 className={`text-2xl md:text-3xl font-black mt-1 font-mono tracking-tight ${
+                              currentSummary.difference === 0 
+                                ? 'text-emerald-600 dark:text-emerald-400' 
+                                : currentSummary.difference > 0 
+                                ? 'text-amber-600 dark:text-amber-400' 
+                                : 'text-rose-600 dark:text-rose-400'
+                            }`}>
+                              {currentSummary.difference > 0 ? '+' : ''}{formatNum(currentSummary.difference)} <span className="text-xs font-normal text-slate-500">ر.س</span>
+                            </h3>
+                          </div>
+                          <div className={`p-2.5 rounded-[4px] ${
+                            currentSummary.difference === 0 
+                              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400' 
+                              : currentSummary.difference > 0 
+                              ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400' 
+                              : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400'
+                          }`}>
+                            <AlertCircle size={24} />
+                          </div>
+                        </div>
+                        <div className="border-t border-slate-100 dark:border-slate-800/60 mt-4 pt-3 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          <span>حالة التسوية:</span>
+                          <span className={`font-bold ${
+                            currentSummary.difference === 0 
+                              ? 'text-emerald-600' 
+                              : currentSummary.difference > 0 
+                              ? 'text-amber-600' 
+                              : 'text-rose-600'
+                          }`}>
+                            {currentSummary.difference === 0 ? 'مطابق ومغلق' : currentSummary.difference > 0 ? 'زيادة نقدية' : 'عجز في النقدية'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 🧾 عدد الفواتير */}
+                      <div className="bg-white dark:bg-slate-900 rounded-[4px] p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 text-sm font-bold">🧾 عدد الفواتير الإجمالي</span>
+                            <h3 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white mt-1 font-mono tracking-tight">
+                              {currentSummary.totalInvoices} <span className="text-xs font-normal text-slate-500">فاتورة</span>
+                            </h3>
+                          </div>
+                          <div className="p-2.5 bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 rounded-[4px]">
+                            <Receipt size={24} />
+                          </div>
+                        </div>
+                        <div className="border-t border-slate-100 dark:border-slate-800/60 mt-4 pt-3 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          <span>متوسط الفاتورة تقديرياً:</span>
+                          <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">
+                            {currentSummary.totalInvoices > 0 ? formatNum(round2(currentSummary.netSales / currentSummary.totalInvoices)) : '0.00'} ر.س
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 💳 الشبكات */}
+                      <div className="bg-white dark:bg-slate-900 rounded-[4px] p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 text-sm font-bold">💳 إجمالي عمليات الشبكات</span>
+                            <h3 className="text-2xl md:text-3xl font-black text-amber-600 dark:text-amber-400 mt-1 font-mono tracking-tight">
+                              {formatNum(currentSummary.totalNetworks)} <span className="text-xs font-normal text-slate-500">ر.س</span>
+                            </h3>
+                          </div>
+                          <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-[4px]">
+                            <CreditCard size={24} />
+                          </div>
+                        </div>
+                        <div className="border-t border-slate-100 dark:border-slate-800/60 mt-4 pt-3 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          <span>نسبة مبيعات الشبكة:</span>
+                          <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">
+                            {currentSummary.netSales > 0 ? Math.round((currentSummary.totalNetworks / currentSummary.netSales) * 100) : 0}%
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 💸 المصروفات */}
+                      <div className="bg-white dark:bg-slate-900 rounded-[4px] p-5 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 text-sm font-bold">💸 إجمالي المصروفات</span>
+                            <h3 className="text-2xl md:text-3xl font-black text-rose-600 dark:text-rose-400 mt-1 font-mono tracking-tight">
+                              {formatNum(currentSummary.totalExpenses)} <span className="text-xs font-normal text-slate-500">ر.س</span>
+                            </h3>
+                          </div>
+                          <div className="p-2.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-[4px]">
+                            <ArrowUpRight size={24} />
+                          </div>
+                        </div>
+                        <div className="border-t border-slate-100 dark:border-slate-800/60 mt-4 pt-3 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 font-medium">
+                          <span>التشغيلية العامة: <strong className="font-mono text-slate-700 dark:text-slate-300">{formatNum(currentSummary.generalExpensesTotal)}</strong></span>
+                          <span>المنفصلة للتقارير: <strong className="font-mono text-slate-700 dark:text-slate-300">{formatNum(currentSummary.separatedExpensesTotal)}</strong></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Additional Branded & Informational Sections */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* points of sale list on dashboard */}
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[4px] shadow-sm p-5 flex flex-col">
+                        <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-4 flex items-center gap-2">
+                          <Activity size={18} className="text-brand-500" /> ملخص مبيعات نقاط البيع المفتوحة
+                        </h4>
+                        <div className="space-y-4 flex-1">
+                          {(state.posData || []).length === 0 ? (
+                            <p className="text-slate-400 text-center text-xs py-8">لا توجد نقاط بيع مسجلة لليوم الحالي.</p>
+                          ) : (
+                            (state.posData || []).map((pos) => {
+                              const posNet = pos.sales - pos.returns;
+                              const posShare = currentSummary.netSales > 0 ? Math.round((posNet / currentSummary.netSales) * 100) : 0;
+                              return (
+                                <div key={pos.id} className="border-b border-slate-100 dark:border-slate-800/50 pb-3 last:border-none last:pb-0">
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="font-bold text-slate-700 dark:text-slate-300 text-[14px]">{pos.name || 'نقطة بيع غير مسماة'}</span>
+                                    <span className="font-mono text-slate-900 dark:text-slate-100 text-[14px] font-bold">{formatNum(posNet)} ر.س</span>
+                                  </div>
+                                  <div className="flex justify-between items-center text-[11px] text-slate-400 mb-2">
+                                    <span>المبيعات: {formatNum(pos.sales)} | المرتجعات: {formatNum(pos.returns)}</span>
+                                    <span>النسبة: {posShare}%</span>
+                                  </div>
+                                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                    <div className="bg-brand-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, posShare)}%` }}></div>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Cash matching and Shift info */}
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[4px] shadow-sm p-5 flex flex-col justify-between">
+                        <div>
+                          <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-4 flex items-center gap-2">
+                            <Sparkles size={18} className="text-brand-500" /> تحليل مطابقة السيولة النقدية (Cash Matching)
+                          </h4>
+                          <div className="space-y-4">
+                            <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-[4px] border border-slate-100 dark:border-slate-800">
+                              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
+                                يقوم نظام <strong className="font-bold text-slate-700 dark:text-slate-300">rezora Cash Manager</strong> باحتساب \"الرصيد الفعلي\" بناءً على النقد الفعلي الذي تم جره وتعديله بـالأموال المعلقة، ومطابقته فورياً بالرصيد الدفتري المتوقع في الخزينة بعد إدخال كافة المقبوضات والمدفوعات والمصروفات.
+                              </p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4 text-center">
+                              <div className="p-3 bg-slate-50 dark:bg-slate-800/20 rounded-[4px] border border-slate-100 dark:border-slate-800">
+                                <span className="text-[11px] text-slate-400 block font-bold">النقد الفعلي الإجمالي</span>
+                                <span className="font-mono text-lg font-black text-slate-800 dark:text-slate-200">{formatNum(currentSummary.physicalCash)} ر.س</span>
+                              </div>
+                              <div className="p-3 bg-slate-50 dark:bg-slate-800/20 rounded-[4px] border border-slate-100 dark:border-slate-800">
+                                <span className="text-[11px] text-slate-400 block font-bold">رصيد أول المدة المرحل</span>
+                                <span className="font-mono text-lg font-black text-slate-800 dark:text-slate-200">{formatNum(state.previousBalance)} ر.س</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-4 text-center">
+                          <button 
+                            onClick={() => setActiveTab('cash')}
+                            className="text-xs bg-brand-50 hover:bg-brand-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-brand-600 dark:text-brand-400 font-bold px-4 py-2 rounded-[4px] inline-flex items-center gap-1.5 transition-colors"
+                          >
+                            <Wallet size={14} /> الانتقال لجرد الخزينة والعد الفعلي
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Sales Tab */}
                 { (activeTab === 'sales' || (isExporting && exportMode === 'detailed')) && (<div className="print:block mb-6">
                 <div className="bg-white dark:bg-slate-900 print:bg-white rounded-[4px] shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden mb-6 flex flex-col">
@@ -5028,13 +5337,14 @@ const handleCopyDailyReport = () => {
                     <table className="w-full text-[15px] text-right">
                       <thead>
                         <tr className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                          <th className="pb-3 font-medium w-[22%]">نقطة البيع</th>
-                          <th className="pb-3 font-medium w-[13%]">إجمالي المبيعات</th>
-                          <th className="pb-3 font-medium w-[13%]">المرتجعات</th>
-                          <th className="pb-3 font-medium w-[13%]">صافي المبيعات</th>
-                          <th className="pb-3 font-medium w-[13%]">الشبكات (تخصم)</th>
-                          <th className="pb-3 font-medium w-[13%]">الكاش الفعلي</th>
-                          <th className="pb-3 font-medium w-[13%] print:hidden text-center">إجراءات</th>
+                          <th className="pb-3 font-medium w-[18%]">نقطة البيع</th>
+                          <th className="pb-3 font-medium w-[11%]">إجمالي المبيعات</th>
+                          <th className="pb-3 font-medium w-[11%]">المرتجعات</th>
+                          <th className="pb-3 font-medium w-[11%]">صافي المبيعات</th>
+                          <th className="pb-3 font-medium w-[11%]">عدد الفواتير</th>
+                          <th className="pb-3 font-medium w-[11%]">الشبكات (تخصم)</th>
+                          <th className="pb-3 font-medium w-[11%]">الكاش الفعلي</th>
+                          <th className="pb-3 font-medium w-[16%] print:hidden text-center">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -5045,6 +5355,7 @@ const handleCopyDailyReport = () => {
                             <tr key={pos.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 relative group">
                               <td className="py-4 pr-2">
                                 <Input 
+                                  id={`input-pos-name-${pos.id}`}
                                   value={pos.name} 
                                   list="list-posData"
                                   onChange={(e: any) => {
@@ -5067,6 +5378,20 @@ const handleCopyDailyReport = () => {
                                   updateField('posData', newData);
                                 }} dir="ltr" className="text-left text-rose-600 bg-transparent border-transparent shadow-none hover:bg-rose-50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-rose-200 transition-colors rounded-[4px]" /></td>
                               <td className="py-4 px-2 text-left font-bold text-[#2b7d2b] text-brand-success" dir="ltr">{formatNum(net)}</td>
+                              <td className="py-4 px-1">
+                                <Input 
+                                  type="number" 
+                                  value={pos.invoiceCount !== undefined ? pos.invoiceCount : ''} 
+                                  placeholder="0"
+                                  onChange={(e: any) => {
+                                    const newData = [...state.posData];
+                                    newData[index].invoiceCount = e.target.value === '' ? undefined : Number(e.target.value);
+                                    updateField('posData', newData);
+                                  }} 
+                                  dir="ltr" 
+                                  className="text-left bg-transparent border-transparent shadow-none hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-slate-300 dark:border-slate-600 transition-colors rounded-[4px]" 
+                                />
+                              </td>
                               <td className="py-4 px-1">
                                 <button 
                                   onClick={() => setActiveNetworkPosId(pos.id)}
@@ -5119,14 +5444,15 @@ const handleCopyDailyReport = () => {
                           <td className="py-3 px-2 text-left" dir="ltr">{formatNum(currentSummary.totalSales)}</td>
                           <td className="py-3 px-2 text-left text-rose-600" dir="ltr">{formatNum(currentSummary.totalReturns)}</td>
                           <td className="py-3 px-2 text-left text-[#2b7d2b] text-brand-success" dir="ltr">{formatNum(currentSummary.netSales)}</td>
+                          <td className="py-3 px-2 text-left text-slate-700 dark:text-slate-300" dir="ltr">{currentSummary.totalInvoices}</td>
                           <td className="py-3 px-2 text-left text-amber-600" dir="ltr">{formatNum(currentSummary.totalNetworks)}</td>
                           <td className="py-3 px-2 text-left text-slate-900 dark:text-white tracking-tight" dir="ltr">{formatNum(state.posData.reduce((acc, p) => acc + (p.physicalCash || 0), 0))}</td>
                           <td className="print:hidden"></td>
                         </tr>
                       </tfoot>
                     </table>
-                    <button onClick={() => updateField('posData', [...state.posData, { id: generateId(), name: '', sales: 0, returns: 0, networks: [] }])} className="mt-4 flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 text-[14px] font-medium px-4 py-2 rounded-[4px] transition-all active:scale-95">
-                      <Plus size={16} /> إضافة نقطة بيع جديدة
+                    <button onClick={addPOSRow} className="mt-4 flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800/80 text-[14px] font-medium px-4 py-2 rounded-[4px] transition-all active:scale-95 shadow-sm hover:border-slate-300 dark:hover:border-slate-600">
+                      <Plus size={16} /> إضافة نقطة بيع جديدة <kbd className="mr-2 px-1.5 py-0.5 text-[10px] font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-slate-400 select-none">F9</kbd>
                     </button>
                   </div>
                 </div>
