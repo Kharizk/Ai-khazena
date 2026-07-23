@@ -1469,7 +1469,7 @@ const AddNameInput = ({ onAdd }: { onAdd: (name: string) => void }) => {
   );
 };
 
-const EditableAmountInput = ({ value, onSave }: any) => {
+const EditableAmountInput = ({ value, onSave, ...props }: any) => {
   const [localVal, setLocalVal] = useState<string>(value !== undefined && value !== 0 ? value.toString() : value === 0 ? '0' : '');
 
   useEffect(() => {
@@ -1503,6 +1503,7 @@ const EditableAmountInput = ({ value, onSave }: any) => {
       placeholder="المبلغ" 
       className="text-left font-semibold group-hover/row:border-slate-300 dark:border-slate-600/60 !rounded-[4px]" 
       dir="ltr" 
+      {...props}
     />
   );
 };
@@ -1572,7 +1573,7 @@ key={item.id}
             <span className={`text-slate-300 text-xs font-bold select-none text-center ${onReorder && searchQuery === '' ? 'w-2' : 'w-4'}`}>{actualIndex + 1}</span>
             <div className="flex-1">
               <Input 
-                id={`input-name-${item.id}`}
+                id={`input-${field}-name-${item.id}`}
                 list={listId}
                 value={item.name} 
                 onChange={(e: any) => onUpdate(item.id, 'name', e.target.value)} 
@@ -1583,6 +1584,7 @@ key={item.id}
             </div>
             <div className="w-1/3">
               <EditableAmountInput 
+                id={`input-${field}-amount-${item.id}`}
                 value={item.amount} 
                 onSave={(val: any) => onUpdate(item.id, 'amount', val)} 
               />
@@ -2713,6 +2715,7 @@ const LiveClock = () => {
 export default function App() {
   const [state, setState] = useState<AppState>(getInitialState());
   const [lastAddedId, setLastAddedId] = useState<string | null>(null);
+  const [lastAddedColumn, setLastAddedColumn] = useState<string>('name');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [skipLogin, setSkipLogin] = useState(false);
   const [showAddBranchModal, setShowAddBranchModal] = useState(false);
@@ -2810,6 +2813,56 @@ export default function App() {
         } else {
           showToast('يرجى الانتقال لصفحة المبيعات أو المدفوعات لإضافة بنود جديدة', 'error');
         }
+        return;
+      }
+
+      // Handle ArrowDown and ArrowUp for inputs
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        const activeId = document.activeElement ? document.activeElement.id : '';
+        if (activeId && activeId.startsWith('input-')) {
+          const parts = activeId.split('-');
+          if (parts.length >= 4) {
+            const field = parts[1];  // e.g. 'expenses', 'posData', 'pendingFundsOwedToUs', etc.
+            const column = parts[2]; // e.g. 'name', 'amount', 'sales', 'returns', 'invoiceCount', 'physicalCash'
+            const itemId = parts.slice(3).join('-');
+
+            const list = state[field as keyof AppState] as any[];
+            if (Array.isArray(list)) {
+              const index = list.findIndex((item: any) => item.id === itemId);
+              if (index !== -1) {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  if (index < list.length - 1) {
+                    const nextItem = list[index + 1];
+                    const nextEl = document.getElementById(`input-${field}-${column}-${nextItem.id}`);
+                    if (nextEl) {
+                      (nextEl as HTMLInputElement).focus();
+                      (nextEl as HTMLInputElement).select();
+                    }
+                  } else if (index === list.length - 1) {
+                    // Last row: automatically trigger add action!
+                    setLastAddedColumn(column);
+                    if (field === 'posData') {
+                      addPOSRow();
+                    } else {
+                      addTransaction(field as keyof AppState);
+                    }
+                  }
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  if (index > 0) {
+                    const prevItem = list[index - 1];
+                    const prevEl = document.getElementById(`input-${field}-${column}-${prevItem.id}`);
+                    if (prevEl) {
+                      (prevEl as HTMLInputElement).focus();
+                      (prevEl as HTMLInputElement).select();
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     };
 
@@ -2817,22 +2870,22 @@ export default function App() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentAppView, activeTab]);
+  }, [currentAppView, activeTab, state]);
 
   // Autofocus target element when lastAddedId changes
   useEffect(() => {
     if (lastAddedId) {
       const timer = setTimeout(() => {
-        const el = document.getElementById(`input-name-${lastAddedId}`) || 
-                   document.getElementById(`input-pos-name-${lastAddedId}`);
+        const el = document.querySelector(`[id$="-${lastAddedColumn}-${lastAddedId}"]`) || 
+                   document.querySelector(`[id$="-${lastAddedId}"]`);
         if (el) {
-          el.focus();
+          (el as HTMLInputElement).focus();
           (el as HTMLInputElement).select();
         }
       }, 80);
       return () => clearTimeout(timer);
     }
-  }, [lastAddedId, state]);
+  }, [lastAddedId, lastAddedColumn, state]);
 
   const [theme, setTheme] = useState<'system'|'light'|'dark'>(() => {
     return (safeLocalStorage.getItem('smart_safe_theme') as any) || 'system';
@@ -4763,25 +4816,28 @@ const handleCopyDailyReport = () => {
         }}></div>
 
         {/* Status Bar */}
-        <div className="relative z-10 shrink-0 flex justify-between items-start px-6 py-4 drop-shadow-md border-b border-white/5 bg-[#354a5f] text-white">
+        <div className="relative z-10 shrink-0 flex justify-between items-start px-6 py-4 drop-shadow-md border-b border-white/5 bg-[#0d182a] text-white">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 relative">
-               <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
-                 <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="url(#smLogoGrad)" strokeWidth="18" strokeLinecap="round" />
-                 <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
-                 <circle cx="80" cy="28" r="2" fill="#000000" />
+               <svg viewBox="0 0 100 100" className="w-full h-full">
                  <defs>
-                   <linearGradient id="smLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                     <stop offset="0%" stopColor="#0f172a" />
-                     <stop offset="100%" stopColor="#3b82f6" />
+                   <linearGradient id="rezoraGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                     <stop offset="0%" stopColor="#2563eb" />
+                     <stop offset="100%" stopColor="#00bfa6" />
                    </linearGradient>
                  </defs>
+                 <rect x="5" y="32" width="22" height="6" rx="3" fill="url(#rezoraGrad)" />
+                 <rect x="12" y="47" width="15" height="6" rx="3" fill="url(#rezoraGrad)" />
+                 <rect x="18" y="62" width="9" height="6" rx="3" fill="url(#rezoraGrad)" />
+                 <path d="M 36 25 L 36 75" stroke="url(#rezoraGrad)" strokeWidth="10" strokeLinecap="round" />
+                 <path d="M 36 25 C 55 25, 68 30, 68 47 C 68 62, 53 65, 36 65" fill="none" stroke="url(#rezoraGrad)" strokeWidth="10" strokeLinecap="round" />
+                 <path d="M 50 55 L 72 75" stroke="url(#rezoraGrad)" strokeWidth="10" strokeLinecap="round" />
                </svg>
              </div>
              <div>
                <h1 className="text-xl font-extrabold tracking-tight flex items-center gap-2 leading-none">
-                 <span className="text-white drop-shadow">ســـرب</span>
-                 <span className="text-[10px] text-brand-200 bg-white dark:bg-slate-900 print:bg-white/10 border border-white/10 px-1.5 py-0.5 rounded font-bold tracking-widest font-mono">ERP</span>
+                 <span className="text-white drop-shadow font-poppins text-2xl font-black">Rezora</span>
+                 <span className="text-[10px] text-[#00bfa6] bg-white/10 border border-white/10 px-1.5 py-0.5 rounded font-bold tracking-widest font-mono uppercase">ERP</span>
                </h1>
              </div>
           </div>
@@ -4806,8 +4862,18 @@ const handleCopyDailyReport = () => {
               <div className="w-[72px] h-[72px] bg-white dark:bg-slate-900 print:bg-white rounded-[4px] shadow-xl ring-1 ring-white/10 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:shadow-2xl group-hover:-translate-y-1 group-hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50">
                 {/* Simplified Logo icon for app */}
                 <svg viewBox="0 0 100 100" className="w-10 h-10 drop-shadow-md mb-0.5">
-                  <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#0a6ed1" strokeWidth="18" strokeLinecap="round" />
-                  <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
+                  <defs>
+                    <linearGradient id="rezoraAppGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#2563eb" />
+                      <stop offset="100%" stopColor="#00bfa6" />
+                    </linearGradient>
+                  </defs>
+                  <rect x="5" y="32" width="22" height="6" rx="3" fill="url(#rezoraAppGrad)" />
+                  <rect x="12" y="47" width="15" height="6" rx="3" fill="url(#rezoraAppGrad)" />
+                  <rect x="18" y="62" width="9" height="6" rx="3" fill="url(#rezoraAppGrad)" />
+                  <path d="M 36 25 L 36 75" stroke="url(#rezoraAppGrad)" strokeWidth="10" strokeLinecap="round" />
+                  <path d="M 36 25 C 55 25, 68 30, 68 47 C 68 62, 53 65, 36 65" fill="none" stroke="url(#rezoraAppGrad)" strokeWidth="10" strokeLinecap="round" />
+                  <path d="M 50 55 L 72 75" stroke="url(#rezoraAppGrad)" strokeWidth="10" strokeLinecap="round" />
                 </svg>
               </div>
               <span className="text-xs font-bold drop-shadow-md tracking-wide text-white/90">rezora Cash Manager</span>
@@ -4819,7 +4885,7 @@ const handleCopyDailyReport = () => {
               className="flex flex-col items-center gap-2 group active:scale-95 transition-all"
             >
               <div className="w-[72px] h-[72px] bg-white dark:bg-slate-900 print:bg-white rounded-[4px] shadow-xl ring-1 ring-white/10 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:shadow-2xl group-hover:-translate-y-1 group-hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50">
-                <CalendarDays size={28} className="text-[#0a6ed1] dark:text-blue-400 drop-shadow-md" />
+                <CalendarDays size={28} className="text-[#2563eb] dark:text-blue-400 drop-shadow-md" />
               </div>
               <span className="text-xs font-bold drop-shadow-md tracking-wide text-white/90">كشف الدوام</span>
             </button>
@@ -4890,10 +4956,10 @@ const handleCopyDailyReport = () => {
   }
 
   return (
-    <div className={`min-h-screen pb-24 md:pb-0 bg-[#f4f4f6] text-slate-800 dark:bg-slate-900 dark:text-slate-200 font-sans selection:bg-brand-100 selection:text-brand-900 print:text-black ${printView !== "none" ? "print:bg-white dark:bg-slate-900" : ""} `} dir="rtl">
+    <div className={`min-h-screen pb-24 md:pb-0 bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 font-sans selection:bg-brand-100 selection:text-brand-900 print:text-black ${printView !== "none" ? "print:bg-white dark:bg-slate-900" : ""} `} dir="rtl">
       <div style={{ zoom: uiScale }}>
       <div className={printView !== 'none' ? 'print:hidden' : ''}>
-        <div className="sticky top-0 z-50 bg-[#354a5f] text-white print:hidden transition-all shadow-md px-4">
+        <div className="sticky top-0 z-50 bg-[#0d182a] text-white print:hidden transition-all shadow-md px-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 sm:h-[4.5rem]">
             {/* Logo/Name on the right side (RTL start) */}
@@ -4907,10 +4973,20 @@ const handleCopyDailyReport = () => {
               </button>
               
               <div className="flex items-center gap-2.5 px-3 py-1.5">
-                <div className="w-9 h-9 md:w-11 md:h-11 bg-srb-main rounded-[4px] shadow-md flex items-center justify-center ring-1 ring-black/5 overflow-hidden">
-                  <svg viewBox="0 0 100 100" className="w-6 h-6 md:w-7 md:h-7 mt-0.5 drop-shadow-sm">
-                    <path d="M 80 30 C 80 15, 65 10, 50 10 C 30 10, 20 25, 20 40 C 20 60, 45 60, 50 70 C 55 80, 45 85, 30 85 C 15 85, 10 75, 10 75" fill="none" stroke="#0a6ed1" strokeWidth="18" strokeLinecap="round" />
-                    <path d="M 65 35 L 85 20 L 95 30 L 75 45 Z" fill="#fff" />
+                <div className="w-9 h-9 md:w-11 md:h-11 bg-[#0d182a] rounded-[4px] flex items-center justify-center ring-1 ring-white/10 overflow-hidden">
+                  <svg viewBox="0 0 100 100" className="w-7 h-7 mt-0.5">
+                    <defs>
+                      <linearGradient id="rezoraHeaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#2563eb" />
+                        <stop offset="100%" stopColor="#00bfa6" />
+                      </linearGradient>
+                    </defs>
+                    <rect x="5" y="32" width="22" height="6" rx="3" fill="url(#rezoraHeaderGrad)" />
+                    <rect x="12" y="47" width="15" height="6" rx="3" fill="url(#rezoraHeaderGrad)" />
+                    <rect x="18" y="62" width="9" height="6" rx="3" fill="url(#rezoraHeaderGrad)" />
+                    <path d="M 36 25 L 36 75" stroke="url(#rezoraHeaderGrad)" strokeWidth="10" strokeLinecap="round" />
+                    <path d="M 36 25 C 55 25, 68 30, 68 47 C 68 62, 53 65, 36 65" fill="none" stroke="url(#rezoraHeaderGrad)" strokeWidth="10" strokeLinecap="round" />
+                    <path d="M 50 55 L 72 75" stroke="url(#rezoraHeaderGrad)" strokeWidth="10" strokeLinecap="round" />
                   </svg>
                 </div>
                 <div className="flex flex-col items-start translate-y-0.5">
@@ -5089,11 +5165,11 @@ const handleCopyDailyReport = () => {
                 {activeTab === 'dashboard' && (
                   <div className="space-y-6 mb-8 print:hidden">
                     {/* Branded Header */}
-                    <div className="relative overflow-hidden bg-[#354a5f] text-white rounded-[4px] p-6 shadow-sm border border-slate-700/30">
+                    <div className="relative overflow-hidden bg-gradient-to-r from-[#0d182a] to-[#15253e] text-white rounded-[4px] p-6 shadow-sm border border-slate-700/30">
                       <div className="absolute inset-0 bg-grid-white/[0.05]" />
                       <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                          <span className="bg-brand-500/20 text-brand-300 border border-brand-500/30 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                          <span className="bg-[#00bfa6]/20 text-[#00bfa6] border border-[#00bfa6]/30 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider font-poppins">
                             rezora Cash Manager
                           </span>
                           <h2 className="text-xl md:text-2xl font-black mt-2">
@@ -5355,7 +5431,7 @@ const handleCopyDailyReport = () => {
                             <tr key={pos.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 relative group">
                               <td className="py-4 pr-2">
                                 <Input 
-                                  id={`input-pos-name-${pos.id}`}
+                                  id={`input-posData-name-${pos.id}`}
                                   value={pos.name} 
                                   list="list-posData"
                                   onChange={(e: any) => {
@@ -5367,19 +5443,38 @@ const handleCopyDailyReport = () => {
                                   className="bg-transparent border-transparent shadow-none hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-slate-300 dark:border-slate-600 transition-colors rounded-[4px]"
                                 />
                               </td>
-                              <td className="py-4 px-1"><Input type="number" value={pos.sales !== undefined ? round2(pos.sales) : ''} onChange={(e: any) => {
-                                  const newData = [...state.posData];
-                                  newData[index].sales = Number(e.target.value);
-                                  updateField('posData', newData);
-                                }} dir="ltr" className="text-left bg-transparent border-transparent shadow-none hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-slate-300 dark:border-slate-600 transition-colors rounded-[4px]" /></td>
-                              <td className="py-4 px-1"><Input type="number" value={pos.returns !== undefined ? round2(pos.returns) : ''} onChange={(e: any) => {
-                                  const newData = [...state.posData];
-                                  newData[index].returns = Number(e.target.value);
-                                  updateField('posData', newData);
-                                }} dir="ltr" className="text-left text-rose-600 bg-transparent border-transparent shadow-none hover:bg-rose-50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-rose-200 transition-colors rounded-[4px]" /></td>
+                              <td className="py-4 px-1">
+                                <Input 
+                                  id={`input-posData-sales-${pos.id}`}
+                                  type="number" 
+                                  value={pos.sales !== undefined ? round2(pos.sales) : ''} 
+                                  onChange={(e: any) => {
+                                    const newData = [...state.posData];
+                                    newData[index].sales = Number(e.target.value);
+                                    updateField('posData', newData);
+                                  }} 
+                                  dir="ltr" 
+                                  className="text-left bg-transparent border-transparent shadow-none hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-slate-300 dark:border-slate-600 transition-colors rounded-[4px]" 
+                                />
+                              </td>
+                              <td className="py-4 px-1">
+                                <Input 
+                                  id={`input-posData-returns-${pos.id}`}
+                                  type="number" 
+                                  value={pos.returns !== undefined ? round2(pos.returns) : ''} 
+                                  onChange={(e: any) => {
+                                    const newData = [...state.posData];
+                                    newData[index].returns = Number(e.target.value);
+                                    updateField('posData', newData);
+                                  }} 
+                                  dir="ltr" 
+                                  className="text-left text-rose-600 bg-transparent border-transparent shadow-none hover:bg-rose-50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-rose-200 transition-colors rounded-[4px]" 
+                                />
+                              </td>
                               <td className="py-4 px-2 text-left font-bold text-[#2b7d2b] text-brand-success" dir="ltr">{formatNum(net)}</td>
                               <td className="py-4 px-1">
                                 <Input 
+                                  id={`input-posData-invoiceCount-${pos.id}`}
                                   type="number" 
                                   value={pos.invoiceCount !== undefined ? pos.invoiceCount : ''} 
                                   placeholder="0"
@@ -5405,11 +5500,19 @@ const handleCopyDailyReport = () => {
                                 </button>
                               </td>
                               <td className="py-4 px-1">
-                                <Input type="number" value={pos.physicalCash !== undefined ? round2(pos.physicalCash) : ''} placeholder="" onChange={(e: any) => {
-                                  const newData = [...state.posData];
-                                  newData[index].physicalCash = e.target.value === '' ? undefined : Number(e.target.value);
-                                  updateField('posData', newData);
-                                }} dir="ltr" className="text-left font-bold text-slate-800 dark:text-slate-200 font-bold pointer-events-auto bg-transparent border-transparent shadow-none hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-slate-300 dark:border-slate-600 transition-colors rounded-[4px] font-mono text-lg tracking-tight" />
+                                <Input 
+                                  id={`input-posData-physicalCash-${pos.id}`}
+                                  type="number" 
+                                  value={pos.physicalCash !== undefined ? round2(pos.physicalCash) : ''} 
+                                  placeholder="" 
+                                  onChange={(e: any) => {
+                                    const newData = [...state.posData];
+                                    newData[index].physicalCash = e.target.value === '' ? undefined : Number(e.target.value);
+                                    updateField('posData', newData);
+                                  }} 
+                                  dir="ltr" 
+                                  className="text-left font-bold text-slate-800 dark:text-slate-200 font-bold pointer-events-auto bg-transparent border-transparent shadow-none hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-800/50 focus:bg-white dark:bg-slate-900 print:bg-white focus:border-slate-300 dark:border-slate-600 transition-colors rounded-[4px] font-mono text-lg tracking-tight" 
+                                />
                               </td>
                               <td className="py-4 pl-2 flex justify-center items-center gap-1.5 print:hidden h-full mt-2">
                                 <button 

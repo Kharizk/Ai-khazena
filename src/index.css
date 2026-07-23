@@ -1,27 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "72", "72-Light", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: "Poppins", "Cairo", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "72-Mono", Consolas, "Courier New", monospace;
   
-  --color-brand-50: #e6f2fb;
-  --color-brand-100: #cce4f7;
-  --color-brand-200: #99c9f0;
-  --color-brand-300: #66ade8;
-  --color-brand-400: #3392df;
-  --color-brand-500: #0a6ed1;
-  --color-brand-600: #0858a7;
-  --color-brand-700: #06427d;
-  --color-brand-800: #042c54;
-  --color-brand-900: #02162a;
+  --color-brand-50: #f0f6ff;
+  --color-brand-100: #e0ebff;
+  --color-brand-200: #bad3ff;
+  --color-brand-300: #8bb4ff;
+  --color-brand-400: #548eff;
+  --color-brand-500: #2563eb;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e40af;
+  --color-brand-800: #1e3a8a;
+  --color-brand-900: #0f172a;
 
-  --color-sap-header: #354a5f;
-  --color-sap-bg: #f4f4f6;
+  --color-sap-header: #0d182a;
+  --color-sap-bg: #f8fafc;
 }
 
 @layer base {
   body {
-    @apply font-sans antialiased bg-[#f4f4f6] text-slate-800;
+    @apply font-sans antialiased bg-slate-50 text-slate-800;
   }
   
   :is(.dark body) {
